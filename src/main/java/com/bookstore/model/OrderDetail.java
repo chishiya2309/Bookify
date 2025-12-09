@@ -3,11 +3,9 @@ package com.bookstore.model;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import com.bookstore.service.OrderDetailServices;
 
 @Entity
 @Table(name = "order_details")
-@EntityListeners(OrderDetailServices.class)
 public class OrderDetail implements Serializable {
     
     @Id
@@ -73,6 +71,13 @@ public class OrderDetail implements Serializable {
         this.unitPrice = unitPrice;
         this.subTotal = calcSubTotal();
     }
+    
+    @PrePersist
+    @PreUpdate
+    public void updateSubTotal() {
+        this.subTotal = calcSubTotal();
+    }
+
     
     public BigDecimal getSubTotal() {
         return subTotal;

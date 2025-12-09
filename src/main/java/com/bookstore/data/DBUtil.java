@@ -9,7 +9,7 @@ import java.sql.*;
 
 public class DBUtil {
     private static final EntityManagerFactory emf =
-            Persistence.createEntityManagerFactory("bookify-pu");
+            Persistence.createEntityManagerFactory("bookify_pu");
     
     public static EntityManagerFactory getEmFactory() {
         return emf;
