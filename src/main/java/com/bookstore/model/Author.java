@@ -38,8 +38,8 @@ public class Author implements Serializable {
     
     @Size(max = 500, message = "URL ảnh tối đa 500 ký tự")
     @Pattern(
-            regexp = "^$|^(?i)https?://.*\\.(?:png|jpe?g|gif|webp|svg)(?:\\?.*)?$",
-            message = "URL ảnh không hợp lệ (chấp nhận png, jpg, jpeg, gif, webp, svg)"
+            regexp = "^$|^(?i)https?://.+",
+            message = "URL ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)"
     )
     @Column(name = "photo_url", length = 500)
     private String photoUrl;
