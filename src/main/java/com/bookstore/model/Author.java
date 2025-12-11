@@ -12,7 +12,7 @@ import java.util.List;
 @Table(
         name = "authors",
         indexes = {
-                // Tìm kiếm tác giả theo tên 
+                // Tìm kiếm tác giả theo tên
                 @Index(name = "idx_authors_name", columnList = "name"),
         }
 )
