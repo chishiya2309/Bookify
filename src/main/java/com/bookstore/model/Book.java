@@ -8,7 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "books")
+@Table(
+        name = "books",
+        indexes = {
+                @Index(name = "idx_books_title", columnList = "title"),
+                @Index(name = "idx_books_price", columnList = "price"),
+                @Index(name = "idx_books_category_price", columnList = "category_id, price"),
+                @Index(name = "idx_books_publisher", columnList = "publisher_id"),
+                @Index(name = "idx_books_last_updated", columnList = "last_updated DESC"),
+                @Index(name = "idx_books_publish_date", columnList = "publish_date DESC"),
+                @Index(name = "idx_books_in_stock", columnList = "quantity_in_stock")
+        }
+)
 public class Book implements Serializable {
     
     @Id
@@ -22,7 +33,7 @@ public class Book implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @Column(length = 20, unique = true)
+    @Column(length = 20, unique = true, nullable = false)
     private String isbn;
     
     @Column(nullable = false, precision = 10, scale = 2)
@@ -34,8 +45,8 @@ public class Book implements Serializable {
     @Column(name = "publish_date")
     private LocalDate publishDate;
     
-    @Column(name = "last_updated")
-    private LocalDate lastUpdated;
+    @Column(name = "last_updated", nullable = false)
+    private LocalDate lastUpdated = LocalDate.now();
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -53,10 +64,10 @@ public class Book implements Serializable {
     )
     private List<Author> authors = new ArrayList<>();
     
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BookImage> images = new ArrayList<>();
     
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Review> reviews = new ArrayList<>();
     
     // Constructors
