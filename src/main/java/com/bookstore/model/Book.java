@@ -17,8 +17,7 @@ import java.util.List;
                 @Index(name = "idx_books_publisher", columnList = "publisher_id"),
                 @Index(name = "idx_books_last_updated", columnList = "last_updated DESC"),
                 @Index(name = "idx_books_publish_date", columnList = "publish_date DESC"),
-                @Index(name = "idx_books_in_stock", columnList = "quantity_in_stock"),
-                @Index(name = "uk_books_isbn", columnList = "isbn", unique = true)
+                @Index(name = "idx_books_in_stock", columnList = "quantity_in_stock")
         }
 )
 public class Book implements Serializable {
