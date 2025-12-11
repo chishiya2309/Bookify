@@ -1,0 +1,268 @@
+/*  1. KHAI BÁO BIẾN MÀU (COLOR PALETTE)  */
+:root {
+    /* Màu thương hiệu */
+    --color-primary: #0D6EFD;   /* Xanh dương (Logo, Nút chính, Link hover) */
+    --color-secondary: #6C757D; /* Xám (Viền, Chữ phụ) */
+    --color-accent: #FF9900;    /* Cam (Giỏ hàng, Điểm nhấn) */
+    
+    /* Màu nền */
+    --bg-body: #F8F9FA;         /* Nền chung toàn trang (hơi xám) */
+    --bg-white: #FFFFFF;        /* Nền trắng (Header, Box) */
+    
+    /* Màu chữ */
+    --text-main: #212529;       /* Đen đậm (Chữ chính) */
+    --text-light: #6C757D;      /* Xám nhạt (Footer, text phụ) */
+}
+
+/* 
+   2. CẤU HÌNH CHUNG (GLOBAL)
+   ========================================= */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-body); /* Áp dụng nền xám nhẹ */
+    color: var(--text-main);          /* Áp dụng màu chữ chính */
+}
+
+a {
+    text-decoration: none;
+    color: var(--text-main);
+    transition: color 0.2s ease; /* Hiệu ứng chuyển màu mượt */
+}
+
+a:hover {
+    color: var(--color-primary); /* Hover ra màu xanh thương hiệu */
+    text-decoration: underline;
+}
+
+/* =========================================
+   3. ADMIN HEADER & FOOTER
+   ========================================= */
+.admin-header {
+    text-align: center;
+    padding: 30px 0 20px 0;
+    background-color: var(--bg-white);
+    border-bottom: 1px solid #dee2e6; /* Màu kẻ nhạt hơn chút cho tinh tế */
+}
+
+/* Logo Admin */
+.admin-logo h1 {
+    margin: 0;
+    font-size: 24px;
+    font-style: italic;
+    font-weight: bold;
+    color: var(--color-primary); /* Logo màu Xanh thương hiệu */
+    text-transform: uppercase;
+}
+
+/* Welcome Admin */
+.admin-welcome {
+    font-size: 16px;
+    margin: 15px 0 25px 0;
+    color: var(--text-main);
+}
+
+.admin-welcome .email {
+    font-weight: bold;
+    color: var(--color-primary); 
+}
+
+.logout-btn {
+    margin-left: 15px;
+    text-decoration: underline;
+    color: var(--color-secondary); /* Nút logout màu xám cho đỡ gắt */
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    color: var(--color-error, #DC3545); /* Hover logout ra màu đỏ (nếu muốn) hoặc đen */
+}
+
+/* Menu Ngang Admin */
+.admin-menu {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding-bottom: 10px;
+}
+
+.admin-menu a {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-main);
+    padding-bottom: 5px;
+}
+
+.admin-menu a:hover {
+    color: var(--color-primary);
+}
+
+/* Footer Box (Admin) */
+.footer-box {
+    display: inline-block;
+    border: 2px solid var(--color-secondary);
+    padding: 15px 80px;
+    color: var(--text-main);
+    font-size: 14px;
+    background-color: var(--bg-white);
+}
+
+/* =========================================
+   4. CUSTOMER & VISITOR HEADER (CHUNG)
+   ========================================= */
+.header-container {
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+    background: var(--bg-white); /* Nền trắng */
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Layout phần trên: Logo - Search - User */
+.header-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Logo chung */
+.logo, .logo-box {
+    /* Gom chung style cho cả 2 loại logo cũ và mới của bạn */
+    flex-basis: 100%;
+    margin-bottom: 20px;
+    font-size: 32px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--color-primary); /* Logo màu Xanh */
+    
+    /* Nếu là logo-box (có khung) thì thêm viền */
+    border: none; /* Xóa viền đen cũ */
+    padding: 0;
+}
+
+/* Thanh tìm kiếm */
+.search-bar {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.search-bar input, .search-input {
+    background-color: var(--bg-body); /* Nền ô input xám nhạt */
+    border: 1px solid var(--color-secondary);
+    padding: 8px 12px;
+    width: 300px;
+    outline: none;
+    border-radius: 4px;
+    color: var(--text-main);
+}
+
+.search-bar button, .search-btn {
+    background-color: var(--color-primary); /* Nút tìm kiếm màu Xanh */
+    color: var(--bg-white); /* Chữ trắng */
+    border: 1px solid var(--color-primary);
+    padding: 8px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 5px;
+    border-radius: 4px;
+    transition: opacity 0.2s;
+}
+
+.search-bar button:hover, .search-btn:hover {
+    opacity: 0.9; /* Làm mờ nhẹ khi hover */
+}
+
+/* User Links (Welcome, Cart...) */
+.user-links, .auth-links {
+    display: inline-block;
+    font-size: 14px;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.user-links strong {
+    font-weight: bold;
+    color: var(--color-primary); /* Tên user màu xanh */
+    text-decoration: none;
+}
+
+.user-links a, .auth-links a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: bold;
+    margin: 0 8px;
+}
+
+.user-links a:hover, .auth-links a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+/* Nút giỏ hàng (Cart) nổi bật màu Cam */
+a[href*="cart"], a[href*="Cart"] {
+    color: var(--color-accent) !important;
+}
+
+/* Danh mục (Categories) */
+.category-bar, .categories {
+    margin-top: 15px;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+    border-top: 1px solid #eee; /* Kẻ mờ thay vì khung bao */
+    
+    /* Reset lại style cũ của bạn */
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0;
+    display: block;
+}
+
+.category-bar a, .categories a {
+    text-decoration: none;
+    font-weight: bold;
+    color: var(--text-main);
+    margin: 0 15px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.category-bar a:hover, .categories a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+/* =========================================
+   5. FOOTER CHUNG (CUSTOMER & VISITOR)
+   ========================================= */
+.footer-container, .site-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 30px 0;
+    width: 100%;
+    background-color: var(--bg-white);
+    border-top: 1px solid var(--color-secondary); /* Viền trên màu xám */
+    color: var(--text-light); /* Chữ màu xám nhạt */
+}
+
+.footer-links {
+    margin-top: 15px;
+}
+
+.footer-links a {
+    margin: 0 12px;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--text-light); /* Link footer màu xám */
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: var(--color-primary); /* Hover ra màu xanh */
+    text-decoration: underline;
+}
