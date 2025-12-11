@@ -47,7 +47,7 @@ public class Book implements Serializable {
     private LocalDate publishDate;
     
     @Column(name = "last_updated", nullable = false)
-    private LocalDate lastUpdated = LocalDate.now();
+    private LocalDate lastUpdated;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -73,13 +73,11 @@ public class Book implements Serializable {
     
     // Constructors
     public Book() {
-        this.lastUpdated = LocalDate.now();
     }
     
     public Book(String title, BigDecimal price) {
         this.title = title;
         this.price = price;
-        this.lastUpdated = LocalDate.now();
     }
     
     // Getters and Setters
@@ -217,6 +215,11 @@ public class Book implements Serializable {
             image.setBook(this);
             images.add(image);
         }
+    }
+    
+    @PrePersist
+    public void prePersist() {
+        this.lastUpdated = LocalDate.now();
     }
     
     @PreUpdate
