@@ -115,11 +115,11 @@ INSERT INTO authors (name, biography, photo_url) VALUES
 -- USERS - ADMINS (5 admins)
 -- =====================================================
 INSERT INTO users (email, password, full_name, user_type) VALUES
-('admin@bookify.vn', '$2a$10$N9qo8uLOickgx2ZMRZoMye', 'Admin Hệ Thống', 'ADMIN'),
-('manager@bookify.vn', '$2a$10$N9qo8uLOickgx2ZMRZoMye', 'Quản Lý Cửa Hàng', 'ADMIN'),
-('warehouse@bookify.vn', '$2a$10$N9qo8uLOickgx2ZMRZoMye', 'Quản Lý Kho', 'ADMIN'),
-('support@bookify.vn', '$2a$10$N9qo8uLOickgx2ZMRZoMye', 'Hỗ Trợ Khách Hàng', 'ADMIN'),
-('marketing@bookify.vn', '$2a$10$N9qo8uLOickgx2ZMRZoMye', 'Marketing Manager', 'ADMIN');
+('admin@bookify.vn', '$2a$12$RcFtv5.ihBYr2Wjl3ZRL7uPD/Hb0VaEBKJcIbq8jtclsw3hRX7lFS', 'Admin Hệ Thống', 'ADMIN'),
+('manager@bookify.vn', '$2a$12$h2iZITh5h3l/ZuinJvNuRuEUGtJl6HM3bL6o2Sydu74VIHf0dsWoy', 'Quản Lý Cửa Hàng', 'ADMIN'),
+('warehouse@bookify.vn', '$2a$12$qP6CP42zi2XPmcHNAKeRtOnGbalD56U.m06uMX4KGINjUn3U.cNkq', 'Quản Lý Kho', 'ADMIN'),
+('support@bookify.vn', '$2a$12$F5A1nZ2iTIoDmMo0NQqcaeFEGtBSqcPl.dVab6.JqLdYFjO6OQpui', 'Hỗ Trợ Khách Hàng', 'ADMIN'),
+('marketing@bookify.vn', '$2a$12$1odIGjqJFsCSRLrU9kkreOGFjfufGlVK3wsf9SvP/U5vciaO3/hPq', 'Marketing Manager', 'ADMIN');
 
 -- Insert admin records
 INSERT INTO admins (user_id) VALUES (1), (2), (3), (4), (5);
