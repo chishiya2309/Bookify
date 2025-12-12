@@ -1,14 +1,44 @@
 package com.bookstore.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 @Entity
-@Table(name = "orders")
+@Table(
+        name = "orders",
+        indexes = {
+                // Lấy tất cả đơn hàng của 1 customer
+                @Index(name = "idx_orders_customer_id", columnList = "customer_id"),
+                // Lọc đơn hàng theo trạng thái (PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+                @Index(name = "idx_orders_status", columnList = "order_status"),
+                // Lọc đơn theo trạng thái thanh toán (UNPAID, PAID, REFUNDED)
+                @Index(name = "idx_orders_payment_status", columnList = "payment_status"),
+                // Lọc đơn theo ngày đặt (báo cáo doanh thu theo thời gian)
+                @Index(name = "idx_orders_date", columnList = "order_date DESC"),
+                // Composite: Customer + Date (lịch sử đơn hàng của khách)
+                @Index(name = "idx_orders_customer_date", columnList = "customer_id, order_date DESC"),
+                // Composite: Status + Date (đơn hàng cần xử lý)
+                @Index(name = "idx_orders_status_date", columnList = "order_status, order_date DESC"),
+                // Composite: Payment Status + Date (theo dõi thanh toán)
+                @Index(name = "idx_orders_payment_date", columnList = "payment_status, order_date DESC"),
+                // Tổng tiền đơn hàng (phân tích, báo cáo)
+                @Index(name = "idx_orders_total_amount", columnList = "total_amount DESC"),
+                // Địa chỉ giao hàng (thống kê vùng địa lý)
+                @Index(name = "idx_orders_shipping_address", columnList = "shipping_address_id"),
+                // Phương thức thanh toán (phân tích)
+                @Index(name = "idx_orders_payment_method", columnList = "payment_method"),
+                // Thời gian tạo đơn (audit, tracking)
+                @Index(name = "idx_orders_created_at", columnList = "created_at DESC")
+        }
+)
 public class Order implements Serializable {
     
     @Id
@@ -16,46 +46,62 @@ public class Order implements Serializable {
     @Column(name = "order_id")
     private Integer orderId;
     
+    @NotNull(message = "Ngày đặt hàng không được để trống")
     @Column(name = "order_date", nullable = false)
-    private LocalDate orderDate;
+    private LocalDateTime orderDate = LocalDateTime.now();
     
-    @Column(name = "order_status", nullable = false, length = 50)
-    private String orderStatus = "PENDING";
+    @Enumerated(EnumType.STRING) 
+    @Column(name = "order_status", nullable = false, length = 20)
+    private OrderStatus orderStatus = OrderStatus.PENDING;
     
-    @Column(name = "payment_status", length = 50)
-    private String paymentStatus = "UNPAID";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 50, nullable = false)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
     
+    @NotNull(message = "Tổng tiền không được để trống")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Tổng tiền phải lớn hơn 0")
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
     
+    @Size(max = 50, message = "Phương thức thanh toán tối đa 50 ký tự")
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
     
+    @Size(max = 100, message = "Tên người nhận tối đa 100 ký tự")
     @Column(name = "recipient_name", length = 100)
     private String recipientName;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @NotNull(message = "Đơn hàng phải có địa chỉ giao hàng")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "shipping_address_id", nullable = false)
     private Address shippingAddress;
     
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderDetail> orderDetails = new ArrayList<>();
     
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;
     
+    public enum OrderStatus {
+        PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+    }
+    
+    public enum PaymentStatus {
+        UNPAID, PAID, REFUNDED
+    }
+    
     public Order() {
-        this.orderDate = LocalDate.now();
+        this.orderDate = LocalDateTime.now();
     }
     
     public Order(Customer customer, Address shippingAddress) {
         this.customer = customer;
         this.shippingAddress = shippingAddress;
-        this.orderDate = LocalDate.now();
+        this.orderDate = LocalDateTime.now();
     }
     
     public Integer getOrderId() {
@@ -66,27 +112,27 @@ public class Order implements Serializable {
         this.orderId = orderId;
     }
     
-    public LocalDate getOrderDate() {
+    public LocalDateTime getOrderDate() {
         return orderDate;
     }
     
-    public void setOrderDate(LocalDate orderDate) {
+    public void setOrderDate(LocalDateTime orderDate) {
         this.orderDate = orderDate;
     }
     
-    public String getOrderStatus() {
+    public OrderStatus getOrderStatus() {
         return orderStatus;
     }
     
-    public void setOrderStatus(String orderStatus) {
+    public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
     
-    public String getPaymentStatus() {
+    public PaymentStatus getPaymentStatus() {
         return paymentStatus;
     }
     
-    public void setPaymentStatus(String paymentStatus) {
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
     
