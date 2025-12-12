@@ -6,10 +6,10 @@
             <!-- JDBC -->
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:postgresql://pg-86c5d38-lequanghung-400.g.aivencloud.com:23856/bookify?ssl=require"/>
+                      value="jdbc:postgresql://pg-33ceb7ed-truongconganh5575-46a6.c.aivencloud.com:24419/bookify?ssl=require"/>
 
             <property name="jakarta.persistence.jdbc.user" value="avnadmin"/>
-            <property name="jakarta.persistence.jdbc.password" value="AVNS_0WAsdbTz6Tp-HGUKKSc"/>
+            <property name="jakarta.persistence.jdbc.password" value="AVNS_P9cuvrjj5FqgxBqfBEx"/>
 
             <!-- Hibernate -->
             <property name="hibernate.hbm2ddl.auto" value="update"/>
