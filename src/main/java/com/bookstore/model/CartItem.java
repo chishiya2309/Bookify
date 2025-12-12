@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Table(
     name = "cart_items",
     indexes = {
-        @Index(name = "idx_cart_items_book_id", columnList = "book_id") 
+        @Index(name = "idx_cart_items_cart_id", columnList = "cart_id")
     },
     uniqueConstraints = {
         @UniqueConstraint(
