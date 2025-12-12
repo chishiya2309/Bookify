@@ -24,7 +24,7 @@ public class BookImage implements Serializable {
     @NotBlank(message = "URL ảnh không được để trống")
     @Size(max = 500, message = "URL ảnh tối đa 500 ký tự")
     @Pattern(
-            regexp = "https?://.+", 
+            regexp = "^$|^(?i)https?://.+", 
             message = "URL ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)",
             flags = Pattern.Flag.CASE_INSENSITIVE
     )
