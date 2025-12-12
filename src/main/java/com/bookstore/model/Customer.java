@@ -1,43 +1,65 @@
 package com.bookstore.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "customers")
+@Table(
+        name = "customers",
+        indexes = {
+                // Tìm customer theo số điện thoại (hỗ trợ, tra cứu đơn hàng)
+                @Index(name = "idx_customers_phone", columnList = "phone_number"),
+
+                // Lọc customer theo ngày đăng ký (analytics, marketing campaigns)
+                @Index(name = "idx_customers_register_date", columnList = "register_date DESC"),
+
+                // Tìm customer theo user_id (kế thừa từ User)
+                @Index(name = "idx_customers_user_id", columnList = "user_id")
+        }
+)
 @DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
     
-    @Column(name = "phone_number", length = 20)
+    @NotBlank(message = "Số điện thoại không được để trống")
+    @Pattern(
+        regexp = "^(\\+84|0)[0-9]{9}$",
+        message = "Số điện thoại không hợp lệ. Vui lòng sử dụng 10 số (VD: 0912345678)"
+    )
+    @Size(min = 10, max = 20, message = "Độ dài số điện thoại phải từ 10 đến 20 ký tự")
+    @Column(name = "phone_number", length = 20, nullable = false)
     private String phoneNumber;
     
-    @Column(name = "register_date")
-    private LocalDate registerDate;
+    @Column(name = "register_date", nullable = false)
+    private LocalDateTime registerDate = LocalDateTime.now();
     
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Address> addresses = new ArrayList<>();
     
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
     
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Review> reviews = new ArrayList<>();
     
-    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private ShoppingCart shoppingCart;
     
     // Constructors
     public Customer() {
         super();
-        this.registerDate = LocalDate.now();
+        this.registerDate = LocalDateTime.now();
     }
     
     public Customer(String email, String password, String fullName, String phoneNumber) {
         super(email, password, fullName);
         this.phoneNumber = phoneNumber;
-        this.registerDate = LocalDate.now();
+        this.registerDate = LocalDateTime.now();
     }
     
     public String getPhoneNumber() {
@@ -48,11 +70,11 @@ public class Customer extends User {
         this.phoneNumber = phoneNumber;
     }
     
-    public LocalDate getRegisterDate() {
+    public LocalDateTime getRegisterDate() {
         return registerDate;
     }
     
-    public void setRegisterDate(LocalDate registerDate) {
+    public void setRegisterDate(LocalDateTime registerDate) {
         this.registerDate = registerDate;
     }
     
@@ -86,53 +108,5 @@ public class Customer extends User {
     
     public void setShoppingCart(ShoppingCart shoppingCart) {
         this.shoppingCart = shoppingCart;
-    }
-    
-    public boolean login() {
-        return true;
-    }
-    
-    public void logout() {
-        // Implementation
-    }
-    
-    // Business methods
-    public void register() {
-        this.registerDate = LocalDate.now();
-    }
-    
-    public void updateProfile() {
-        // Update profile logic
-    }
-    
-    public void addAddress(Address address) {
-        addresses.add(address);
-        address.setCustomer(this);
-    }
-    
-    public void removeAddress(Integer addressId) {
-        addresses.removeIf(addr -> addr.getAddressId().equals(addressId));
-    }
-    
-    public List<Book> searchBook(String keyword) {
-        // Search book logic
-        return new ArrayList<>();
-    }
-    
-    public void addToCart(Book book, int quantity) {
-        // Add to cart logic
-    }
-    
-    public Order placeOrder() {
-        // Place order logic
-        return new Order();
-    }
-    
-    public List<Order> viewOrderHistory() {
-        return orders;
-    }
-    
-    public void writeReview(Book book, int rating, String comment) {
-        // Write review logic
     }
 }
