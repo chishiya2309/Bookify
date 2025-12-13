@@ -72,7 +72,7 @@
 <%--    </c:if>--%>
 
     <label>Price:</label>
-    <input type="number" name="price" value="${book.price}" step="0.01" style="width: 100px;"> USD
+    <input type="number" name="price" value="${book.price}" step="0.01" style="width: 100px;"> $
     <br>
 
     <label>Description:</label>

@@ -72,12 +72,12 @@ public class Payment implements Serializable {
     @Size(max = 100, message = "Transaction ID tối đa 100 ký tự")
     @Column(name = "transaction_id", unique = true, length = 100)
     private String transactionId;
-    
+    @Enumerated(EnumType.STRING) // <--- THÊM DÒNG NÀY
     @NotBlank(message = "Phương thức thanh toán không được để trống")
     @Size(max = 50, message = "Phương thức thanh toán tối đa 50 ký tự")
     @Column(nullable = false, length = 50)
     private PaymentMethod method;
-    
+    @Enumerated(EnumType.STRING) // <--- THÊM DÒNG NÀY
     @NotBlank(message = "Trạng thái thanh toán không được để trống")
     @Size(max = 50, message = "Trạng thái thanh toán tối đa 50 ký tự")
     @Column(nullable = false, length = 50)
