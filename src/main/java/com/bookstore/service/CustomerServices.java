@@ -1,16 +1,22 @@
 package com.bookstore.service;
 
-public class CustomerServices extends UserServices {
+import com.bookstore.dao.CustomerHomePageDAO;
+import com.bookstore.model.Book;
+import java.util.List;
 
-    @Override
-    public boolean login() {
-        // code xử lý login cho Customer
-        return true;
+public class CustomerServices {
+
+
+    public List<Book> listNewBooks() {
+        return CustomerHomePageDAO.listNewBooks();
     }
 
-    @Override
-    public void logout() {
-        // code xử lý logout cho Customer
+    public List<Book> listBestSellingBooks() {
+        return CustomerHomePageDAO.listBestSellingBooks();
     }
+
+    public List<Book> listMostFavoredBooks() {
+        return CustomerHomePageDAO.listMostFavoredBooks();
+    }
+    
 }
-

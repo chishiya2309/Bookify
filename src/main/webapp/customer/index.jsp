@@ -7,7 +7,7 @@
 </head>
 <body>
 
-<%@ include file="/common/header_sign_in.jsp" %>
+<%@ include file="/common/header_customer.jsp" %>
 
 <h1>Hello World!</h1>
 
