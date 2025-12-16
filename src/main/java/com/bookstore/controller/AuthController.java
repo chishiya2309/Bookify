@@ -68,7 +68,7 @@ public class AuthController extends HttpServlet {
             throws IOException {
         
         EntityManager em = emf.createEntityManager();
-        String email = null;
+        String email = "unknown";
         
         try {
             email = request.getParameter("email");
@@ -138,7 +138,7 @@ public class AuthController extends HttpServlet {
         throws IOException {
     
     EntityManager em = emf.createEntityManager();
-    String email = null;
+    String email = "unknown";
     
     try {
         // Get parameters
