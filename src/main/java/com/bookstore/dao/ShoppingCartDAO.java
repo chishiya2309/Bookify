@@ -66,6 +66,8 @@ public class ShoppingCartDAO {
                 Customer managedCustomer = em.find(Customer.class, cart.getCustomer().getUserId());
                 if (managedCustomer != null) {
                     cart.setCustomer(managedCustomer);
+                } else {
+                    throw new IllegalArgumentException("Customer with ID " + cart.getCustomer().getUserId() + " does not exist.");
                 }
             }
             
