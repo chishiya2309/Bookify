@@ -91,7 +91,7 @@ public class AuthController extends HttpServlet {
             
             // Check for SQL injection patterns
             if (ValidationUtil.containsSqlInjection(email) || ValidationUtil.containsSqlInjection(password)) {
-                logger.warn("Potential SQL injection attempt detected for email: {}", email);
+                logger.warn("Potential SQL injection attempt detected during login");
                 sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
                     createErrorResponse("Dữ liệu đầu vào không hợp lệ"));
                 return;
@@ -195,7 +195,7 @@ public class AuthController extends HttpServlet {
         // Check for SQL injection patterns
         if (ValidationUtil.containsSqlInjection(email) || ValidationUtil.containsSqlInjection(password) ||
             ValidationUtil.containsSqlInjection(fullName) || ValidationUtil.containsSqlInjection(phoneNumber)) {
-            logger.warn("Potential SQL injection attempt detected during registration for email: {}", email);
+            logger.warn("Potential SQL injection attempt detected during registration");
             sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                 createErrorResponse("Dữ liệu đầu vào không hợp lệ"));
             return;
