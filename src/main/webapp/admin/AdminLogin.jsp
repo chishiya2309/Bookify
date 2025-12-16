@@ -89,8 +89,9 @@
             var appContextPath = contextPath || '';
             
             // Must start with context path or be root
-            // Allow root path and paths under context path
-            if (url !== '/' && !url.startsWith(appContextPath + '/')) {
+            // When contextPath is empty, any URL starting with '/' is allowed
+            // When contextPath is set, URL must be root or start with contextPath
+            if (appContextPath && url !== '/' && !url.startsWith(appContextPath + '/')) {
                 return false;
             }
             
