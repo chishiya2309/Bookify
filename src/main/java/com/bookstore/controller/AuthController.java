@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import com.bookstore.service.JwtUtil;
 import com.bookstore.service.ValidationUtil;
+import com.bookstore.service.AppConfig;
 import com.bookstore.dao.UserRepository;
 import com.bookstore.model.User;
 import com.bookstore.model.Customer;
@@ -283,7 +284,7 @@ public class AuthController extends HttpServlet {
     private void setCookie(HttpServletResponse response, String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set true in production with HTTPS
+        cookie.setSecure(AppConfig.isSecureCookiesEnabled());
         cookie.setPath("/");
         cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
