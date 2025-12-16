@@ -85,8 +85,12 @@
                 return false;
             }
             
+            // Ensure contextPath is defined and handle edge cases
+            var appContextPath = contextPath || '';
+            
             // Must start with context path or be root
-            if (!url.startsWith(contextPath + '/') && url !== '/') {
+            // Allow root path and paths under context path
+            if (url !== '/' && !url.startsWith(appContextPath + '/')) {
                 return false;
             }
             
