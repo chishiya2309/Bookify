@@ -241,7 +241,7 @@ public class ShoppingCartServices {
         }
         
         public void addLimitedItem(String bookTitle, int requestedQty, int availableQty) {
-            limitedItems.add(String.format("'%s': Đã giới hạn đến %d cuốn (theo yêu cầu là %d, không đủ số lượng hàng trong kho)", bookTitle, availableQty, requestedQty));
+            limitedItems.add(String.format("'%s': đã giới hạn đến %d cuốn (theo yêu cầu là %d, không đủ số lượng hàng trong kho)", bookTitle, availableQty, requestedQty));
         }
         
         public boolean hasWarnings() {
