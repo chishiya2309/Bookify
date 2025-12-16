@@ -57,9 +57,11 @@ public class JwtFilter implements Filter {
         String token = extractToken(httpRequest);
         
         if (token != null && JwtUtil.validateToken(token)) {
-            // Token hợp lệ, lấy username và set vào request
+            // Token hợp lệ, lấy username và role và set vào request
             String username = JwtUtil.extractUsername(token);
+            String role = JwtUtil.extractRole(token);
             httpRequest.setAttribute("username", username);
+            httpRequest.setAttribute("userRole", role);
             chain.doFilter(request, response);
         } else {
             // Token không hợp lệ hoặc không tồn tại

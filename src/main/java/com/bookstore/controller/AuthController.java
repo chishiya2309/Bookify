@@ -99,8 +99,18 @@ public class AuthController extends HttpServlet {
                 return;
             }
             
-            // Generate JWT token (NO REFRESH TOKEN)
-            String accessToken = JwtUtil.generateToken(email);
+            // Determine user role
+            String role;
+            if (user instanceof Admin) {
+                role = "ADMIN";
+            } else if (user instanceof Customer) {
+                role = "CUSTOMER";
+            } else {
+                role = "USER";
+            }
+            
+            // Generate JWT token with role (NO REFRESH TOKEN)
+            String accessToken = JwtUtil.generateToken(email, role);
             
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
