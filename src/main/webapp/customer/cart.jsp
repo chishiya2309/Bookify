@@ -641,16 +641,16 @@
                                         <td data-label="">
                                             <figure class="book-info">
                                                 <img src="${not empty book.primaryImageUrl ? book.primaryImageUrl : pageContext.request.contextPath.concat('/images/no-image.jpg')}" 
-                                                     alt="${book.title}"
+                                                     alt="<c:out value='${book.title}'/>"
                                                      onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/no-image.jpg';">
                                                 <div>
-                                                    <figcaption>${book.title}</figcaption>
+                                                    <figcaption><c:out value="${book.title}"/></figcaption>
                                                     <div class="book-meta">
                                                         <c:if test="${not empty book.authors}">
                                                             <div>
                                                                 <i class="fas fa-user-edit"></i>
                                                                 <c:forEach var="author" items="${book.authors}" varStatus="authorStatus">
-                                                                    ${author.name}<c:if test="${!authorStatus.last}">, </c:if>
+                                                                    <c:out value="${author.name}"/><c:if test="${!authorStatus.last}">, </c:if>
                                                                 </c:forEach>
                                                             </div>
                                                         </c:if>
