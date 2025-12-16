@@ -7,10 +7,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
-    <jsp:include page="/common/header_admin.jsp"></jsp:include>
+    <jsp:include page="/admin/header_admin.jsp"></jsp:include>
 
     <div align="center" class="container">
         <h2 class="page-title">Administrative Dashboard</h2>
@@ -103,6 +103,6 @@
         </div>
     </div>
 
-    <jsp:include page="/common/footer_admin.jsp"></jsp:include>
+    <jsp:include page="/admin/footer_admin.jsp"></jsp:include>
 </body>
 </html>

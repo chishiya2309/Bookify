@@ -1,29 +1,48 @@
 package com.bookstore.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "book_images")
+@Table(
+        name = "book_images",
+        indexes = {
+                @Index(name = "idx_book_images_order", columnList = "book_id, sort_order")
+        }
+)
 public class BookImage implements Serializable {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Integer imageId;
     
+    @NotBlank(message = "URL ảnh không được để trống")
+    @Size(max = 500, message = "URL ảnh tối đa 500 ký tự")
+    @Pattern(
+            regexp = "^$|^(?i)https?://.+", 
+            message = "URL ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)",
+            flags = Pattern.Flag.CASE_INSENSITIVE
+    )
     @Column(nullable = false, length = 500)
     private String url;
     
+    @Size(max = 255, message = "Chú thích ảnh tối đa 255 ký tự")
     @Column(length = 255)
     private String caption;
     
-    @Column(name = "is_primary")
+    @Column(name = "is_primary", nullable = false)
     private Boolean isPrimary = false;
     
-    @Column(name = "sort_order")
+    @Min(value = 0, message = "Thứ tự sắp xếp không được âm")
+    @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
     
+    @NotNull(message = "Ảnh phải thuộc về một cuốn sách")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;

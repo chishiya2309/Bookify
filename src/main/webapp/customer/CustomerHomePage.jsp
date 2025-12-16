@@ -7,10 +7,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Bookify - Online Bookstore</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
-    <jsp:include page="/common/header_sign_in.jsp"></jsp:include>
+    <%-- Hiển thị header phù hợp với trạng thái đăng nhập --%>
+    <c:choose>
+        <c:when test="${isLoggedIn}">
+            <jsp:include page="/customer/header_customer.jsp"></jsp:include>
+        </c:when>
+        <c:otherwise>
+            <jsp:include page="/customer/header_sign_in.jsp"></jsp:include>
+        </c:otherwise>
+    </c:choose>
 
     <div class="container">
         
@@ -22,7 +30,15 @@
                 <c:forEach items="${listNewBooks}" var="book">
                     <div class="book-card">
                         <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">
-                            <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                            <c:choose>
+                                <c:when test="${not empty book.primaryImageUrl}">
+                                    <img class="book-img" src="${book.primaryImageUrl}" alt="${book.title}" 
+                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/book_icon.png';" />
+                                </c:when>
+                                <c:otherwise>
+                                    <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                                </c:otherwise>
+                            </c:choose>
                         </a>
                         
                         <div class="book-title">
@@ -38,7 +54,7 @@
                         <div class="book-rating">★★★★☆</div>
 
                         <div class="book-price">
-                            <fmt:formatNumber value="${book.price}" type="currency" currencySymbol="$"/>
+                            <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫
                         </div>
                     </div>
                 </c:forEach>
@@ -57,7 +73,15 @@
                 <c:forEach items="${listBestSellingBooks}" var="book">
                     <div class="book-card">
                         <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">
-                            <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                            <c:choose>
+                                <c:when test="${not empty book.primaryImageUrl}">
+                                    <img class="book-img" src="${book.primaryImageUrl}" alt="${book.title}" 
+                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/book_icon.png';" />
+                                </c:when>
+                                <c:otherwise>
+                                    <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                                </c:otherwise>
+                            </c:choose>
                         </a>
                         
                         <div class="book-title">
@@ -73,7 +97,7 @@
                         <div class="book-rating">★★★★★</div>
 
                         <div class="book-price">
-                            <fmt:formatNumber value="${book.price}" type="currency" currencySymbol="$"/>
+                            <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫
                         </div>
                     </div>
                 </c:forEach>
@@ -92,17 +116,31 @@
                 <c:forEach items="${listFavoredBooks}" var="book">
                     <div class="book-card">
                         <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">
-                            <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                            <c:choose>
+                                <c:when test="${not empty book.primaryImageUrl}">
+                                    <img class="book-img" src="${book.primaryImageUrl}" alt="${book.title}" 
+                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/book_icon.png';" />
+                                </c:when>
+                                <c:otherwise>
+                                    <img class="book-img" src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+                                </c:otherwise>
+                            </c:choose>
                         </a>
                         
                         <div class="book-title">
                             <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">${book.title}</a>
                         </div>
                         
+                        <div class="book-author">
+                            <c:forEach items="${book.authors}" var="author" varStatus="status">
+                                ${author.name}${!status.last ? ',' : ''}
+                            </c:forEach>
+                        </div>
+                        
                         <div class="book-rating">★★★★★</div>
 
                         <div class="book-price">
-                            <fmt:formatNumber value="${book.price}" type="currency" currencySymbol="$"/>
+                            <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫
                         </div>
                     </div>
                 </c:forEach>
@@ -115,6 +153,6 @@
 
     </div>
 
-    <jsp:include page="/common/footer_customer.jsp"></jsp:include>
+    <jsp:include page="/customer/footer_customer.jsp"></jsp:include>
 </body>
 </html>

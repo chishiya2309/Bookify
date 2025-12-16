@@ -1,0 +1,324 @@
+:root {
+    /* --- Bảng màu quy ước --- */
+    --color-primary: #0D6EFD;
+    --color-secondary: #6C757D;
+    --color-accent: #FF9900;
+    
+    --bg-body: #F8F9FA;
+    --bg-white: #FFFFFF;
+    
+    --text-main: #212529;
+    --text-light: #6C757D;
+    
+    --color-success: #198754;
+    --color-error: #DC3545;
+    
+    /* --- Thông số thiết kế --- */
+    --border-radius: 8px;
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-body);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-main);
+}
+
+.login-wrapper {
+    background-color: var(--bg-white);
+    width: 100%;
+    max-width: 420px;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+    border-top: 5px solid var(--color-primary); 
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h2 {
+    color: var(--color-primary);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.login-header p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 15px;
+    color: var(--text-main);
+    background-color: var(--bg-white);
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    outline: none;
+}
+
+.form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* --- UPDATE: Style cho link Quên mật khẩu --- */
+.forgot-password {
+    display: block;
+    text-align: right; /* Căn phải */
+    margin-bottom: 20px; /* Khoảng cách với nút Login */
+    font-size: 14px;
+}
+
+.forgot-password a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.forgot-password a:hover {
+    color: #0b5ed7; /* Màu đậm hơn khi hover */
+    text-decoration: underline;
+}
+
+/* Nút đăng nhập */
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-login:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--color-error);
+    padding: 12px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.login-footer {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-light);
+}
+/* ... Giữ nguyên các phần cũ ... */
+
+/* --- UPDATE: Style cho dòng Đăng ký ngay --- */
+.register-prompt {
+    text-align: center;
+    margin-top: 20px; /* Cách nút Login ra một khoảng */
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.register-prompt a {
+    color: var(--color-primary);
+    font-weight: 600; /* In đậm link để nổi bật */
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.register-prompt a:hover {
+    color: #0b5ed7;
+    text-decoration: underline;
+}
+
+/* Footer nhỏ bên dưới cùng */
+.login-footer {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-light);
+    border-top: 1px solid #e9ecef; /* Thêm gạch ngang mờ ngăn cách footer */
+    padding-top: 15px;
+}
+
+/* --- UPDATE: Style dành riêng cho trang Đăng ký --- */
+
+/* Class mở rộng độ rộng cho form đăng ký vì nhiều trường thông tin */
+.register-wrapper {
+    max-width: 600px; /* Rộng hơn form login (420px) */
+}
+
+/* Nhóm các nút bấm (Submit & Cancel) nằm ngang */
+.button-group {
+    display: flex;
+    gap: 15px; /* Khoảng cách giữa 2 nút */
+    margin-top: 20px;
+}
+
+/* Nút phụ (Cancel) - Màu xám */
+.btn-secondary {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--bg-white);
+    color: var(--text-light);
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    text-decoration: none; /* Vì nút Cancel thường là thẻ <a> */
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background-color: #e9ecef;
+    color: var(--text-main);
+    border-color: #adb5bd;
+}
+
+/* Layout 2 cột cho các trường ngắn (như Zip Code + Country) */
+/* Sử dụng Grid để chia cột mà không cần div */
+form {
+    display: grid;
+    gap: 0; /* Khoảng cách xử lý bởi margin của form-group */
+}
+
+/* Responsive: Trên màn hình lớn, chia 2 cột cho Address */
+@media (min-width: 500px) {
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    /* Loại bỏ margin bottom của p bên trong grid để khít hơn */
+    .two-col .form-group {
+        margin-bottom: 0; 
+    }
+}
+/* Message styles */
+.message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: none;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.success {
+    color: #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+    border: 1px solid rgba(25, 135, 84, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.message.error {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-success {
+    color: #198754;
+    background-color: rgba(25, 135, 84, 0.1);
+    border: 1px solid rgba(25, 135, 84, 0.2);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Loading spinner */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-login:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Admin color */
+:root {
+    --color-admin: #0D6EFD;
+}
+
+.admin-login .login-wrapper {
+    border-top: 4px solid var(--color-admin);
+}
