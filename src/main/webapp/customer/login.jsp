@@ -77,6 +77,28 @@
         var urlParams = new URLSearchParams(window.location.search);
         var redirectUrl = urlParams.get('redirect');
         
+        // Validate redirectUrl to prevent open redirect vulnerability
+        function isValidRedirectUrl(url) {
+            if (!url) return false;
+            
+            // Must be a relative URL (starts with / but not //)
+            if (!url.startsWith('/') || url.startsWith('//')) {
+                return false;
+            }
+            
+            // Must not contain protocol (http:, https:, javascript:, etc.)
+            if (url.includes(':')) {
+                return false;
+            }
+            
+            // Must start with context path or be root
+            if (!url.startsWith(contextPath + '/') && url !== '/') {
+                return false;
+            }
+            
+            return true;
+        }
+        
         // ✅ Auto-focus password field if email is pre-filled
         window.addEventListener('DOMContentLoaded', function() {
             if (emailInput.value) {
@@ -124,7 +146,7 @@
                         
                         setTimeout(function() {
                             // Redirect về trang trước đó nếu có, không thì về trang chủ
-                            if (redirectUrl) {
+                            if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
                                 window.location.href = redirectUrl;
                             } else {
                                 window.location.href = contextPath + '/';
