@@ -72,14 +72,14 @@ public class Payment implements Serializable {
     @Size(max = 100, message = "Transaction ID tối đa 100 ký tự")
     @Column(name = "transaction_id", unique = true, length = 100)
     private String transactionId;
-    @Enumerated(EnumType.STRING) // <--- THÊM DÒNG NÀY
-    @NotBlank(message = "Phương thức thanh toán không được để trống")
-    @Size(max = 50, message = "Phương thức thanh toán tối đa 50 ký tự")
+    
+    @NotNull(message = "Phương thức thanh toán không được để trống")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private PaymentMethod method;
-    @Enumerated(EnumType.STRING) // <--- THÊM DÒNG NÀY
-    @NotBlank(message = "Trạng thái thanh toán không được để trống")
-    @Size(max = 50, message = "Trạng thái thanh toán tối đa 50 ký tự")
+    
+    @NotNull(message = "Trạng thái thanh toán không được để trống")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private PaymentStatus status = PaymentStatus.PENDING;
     
@@ -131,7 +131,7 @@ public class Payment implements Serializable {
     }
 
     public enum PaymentMethod {
-        COD, CREDIT_CARD, BANK_TRANSFER, SEPAY, MOMO
+        COD, CREDIT_CARD, BANK_TRANSFER, SEPAY, MOMO, VNPAY
     }
 
     public void setPaymentId(Integer paymentId) {
@@ -227,22 +227,19 @@ public class Payment implements Serializable {
         this.order = order;
     }
     
-    @PrePersist // Chạy trước khi INSERT vào database
+    @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now(); // Lúc tạo thì update = create
+        this.updatedAt = LocalDateTime.now();
         if (this.status == null) {
-            this.status = PaymentStatus.PENDING; // Đảm bảo giá trị mặc định
+            this.status = PaymentStatus.PENDING;
         }
     }
 
-    @PreUpdate // Chạy trước khi UPDATE vào database
+    @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-    
-    // Business methods
-    
     
     @Override
     public String toString() {

@@ -34,9 +34,7 @@ import java.util.List;
                 // Địa chỉ giao hàng (thống kê vùng địa lý)
                 @Index(name = "idx_orders_shipping_address", columnList = "shipping_address_id"),
                 // Phương thức thanh toán (phân tích)
-                @Index(name = "idx_orders_payment_method", columnList = "payment_method"),
-                // Thời gian tạo đơn (audit, tracking)
-                @Index(name = "idx_orders_created_at", columnList = "created_at DESC")
+                @Index(name = "idx_orders_payment_method", columnList = "payment_method")
         }
 )
 public class Order implements Serializable {

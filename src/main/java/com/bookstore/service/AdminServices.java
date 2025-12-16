@@ -1,69 +1,38 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.bookstore.service;
 
-import com.bookstore.model.User;
+import com.bookstore.dao.AdminHomePageDAO;
+import com.bookstore.model.Order;
+import com.bookstore.model.Review;
 
-/**
- *
- * @author lequa
- */
-public class AdminServices extends UserServices {
-    @Override
-    public boolean login() {
-        // Implementation for admin login
-        return true;
-    }
+import java.util.List;
+
+public class AdminServices {
     
-    @Override
-    public void logout() {
-        // Implementation for admin logout
+    public long countAllBooks() {
+        return AdminHomePageDAO.countAllBooks();
     }
-    
-    // Business methods (to be implemented in service layer)
-    public void createAdmin(User user) {
-        // Create new admin
+
+    public long countAllUsers() {
+        return AdminHomePageDAO.countAllUsers();
     }
-    
-    public void manageCategory() {
-        // Manage categories
+
+    public long countAllCustomers() {
+        return AdminHomePageDAO.countAllCustomers();
     }
-    
-    public void manageBook() {
-        // Manage books
+
+    public long countAllReviews() {
+        return AdminHomePageDAO.countAllReviews();
     }
-    
-    public void manageUser() {
-        // Manage users
+
+    public long countAllOrders() {
+        return AdminHomePageDAO.countAllOrders();
     }
-    
-    public void manageAuthor() {
-        // Manage authors
+
+    public List<Order> findRecentSales() {
+        return AdminHomePageDAO.findRecentSales();
     }
-    
-    public void managePublisher() {
-        // Manage publishers
-    }
-    
-    public void manageBookImages() {
-        // Manage book images
-    }
-    
-    public void updateOrderStatus(Integer orderId, String status) {
-        // Update order status
-    }
-    
-    public void editOrderItems(Integer orderId, Object items) {
-        // Edit order items
-    }
-    
-    public void deleteReview(Integer reviewId) {
-        // Delete review
-    }
-    
-    public void viewStatistics() {
-        // View statistics
+
+    public List<Review> findRecentReviews() {
+        return AdminHomePageDAO.findRecentReviews();
     }
 }

@@ -4,6 +4,10 @@
         <servlet-name>BookServlet</servlet-name>
         <servlet-class>com.bookstore.controller.admin.BookServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>com.bookstore.controller.RegisterServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>BookServlet</servlet-name>
         <url-pattern>/BookServlet</url-pattern>
@@ -14,6 +18,20 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>admin/book/show.jsp</welcome-file>
+        <welcome-file>customer/CustomerHomePage.jsp</welcome-file>
     </welcome-file-list>
+    
+    <!-- Error Pages Configuration -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/customer/404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/customer/error.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/customer/error.jsp</location>
+    </error-page>
 </web-app>
