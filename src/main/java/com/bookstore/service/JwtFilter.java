@@ -186,7 +186,7 @@ public class JwtFilter implements Filter {
      * Validates that a redirect URL is a safe internal path.
      * Prevents open redirect vulnerabilities by ensuring the URL:
      * - Is a relative URL (starts with / but not //)
-     * - Does not contain a protocol (http:, https:, javascript:, etc.)
+     * - Does not contain a protocol scheme at the beginning
      * - Starts with the application context path or is root
      * 
      * @param url The URL to validate
@@ -203,8 +203,9 @@ public class JwtFilter implements Filter {
             return false;
         }
         
-        // Must not contain protocol (http:, https:, javascript:, etc.)
-        if (url.contains(":")) {
+        // Must not contain protocol scheme at the beginning (http://, https://, javascript:, etc.)
+        // Use a more specific check to avoid rejecting valid URLs with colons in other positions
+        if (url.matches("^[a-zA-Z][a-zA-Z0-9+.-]*:.*")) {
             return false;
         }
         
@@ -212,10 +213,19 @@ public class JwtFilter implements Filter {
         String appContextPath = (contextPath != null) ? contextPath : "";
         
         // Must start with context path or be root
-        // When contextPath is empty, any URL starting with '/' is allowed
-        // When contextPath is set, URL must be root or start with contextPath
-        if (!appContextPath.isEmpty() && !url.equals("/") && !url.startsWith(appContextPath + "/")) {
-            return false;
+        if (!appContextPath.isEmpty()) {
+            // When contextPath is set, URL must be root or start with contextPath
+            if (!url.equals("/") && !url.startsWith(appContextPath + "/")) {
+                return false;
+            }
+        } else {
+            // When contextPath is empty, enforce additional validation
+            // URL must not start with a domain-like pattern to prevent '/external-site.com' attacks
+            // Check for patterns like '/domain.com' or '/subdomain.domain.com'
+            String pathAfterSlash = url.substring(1); // Remove leading /
+            if (pathAfterSlash.matches("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*")) {
+                return false;
+            }
         }
         
         return true;
