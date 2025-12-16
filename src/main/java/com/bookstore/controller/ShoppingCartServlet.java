@@ -228,9 +228,16 @@ public class ShoppingCartServlet extends HttpServlet {
     }
 
     private void addToCart(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String bookIdParam = request.getParameter("bookId");
+        String quantityParam = request.getParameter("quantity");
+        
+        if (bookIdParam == null || quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameters: bookId or quantity");
+        }
+        
         try {
-            Integer bookId = Integer.parseInt(request.getParameter("bookId"));
-            Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+            Integer bookId = Integer.parseInt(bookIdParam);
+            Integer quantity = Integer.parseInt(quantityParam);
             
             cartService.addItemToCart(cart, bookId, quantity);
         } catch (NumberFormatException e) {
@@ -281,8 +288,14 @@ public class ShoppingCartServlet extends HttpServlet {
     }
 
     private void removeItem(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String itemIdParam = request.getParameter("itemId");
+        
+        if (itemIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: itemId");
+        }
+        
         try {
-            Integer itemId = Integer.parseInt(request.getParameter("itemId"));
+            Integer itemId = Integer.parseInt(itemIdParam);
             cartService.removeItemFromCart(cart, itemId);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid itemId parameter", e);
@@ -290,9 +303,16 @@ public class ShoppingCartServlet extends HttpServlet {
     }
 
     private void updateQuantity(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String itemIdParam = request.getParameter("itemId");
+        String quantityParam = request.getParameter("quantity");
+        
+        if (itemIdParam == null || quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameters: itemId or quantity");
+        }
+        
         try {
-            Integer itemId = Integer.parseInt(request.getParameter("itemId"));
-            Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+            Integer itemId = Integer.parseInt(itemIdParam);
+            Integer quantity = Integer.parseInt(quantityParam);
             cartService.updateItemQuantity(cart, itemId, quantity);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid itemId or quantity parameter", e);
