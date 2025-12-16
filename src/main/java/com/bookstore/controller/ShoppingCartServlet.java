@@ -301,7 +301,7 @@ public class ShoppingCartServlet extends HttpServlet {
             Integer itemId = Integer.parseInt(itemIdParam);
             cartService.removeItemFromCart(cart, itemId);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid itemId parameter", e);
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
         }
     }
 
