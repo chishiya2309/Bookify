@@ -218,7 +218,7 @@ public class AuthController extends HttpServlet {
         }
         
         // Validate password strength
-        if (password.length() < 6) {
+        if (!ValidationUtil.isValidPasswordBasic(password)) {
             sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                 createErrorResponse("Mật khẩu phải có ít nhất 6 ký tự"));
             return;

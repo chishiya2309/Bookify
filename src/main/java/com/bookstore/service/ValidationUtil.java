@@ -18,6 +18,12 @@ public class ValidationUtil {
         Pattern.CASE_INSENSITIVE
     );
     
+    // Password validation patterns (pre-compiled for performance)
+    private static final Pattern PASSWORD_UPPERCASE_PATTERN = Pattern.compile(".*[A-Z].*");
+    private static final Pattern PASSWORD_LOWERCASE_PATTERN = Pattern.compile(".*[a-z].*");
+    private static final Pattern PASSWORD_DIGIT_PATTERN = Pattern.compile(".*[0-9].*");
+    private static final Pattern PASSWORD_SPECIAL_PATTERN = Pattern.compile(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*");
+    
     /**
      * Validates email format
      * @param email the email to validate
@@ -62,27 +68,11 @@ public class ValidationUtil {
             return false;
         }
         
-        // Check for at least one uppercase letter
-        if (!password.matches(".*[A-Z].*")) {
-            return false;
-        }
-        
-        // Check for at least one lowercase letter
-        if (!password.matches(".*[a-z].*")) {
-            return false;
-        }
-        
-        // Check for at least one digit
-        if (!password.matches(".*[0-9].*")) {
-            return false;
-        }
-        
-        // Check for at least one special character
-        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
-            return false;
-        }
-        
-        return true;
+        // Use pre-compiled patterns for better performance
+        return PASSWORD_UPPERCASE_PATTERN.matcher(password).matches()
+            && PASSWORD_LOWERCASE_PATTERN.matcher(password).matches()
+            && PASSWORD_DIGIT_PATTERN.matcher(password).matches()
+            && PASSWORD_SPECIAL_PATTERN.matcher(password).matches();
     }
     
     /**
