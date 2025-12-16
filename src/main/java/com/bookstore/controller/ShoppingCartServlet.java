@@ -227,11 +227,25 @@ public class ShoppingCartServlet extends HttpServlet {
         }
     }
 
-    private void addToCart(HttpServletRequest request, ShoppingCart cart) {
-        Integer bookId = Integer.parseInt(request.getParameter("bookId"));
-        Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+    private void addToCart(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String bookIdParam = request.getParameter("bookId");
+        String quantityParam = request.getParameter("quantity");
         
-        cartService.addItemToCart(cart, bookId, quantity);
+        if (bookIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: bookId");
+        }
+        if (quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: quantity");
+        }
+        
+        try {
+            Integer bookId = Integer.parseInt(bookIdParam);
+            Integer quantity = Integer.parseInt(quantityParam);
+            
+            cartService.addItemToCart(cart, bookId, quantity);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -276,14 +290,38 @@ public class ShoppingCartServlet extends HttpServlet {
         System.out.println("[UPDATE CART] Complete! Updated: " + updatedCount + ", Removed: " + removedCount);
     }
 
-    private void removeItem(HttpServletRequest request, ShoppingCart cart) {
-        Integer itemId = Integer.parseInt(request.getParameter("itemId"));
-        cartService.removeItemFromCart(cart, itemId);
+    private void removeItem(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String itemIdParam = request.getParameter("itemId");
+        
+        if (itemIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: itemId");
+        }
+        
+        try {
+            Integer itemId = Integer.parseInt(itemIdParam);
+            cartService.removeItemFromCart(cart, itemId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+        }
     }
 
-    private void updateQuantity(HttpServletRequest request, ShoppingCart cart) {
-        Integer itemId = Integer.parseInt(request.getParameter("itemId"));
-        Integer quantity = Integer.parseInt(request.getParameter("quantity"));
-        cartService.updateItemQuantity(cart, itemId, quantity);
+    private void updateQuantity(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        String itemIdParam = request.getParameter("itemId");
+        String quantityParam = request.getParameter("quantity");
+        
+        if (itemIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: itemId");
+        }
+        if (quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: quantity");
+        }
+        
+        try {
+            Integer itemId = Integer.parseInt(itemIdParam);
+            Integer quantity = Integer.parseInt(quantityParam);
+            cartService.updateItemQuantity(cart, itemId, quantity);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+        }
     }
 }
