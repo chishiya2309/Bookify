@@ -33,7 +33,7 @@
                 <!-- ✅ Pre-fill email from register -->
                 <input type="email" id="email" name="email" class="form-control" 
                        placeholder="khachhang@example.com" 
-                       value="${param.email}" 
+                       value="<c:out value='${param.email}'/>" 
                        required autofocus>
             </p>
             
