@@ -13,6 +13,9 @@ public class JwtUtil {
     // IMPORTANT: Change this in production! Use environment variable
     private static final String SECRET_KEY = "your-very-secure-256-bit-secret-key-change-this-in-production-please-make-it-long-enough";
     
+    // Cached signing key to avoid repeated computation
+    private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    
     // Token validity: 24 hours
     private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
     
@@ -20,8 +23,7 @@ public class JwtUtil {
     private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000;
     
     private static Key getSigningKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+        return SIGNING_KEY;
     }
     
     // Generate token for user (email-based)
