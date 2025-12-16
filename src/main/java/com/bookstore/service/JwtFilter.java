@@ -122,14 +122,20 @@ public class JwtFilter implements Filter {
                 originalUrl += "?" + queryString;
             }
             
-            // Encode URL để truyền qua parameter
-            String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
+            // Validate redirect URL to prevent open redirect vulnerability
+            String contextPath = httpRequest.getContextPath();
+            String redirectParam = "";
+            if (isValidRedirectUrl(originalUrl, contextPath)) {
+                // Only include redirect parameter if URL is valid
+                String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
+                redirectParam = "?redirect=" + encodedUrl;
+            }
             
             // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin, còn lại về Customer Login
             if (path.startsWith("/admin")) {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp?redirect=" + encodedUrl);
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp" + redirectParam);
             } else {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp?redirect=" + encodedUrl);
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp" + redirectParam);
             }
         }
     }
@@ -174,6 +180,45 @@ public class JwtFilter implements Filter {
         }
         
         return null;
+    }
+    
+    /**
+     * Validates that a redirect URL is a safe internal path.
+     * Prevents open redirect vulnerabilities by ensuring the URL:
+     * - Is a relative URL (starts with / but not //)
+     * - Does not contain a protocol (http:, https:, javascript:, etc.)
+     * - Starts with the application context path or is root
+     * 
+     * @param url The URL to validate
+     * @param contextPath The application context path
+     * @return true if the URL is a valid internal redirect, false otherwise
+     */
+    private boolean isValidRedirectUrl(String url, String contextPath) {
+        if (url == null || url.isEmpty()) {
+            return false;
+        }
+        
+        // Must be a relative URL (starts with / but not //)
+        if (!url.startsWith("/") || url.startsWith("//")) {
+            return false;
+        }
+        
+        // Must not contain protocol (http:, https:, javascript:, etc.)
+        if (url.contains(":")) {
+            return false;
+        }
+        
+        // Handle empty context path case
+        String appContextPath = (contextPath != null) ? contextPath : "";
+        
+        // Must start with context path or be root
+        // When contextPath is empty, any URL starting with '/' is allowed
+        // When contextPath is set, URL must be root or start with contextPath
+        if (!appContextPath.isEmpty() && !url.equals("/") && !url.startsWith(appContextPath + "/")) {
+            return false;
+        }
+        
+        return true;
     }
 
     @Override
