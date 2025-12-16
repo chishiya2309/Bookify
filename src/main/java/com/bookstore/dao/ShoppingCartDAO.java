@@ -4,6 +4,7 @@
  */
 package com.bookstore.dao;
 import com.bookstore.model.ShoppingCart;
+import com.bookstore.model.CartItem;
 import jakarta.persistence.EntityManager;
 import com.bookstore.data.DBUtil;
 import com.bookstore.model.Customer;
@@ -24,16 +25,27 @@ public class ShoppingCartDAO {
     public ShoppingCart findByCustomer(Customer customer) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
+            // Lấy cart với items và books
             TypedQuery<ShoppingCart> query = em.createQuery(
-                "SELECT c FROM ShoppingCart c " +
+                "SELECT DISTINCT c FROM ShoppingCart c " +
                 "LEFT JOIN FETCH c.items i " +
-                "LEFT JOIN FETCH i.book " +
+                "LEFT JOIN FETCH i.book b " +
                 "WHERE c.customer.userId = :customerId",
                 ShoppingCart.class
             );
             query.setParameter("customerId", customer.getUserId());
-            return query.getSingleResult();
-        }catch(NoResultException e) {
+            ShoppingCart cart = query.getSingleResult();
+            
+            // Fetch book images và authors (tránh MultipleBagFetchException)
+            if (cart != null && !cart.getItems().isEmpty()) {
+                for (CartItem item : cart.getItems()) {
+                    // Trigger lazy loading trong transaction
+                    item.getBook().getImages().size();
+                    item.getBook().getAuthors().size();
+                }
+            }
+            return cart;
+        } catch(NoResultException e) {
             return null;
         } finally {
             em.close();

@@ -41,10 +41,6 @@ public class ShoppingCartServices {
         return cart;
     }
     
-//    public MergeResult mergeGuestCartToUserCart(ShoppingCart guestCart, Customer customer) {
-//        
-//    }
-    
     public ShoppingCart getOrCreateGuestCart() {
         return new ShoppingCart();
     }
@@ -69,7 +65,7 @@ public class ShoppingCartServices {
             CartItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + quantity);
             cartItemDAO.update(item);
-        }else {
+        } else {
             CartItem newItem = new CartItem(cart, book, quantity);
             cart.getItems().add(newItem);
             cartItemDAO.save(newItem);
@@ -93,6 +89,12 @@ public class ShoppingCartServices {
         item.setQuantity(quantity);
         cartItemDAO.update(item);
         
+        // Sync item trong cart.getItems() với giá trị đã update
+        cart.getItems().stream()
+            .filter(cartItem -> cartItem.getCartItemId().equals(itemId))
+            .findFirst()
+            .ifPresent(cartItem -> cartItem.setQuantity(quantity));
+        
         calculateCartTotals(cart);
         cartDAO.update(cart);
     }
@@ -112,38 +114,31 @@ public class ShoppingCartServices {
     }
     
     public void removeItemFromCart(ShoppingCart cart, Integer itemId) {
-        CartItem item = cartItemDAO.findById(itemId);
-        if (item != null && item.getCart().getCartId().equals(cart.getCartId())) {
-            cart.getItems().remove(item);
-            cartItemDAO.delete(itemId);
+        // Kiểm tra item có tồn tại và thuộc về cart này không
+        boolean itemExists = cart.getItems().stream()
+                .anyMatch(item -> item.getCartItemId().equals(itemId));
+        
+        if (itemExists) {
+            // Sử dụng removeIf với lambda so sánh theo ID thay vì object reference
+            // vì CartItem không override equals()/hashCode()
+            // orphanRemoval = true sẽ tự động xóa item từ DB khi update cart
+            cart.getItems().removeIf(cartItem -> cartItem.getCartItemId().equals(itemId));
             
             calculateCartTotals(cart);
             cartDAO.update(cart);
         }
     }
     
-    public void addItem(Book book, int quantity) {
-        
-    }
-    
-    public void removeItem(Integer cartItemId) {
-        
-    }
-    
-    public void updateQuantity(Integer cartItemId, int newQuantity) {
-        
-    }
-    
+    /**
+     * Xóa tất cả items trong giỏ hàng
+     * orphanRemoval = true sẽ tự động xóa các CartItem từ DB khi update cart
+     */
     public void clearCart(ShoppingCart cart) {
-        cartItemDAO.deleteByCart(cart.getCartId());
+        // Clear collection trước - orphanRemoval sẽ xóa từ DB khi update
         cart.getItems().clear();
         cart.setTotalAmount(BigDecimal.ZERO);
         cart.setTotalItems(0);
         cartDAO.update(cart);
-    }
-    
-    private void calculateTotals() {
-        
     }
     
     public boolean validateCart(ShoppingCart cart) {
@@ -158,6 +153,76 @@ public class ShoppingCartServices {
     public BigDecimal getItemSubtotal(CartItem item) {
         return item.getBook().getPrice()
                 .multiply(BigDecimal.valueOf(item.getQuantity()));
+    }
+    
+    public MergeResult mergeGuestCartToUserCart(ShoppingCart guestCart, Customer customer) {
+        MergeResult result = new MergeResult();
+        
+        // Lấy giỏ hàng của user từ DB
+        ShoppingCart userCart = getCartByCustomer(customer);
+        
+        // Nếu user chưa có giỏ hàng, tạo mới
+        if (userCart == null) {
+            userCart = createCart(customer);
+        }
+        
+        // Nếu giỏ hàng guest rỗng, không cần merge
+        if (guestCart == null || guestCart.getItems().isEmpty()) {
+            result.setMergedCart(userCart);
+            return result;
+        }
+        
+        // Bắt đầu merge
+        for (CartItem guestItem : guestCart.getItems()) {
+            Book book = guestItem.getBook();
+            Integer guestQuantity = guestItem.getQuantity();
+            
+            // Tìm xem sách này đã có trong giỏ hàng user chưa
+            Optional<CartItem> existingItem = userCart.getItems().stream()
+                    .filter(item -> item.getBook().getBookId().equals(book.getBookId()))
+                    .findFirst();
+            
+            if (existingItem.isPresent()) {
+                // TRƯỜNG HỢP 2: Sản phẩm trùng lặp - Cộng dồn số lượng
+                CartItem userItem = existingItem.get();
+                int currentQty = userItem.getQuantity();
+                int requestedQty = currentQty + guestQuantity;
+                int availableStock = book.getQuantityInStock();
+                
+                if (requestedQty <= availableStock) {
+                    // Đủ hàng - cập nhật số lượng mới
+                    userItem.setQuantity(requestedQty);
+                    cartItemDAO.update(userItem);
+                    result.addMergedItem(book.getTitle(), guestQuantity, requestedQty);
+                } else {
+                    // Không đủ hàng - set về mức tối đa
+                    userItem.setQuantity(availableStock);
+                    cartItemDAO.update(userItem);
+                    result.addLimitedItem(book.getTitle(), requestedQty, availableStock);
+                }
+            } else {
+                // TRƯỜNG HỢP 1: Sản phẩm mới - Thêm vào giỏ hàng user
+                if (guestQuantity <= book.getQuantityInStock()) {
+                    CartItem newItem = new CartItem(userCart, book, guestQuantity);
+                    userCart.getItems().add(newItem);
+                    cartItemDAO.save(newItem);
+                    result.addNewItem(book.getTitle(), guestQuantity);
+                } else {
+                    // Số lượng vượt quá tồn kho
+                    CartItem newItem = new CartItem(userCart, book, book.getQuantityInStock());
+                    userCart.getItems().add(newItem);
+                    cartItemDAO.save(newItem);
+                    result.addLimitedItem(book.getTitle(), guestQuantity, book.getQuantityInStock());
+                }
+            }
+        }
+        
+        // Tính toán lại tổng tiền
+        calculateCartTotals(userCart);
+        cartDAO.update(userCart);
+        
+        result.setMergedCart(userCart);
+        return result;
     }
     
     public static class MergeResult {
@@ -178,5 +243,55 @@ public class ShoppingCartServices {
         public void addLimitedItem(String bookTitle, int requestedQty, int availableQty) {
             limitedItems.add(String.format("'%s': Đã giới hạn đến %d cuốn (theo yêu cầu là %d, không đủ số lượng hàng trong kho)", bookTitle, availableQty, requestedQty));
         }
-    }
+        
+        public boolean hasWarnings() {
+            return !limitedItems.isEmpty();
+        }
+        
+        public boolean hasChanges() {
+            return !newItems.isEmpty() || !mergedItems.isEmpty() || !limitedItems.isEmpty();
+        }
+        
+        public String getSummaryMessage() {
+            StringBuilder sb = new StringBuilder();
+            
+            if (!newItems.isEmpty()) {
+                sb.append("<strong>Đã thêm vào quyển sách mới:</strong><br>");
+                newItems.forEach(msg -> sb.append("• ").append(msg).append("<br>"));
+            }
+            
+            if (!mergedItems.isEmpty()) {
+                sb.append("<strong>Đã cập nhật số lượng:</strong><br>");
+                mergedItems.forEach(msg -> sb.append("• ").append(msg).append("<br>"));
+            }
+            
+            if (!limitedItems.isEmpty()) {
+                sb.append("<strong>Giới hạn số lượng trong kho:</strong><br>");
+                limitedItems.forEach(msg -> sb.append("⚠ ").append(msg).append("<br>"));
+            }
+            
+            return sb.toString();
+        }
+        
+        // Getters and Setters
+        public ShoppingCart getMergedCart() {
+            return mergedCart;
+        }
+        
+        public void setMergedCart(ShoppingCart mergedCart) {
+            this.mergedCart = mergedCart;
+        }
+        
+        public List<String> getNewItems() {
+            return newItems;
+        }
+        
+        public List<String> getMergedItems() {
+            return mergedItems;
+        }
+        
+        public List<String> getLimitedItems() {
+            return limitedItems;
+        }
+    }  
 }

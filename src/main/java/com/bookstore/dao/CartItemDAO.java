@@ -6,12 +6,25 @@ package com.bookstore.dao;
 import com.bookstore.model.CartItem;
 import com.bookstore.data.DBUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 
 public class CartItemDAO {
     public CartItem findById(Integer id) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
-            return em.find(CartItem.class, id);
+            // Fetch Book và Cart eagerly để tránh LazyInitializationException
+            TypedQuery<CartItem> query = em.createQuery(
+                "SELECT ci FROM CartItem ci " +
+                "JOIN FETCH ci.book b " +
+                "JOIN FETCH ci.cart c " +
+                "WHERE ci.cartItemId = :id",
+                CartItem.class
+            );
+            query.setParameter("id", id);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
         } finally {
             em.close();
         }
