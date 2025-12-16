@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
     <jsp:include page="/admin/header_admin.jsp"></jsp:include>

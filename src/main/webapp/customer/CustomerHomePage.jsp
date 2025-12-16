@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Bookify - Online Bookstore</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
     <%-- Hiển thị header phù hợp với trạng thái đăng nhập --%>
