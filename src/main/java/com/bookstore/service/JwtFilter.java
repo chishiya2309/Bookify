@@ -204,13 +204,19 @@ public class JwtFilter implements Filter {
         }
         
         // Must not contain protocol scheme at the beginning (http://, https://, javascript:, etc.)
-        // Use a more specific check to avoid rejecting valid URLs with colons in other positions
-        if (url.matches("^[a-zA-Z][a-zA-Z0-9+.-]*:.*")) {
+        // Use a more restrictive pattern to match only valid protocol schemes
+        if (url.matches("^[a-zA-Z][a-zA-Z0-9+]*:.*")) {
             return false;
         }
         
         // Handle empty context path case
         String appContextPath = (contextPath != null) ? contextPath : "";
+        
+        // Validate context path format if not empty
+        if (!appContextPath.isEmpty() && !appContextPath.startsWith("/")) {
+            // Invalid context path format, reject for safety
+            return false;
+        }
         
         // Must start with context path or be root
         if (!appContextPath.isEmpty()) {
@@ -220,10 +226,10 @@ public class JwtFilter implements Filter {
             }
         } else {
             // When contextPath is empty, enforce additional validation
-            // URL must not start with a domain-like pattern to prevent '/external-site.com' attacks
-            // Check for patterns like '/domain.com' or '/subdomain.domain.com'
-            String pathAfterSlash = url.substring(1); // Remove leading /
-            if (pathAfterSlash.matches("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*")) {
+            // URL must not look like an external redirect to a domain
+            // Check for patterns like '//domain.com', '/\domain.com', or '/@domain.com'
+            // which are common bypass techniques for redirect vulnerabilities
+            if (url.matches("^/[\\\\@].*") || url.matches("^/[a-zA-Z0-9-]+\\.[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(?:/.*)?$")) {
                 return false;
             }
         }
