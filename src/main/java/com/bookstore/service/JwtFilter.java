@@ -62,7 +62,35 @@ public class JwtFilter implements Filter {
             String role = JwtUtil.extractRole(token);
             httpRequest.setAttribute("username", username);
             httpRequest.setAttribute("userRole", role);
-            chain.doFilter(request, response);
+
+            // Extract roles from token
+            List<String> roles = JwtUtil.extractRoles(token); // Assumes roles are stored as a claim in the token
+
+            // Determine required role based on path
+            boolean isAdminPath = path.startsWith("/admin");
+            boolean isCustomerPath = path.startsWith("/customer");
+
+            boolean hasAccess = false;
+            if (isAdminPath && roles.contains("ADMIN")) {
+                hasAccess = true;
+            } else if (isCustomerPath && roles.contains("CUSTOMER")) {
+                hasAccess = true;
+            } else if (!isAdminPath && !isCustomerPath) {
+                // For other paths, allow access if user has any role
+                hasAccess = !roles.isEmpty();
+            }
+
+            if (hasAccess) {
+                chain.doFilter(request, response);
+            } else {
+                httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // Optionally, redirect to login or error page
+                if (isAdminPath) {
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
+                } else {
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp");
+                }
+            }
         } else {
             // Token không hợp lệ hoặc không tồn tại
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
