@@ -1,6 +1,7 @@
 package com.bookstore.controller;
 
 import com.bookstore.service.JwtUtil;
+import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.ValidationUtil;
 import com.bookstore.service.AppConfig;
 import com.bookstore.service.ShoppingCartServices;
@@ -333,7 +334,7 @@ public class AuthController extends HttpServlet {
         
         try {
             // Lấy role trước khi xóa token để biết redirect về đâu
-            String token = extractTokenFromRequest(request);
+            String token = JwtAuthHelper.extractJwtToken(request);
             String role = null;
             if (token != null) {
                 role = JwtUtil.extractRole(token);
@@ -367,25 +368,6 @@ public class AuthController extends HttpServlet {
         }
     }
     
-    // Helper method to extract token from request
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        // Check Authorization header
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        
-        // Check cookies
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("jwt_token".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
     
     // Helper methods
     private void setCookie(HttpServletResponse response, String name, String value, int maxAge) {

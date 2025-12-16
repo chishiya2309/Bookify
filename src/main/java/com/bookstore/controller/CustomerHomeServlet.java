@@ -3,11 +3,10 @@ package com.bookstore.controller;
 import com.bookstore.model.Book;
 import com.bookstore.model.Category;
 import com.bookstore.service.CustomerServices;
-import com.bookstore.service.JwtUtil;
+import com.bookstore.service.JwtAuthHelper;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +30,7 @@ public class CustomerHomeServlet extends HttpServlet {
             throws ServletException, IOException {
         
         // 0. Kiểm tra trạng thái đăng nhập từ JWT token
-        checkLoginStatus(request);
+        JwtAuthHelper.checkLoginStatus(request);
         
         // 1. Lấy dữ liệu từ Service
         List<Book> listNewBooks = customerService.listNewBooks();
@@ -53,44 +52,6 @@ public class CustomerHomeServlet extends HttpServlet {
         dispatcher.forward(request, response);
     }
     
-    /**
-     * Kiểm tra JWT token và set thông tin user vào request attribute
-     */
-    private void checkLoginStatus(HttpServletRequest request) {
-        String token = extractToken(request);
-        
-        if (token != null && JwtUtil.validateToken(token)) {
-            try {
-                String email = JwtUtil.extractEmail(token);
-                String role = JwtUtil.extractRole(token);
-                
-                // Set thông tin user vào request để JSP sử dụng
-                request.setAttribute("isLoggedIn", true);
-                request.setAttribute("userEmail", email);
-                request.setAttribute("userRole", role);
-            } catch (Exception e) {
-                // Token không hợp lệ, user chưa đăng nhập
-                request.setAttribute("isLoggedIn", false);
-            }
-        } else {
-            request.setAttribute("isLoggedIn", false);
-        }
-    }
-    
-    /**
-     * Lấy JWT token từ cookie
-     */
-    private String extractToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("jwt_token".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
     
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
