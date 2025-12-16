@@ -533,7 +533,7 @@
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <i class="fas fa-check-circle" style="color: var(--color-success); font-size: 20px;"></i>
                     <span style="font-size: 14px; font-weight: 500; color: var(--color-success); flex: 1;">
-                        ${successMessage}
+                        <c:out value="${successMessage}"/>
                     </span>
                     <button type="button" class="toast-close" onclick="closeToast('successToast')" title="Đóng">
                         <i class="fas fa-times" style="color: var(--color-success);"></i>
@@ -553,7 +553,7 @@
                             Gộp giỏ hàng thành công
                         </h2>
                         <div style="font-size: 14px; color: var(--text-main); line-height: 1.6;">
-                            ${mergeMessage}
+                            <c:out value="${mergeMessage}"/>
                         </div>
                     </section>
                 </div>
