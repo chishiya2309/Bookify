@@ -71,6 +71,33 @@
         var urlParams = new URLSearchParams(window.location.search);
         var redirectUrl = urlParams.get('redirect');
         
+        // Validate redirectUrl to prevent open redirect vulnerability
+        function isValidRedirectUrl(url) {
+            if (!url) return false;
+            
+            // Must be a relative URL (starts with / but not //)
+            if (!url.startsWith('/') || url.startsWith('//')) {
+                return false;
+            }
+            
+            // Must not contain protocol (http:, https:, javascript:, etc.)
+            if (url.includes(':')) {
+                return false;
+            }
+            
+            // Ensure contextPath is defined and handle edge cases
+            var appContextPath = contextPath || '';
+            
+            // Must start with context path or be root
+            // When contextPath is empty, any URL starting with '/' is allowed
+            // When contextPath is set, URL must be root or start with contextPath
+            if (appContextPath && url !== '/' && !url.startsWith(appContextPath + '/')) {
+                return false;
+            }
+            
+            return true;
+        }
+        
         // Bắt sự kiện submit form
         adminLoginForm.addEventListener('submit', function(e) {
             e.preventDefault(); // <--- CHỐT CHẶN: Ngăn reload trang (GET request)
@@ -121,7 +148,7 @@
                         
                         // Chuyển hướng sau 1s - về trang trước đó nếu có
                         setTimeout(function() {
-                            if (redirectUrl) {
+                            if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
                                 window.location.href = redirectUrl;
                             } else {
                                 window.location.href = contextPath + '/admin/dashboard.jsp';
