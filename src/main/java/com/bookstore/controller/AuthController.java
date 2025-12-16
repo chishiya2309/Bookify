@@ -160,11 +160,21 @@ public class AuthController extends HttpServlet {
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
             
-            // Lưu thông tin user vào session
-            HttpSession session = request.getSession();
-            session.setAttribute("userEmail", email);
-            session.setAttribute("userRole", role);
-            session.setAttribute("userName", user.getFullName());
+            // Lưu thông tin user vào session với xử lý race condition
+            // Kiểm tra session hiện tại và invalidate nếu cần để tránh session fixation
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) {
+                // Invalidate old session để tránh session fixation attack
+                oldSession.invalidate();
+            }
+            
+            // Tạo session mới và đồng bộ hóa để tránh race condition
+            HttpSession session = request.getSession(true);
+            synchronized (session) {
+                session.setAttribute("userEmail", email);
+                session.setAttribute("userRole", role);
+                session.setAttribute("userName", user.getFullName());
+            }
             
             // Prepare response
             Map<String, Object> result = new HashMap<>();
@@ -180,8 +190,10 @@ public class AuthController extends HttpServlet {
                 result.put("userType", "CUSTOMER");
                 result.put("phoneNumber", customer.getPhoneNumber());
                 
-                // Lưu Customer vào session để sử dụng cho cart
-                session.setAttribute("customer", customer);
+                // Lưu Customer vào session để sử dụng cho cart với đồng bộ hóa
+                synchronized (session) {
+                    session.setAttribute("customer", customer);
+                }
                 
                 // Merge guest cart với user cart khi đăng nhập
                 ShoppingCartServices cartService = new ShoppingCartServices();
@@ -189,7 +201,9 @@ public class AuthController extends HttpServlet {
                 
             } else if (user instanceof Admin) {
                 result.put("userType", "ADMIN");
-                session.setAttribute("admin", user);
+                synchronized (session) {
+                    session.setAttribute("admin", user);
+                }
             }
             
             sendJsonResponse(response, HttpServletResponse.SC_OK, result);
