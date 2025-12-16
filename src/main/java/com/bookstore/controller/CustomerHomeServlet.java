@@ -47,6 +47,14 @@ public class CustomerHomeServlet extends HttpServlet {
         // 0. Kiểm tra trạng thái đăng nhập từ JWT token
         JwtAuthHelper.checkLoginStatus(request);
         
+        // 0.1. Kiểm tra nếu là ADMIN thì redirect về trang admin
+        String userRole = (String) request.getAttribute("userRole");
+        if ("ADMIN".equals(userRole)) {
+            // Admin không được phép truy cập trang customer
+            response.sendRedirect(request.getContextPath() + "/admin/");
+            return;
+        }
+        
         // 1. Lấy dữ liệu từ Service
         List<Book> listNewBooks = customerService.listNewBooks();
         List<Book> listBestSellingBooks = customerService.listBestSellingBooks();

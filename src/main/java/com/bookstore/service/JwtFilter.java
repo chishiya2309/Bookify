@@ -58,14 +58,24 @@ public class JwtFilter implements Filter {
             return;
         }
         
+        // Lấy token từ header hoặc cookie
+        String token = extractToken(httpRequest);
+        
+        // Kiểm tra nếu là ADMIN cố vào trang customer (ngay cả khi path được exclude)
+        if (token != null && JwtUtil.validateToken(token)) {
+            String role = JwtUtil.extractRole(token);
+            // Nếu là admin và đang vào trang customer hoặc trang chủ, redirect về admin
+            if ("ADMIN".equals(role) && (path.equals("/") || path.startsWith("/customer/"))) {
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/");
+                return;
+            }
+        }
+        
         // Bỏ qua các URL không cần xác thực
         if (shouldExclude(path)) {
             chain.doFilter(request, response);
             return;
         }
-        
-        // Lấy token từ header hoặc cookie
-        String token = extractToken(httpRequest);
         
         if (token != null && JwtUtil.validateToken(token)) {
             // Token hợp lệ, lấy username và role và set vào request

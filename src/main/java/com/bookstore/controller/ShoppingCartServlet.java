@@ -5,6 +5,7 @@ import com.bookstore.service.ShoppingCartServices;
 import com.bookstore.service.ShoppingCartServices.MergeResult;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
+import com.bookstore.service.JwtUtil;
 import com.bookstore.data.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -31,6 +32,17 @@ public class ShoppingCartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra nếu là ADMIN thì redirect về trang admin
+        String token = JwtAuthHelper.extractJwtToken(request);
+        if (token != null && JwtUtil.validateToken(token)) {
+            String role = JwtUtil.extractRole(token);
+            if ("ADMIN".equals(role)) {
+                // Admin không được phép truy cập giỏ hàng customer
+                response.sendRedirect(request.getContextPath() + "/admin/");
+                return;
+            }
+        }
+        
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
         ShoppingCart cart;

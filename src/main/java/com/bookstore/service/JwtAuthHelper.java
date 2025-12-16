@@ -102,6 +102,8 @@ public class JwtAuthHelper {
     /**
      * Check login status from JWT token and set request attributes.
      * Sets isLoggedIn, userEmail, and userRole attributes.
+     * IMPORTANT: Only sets isLoggedIn=true for CUSTOMER role, not ADMIN.
+     * This prevents admin from accessing customer pages.
      * 
      * @param request The HTTP request
      */
@@ -113,10 +115,18 @@ public class JwtAuthHelper {
                 String email = JwtUtil.extractEmail(token);
                 String role = JwtUtil.extractRole(token);
                 
-                // Set user info to request for JSP usage
-                request.setAttribute("isLoggedIn", true);
+                // Always set user info
                 request.setAttribute("userEmail", email);
                 request.setAttribute("userRole", role);
+                
+                // Only set isLoggedIn=true for CUSTOMER role
+                // Admin should not be able to access customer pages
+                if ("CUSTOMER".equals(role)) {
+                    request.setAttribute("isLoggedIn", true);
+                } else {
+                    // Admin is logged in but should not access customer pages
+                    request.setAttribute("isLoggedIn", false);
+                }
             } catch (Exception e) {
                 // Token invalid, user not logged in
                 request.setAttribute("isLoggedIn", false);
