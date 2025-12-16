@@ -3,8 +3,6 @@ import com.bookstore.model.Book;
 import com.bookstore.data.DBUtil;
 import jakarta.persistence.EntityManager;
 
-import com.bookstore.data.DBUtil;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 public class BookDAO {
