@@ -19,8 +19,7 @@ public class JwtFilter implements Filter {
     
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-        "",                              // Root path (trang chủ)
-        "/",                             // Root path alternative
+        "/",                             // Root path
         "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
         "/customer/login.jsp",           
         "/customer/register.jsp",
@@ -152,15 +151,15 @@ public class JwtFilter implements Filter {
             return true;
         }
         
-        // Kiểm tra prefix match (bỏ qua empty string để tránh match tất cả)
+        // Kiểm tra prefix match (chỉ với excluded paths có chiều dài > 1)
         for (String excluded : EXCLUDED_PATHS) {
-            if (!excluded.isEmpty() && path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
         
         for (String excluded : EXCLUDED_SERVLETS) {
-            if (!excluded.isEmpty() && path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
