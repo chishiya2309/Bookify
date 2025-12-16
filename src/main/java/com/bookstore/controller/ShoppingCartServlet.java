@@ -5,8 +5,7 @@ import com.bookstore.service.ShoppingCartServices;
 import com.bookstore.service.ShoppingCartServices.MergeResult;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+import com.bookstore.data.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 public class ShoppingCartServlet extends HttpServlet {
 
     private ShoppingCartServices cartService;
-    private EntityManagerFactory emf;
     private static final String GUEST_CART_KEY = "guestCart";
     private static final String MERGE_MESSAGE_KEY = "mergeMessage";
     private static final String SUCCESS_MESSAGE_KEY = "successMessage";
@@ -28,7 +26,6 @@ public class ShoppingCartServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         cartService = new ShoppingCartServices();
-        emf = Persistence.createEntityManagerFactory("bookify_pu");
     }
 
     @Override
@@ -40,7 +37,7 @@ public class ShoppingCartServlet extends HttpServlet {
         
         // Nếu session không có customer, kiểm tra JWT cookie để khôi phục
         if (customer == null) {
-            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, emf);
+            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
         
         if (customer == null) {
@@ -121,7 +118,7 @@ public class ShoppingCartServlet extends HttpServlet {
         
         // Nếu session không có customer, kiểm tra JWT cookie để khôi phục
         if (customer == null) {
-            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, emf);
+            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
         
         try {
@@ -346,13 +343,6 @@ public class ShoppingCartServlet extends HttpServlet {
             cartService.updateItemQuantity(cart, itemId, quantity);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
-        }
-    }
-    
-    @Override
-    public void destroy() {
-        if (emf != null && emf.isOpen()) {
-            emf.close();
         }
     }
 }
