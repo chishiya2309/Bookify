@@ -9,7 +9,6 @@ import java.util.Optional;
 
 public class UserRepository {
     
-    @PersistenceContext
     private EntityManager entityManager;
     
     // Constructor for manual EntityManager injection
