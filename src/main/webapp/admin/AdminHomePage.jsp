@@ -103,6 +103,6 @@
         </div>
     </div>
 
-    <jsp:include page="/common/footer_admin.jsp"></jsp:include>
+    <jsp:include page="/admin/footer_admin.jsp"></jsp:include>
 </body>
 </html>
