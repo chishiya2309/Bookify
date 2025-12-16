@@ -67,13 +67,12 @@ public class ShoppingCartServices {
      *       rõ ràng (ví dụ: sau khi đơn hàng được hoàn tất)</li>
      * </ul>
      * 
-     * @param customer Đối tượng khách hàng cần lấy hoặc tạo giỏ hàng. Nếu null hoặc 
-     *                 customer.getUserId() null, phương thức sẽ trả về null khi gọi
-     *                 {@link #getCartByCustomer(Customer)} và có thể gây lỗi khi cố 
-     *                 gắng tạo giỏ hàng mới.
+     * @param customer Đối tượng khách hàng cần lấy hoặc tạo giỏ hàng. Không được null
+     *                 và customer.getUserId() không được null.
      * @return Giỏ hàng hiện có hoặc mới tạo của khách hàng, đã được lưu vào cơ sở dữ liệu.
      *         Trả về đối tượng đã được quản lý bởi EntityManager để có thể tiếp tục thao tác.
-     *         Trả về null nếu customer null hoặc customer.getUserId() null.
+     * @throws NullPointerException nếu customer null hoặc customer.getUserId() null khi
+     *                              cố gắng tạo giỏ hàng mới
      * @see #getCartByCustomer(Customer)
      * @see #createCart(Customer)
      */
