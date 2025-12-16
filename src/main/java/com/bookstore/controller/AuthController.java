@@ -1,8 +1,10 @@
 package com.bookstore.controller;
 
 import com.bookstore.service.JwtUtil;
+import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.ValidationUtil;
 import com.bookstore.service.AppConfig;
+import com.bookstore.service.ShoppingCartServices;
 import com.bookstore.dao.UserRepository;
 import com.bookstore.model.User;
 import com.bookstore.model.Customer;
@@ -30,11 +32,30 @@ public class AuthController extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private Gson gson = new Gson();
     private EntityManagerFactory emf;
+    private ShoppingCartServices cartService;
+    private static final int LOCK_STRIPE_SIZE = 256;
+    private static final Object[] sessionLocks = new Object[LOCK_STRIPE_SIZE];
+    
+    static {
+        for (int i = 0; i < LOCK_STRIPE_SIZE; i++) {
+            sessionLocks[i] = new Object();
+        }
+    }
+    
+    private Object getLockForEmail(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
+        // Use bitwise AND to ensure positive hash value, avoiding Integer.MIN_VALUE issue
+        int hash = (email.hashCode() & 0x7FFFFFFF) % LOCK_STRIPE_SIZE;
+        return sessionLocks[hash];
+    }
     
     @Override
     public void init() throws ServletException {
         try {
             emf = Persistence.createEntityManagerFactory("bookify_pu");
+            cartService = new ShoppingCartServices();
         } catch (Exception e) {
             throw new ServletException("Failed to initialize EntityManagerFactory", e);
         }
@@ -157,6 +178,34 @@ public class AuthController extends HttpServlet {
             
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
+            
+            // Lưu thông tin user vào session với xử lý race condition
+            // Sử dụng lock striping để chỉ lock cho cùng user đăng nhập đồng thời
+            HttpSession session;
+            synchronized (getLockForEmail(email)) {
+                // Get or create session
+                session = request.getSession(true);
+                
+                // Change session ID to prevent session fixation attack
+                // This is better than invalidate() as it preserves session data if needed
+                request.changeSessionId();
+                
+                // Set các thuộc tính session cơ bản
+                session.setAttribute("userEmail", email);
+                session.setAttribute("userRole", role);
+                session.setAttribute("userName", user.getFullName());
+                
+                // Set thuộc tính theo loại user
+                if (user instanceof Customer) {
+                    Customer customer = (Customer) user;
+                    session.setAttribute("customer", customer);
+                    
+                    // Merge guest cart với user cart khi đăng nhập (trong synchronized block)
+                    ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
+                } else if (user instanceof Admin) {
+                    session.setAttribute("admin", user);
+                }
+            }
             
             // Prepare response
             Map<String, Object> result = new HashMap<>();
@@ -285,8 +334,18 @@ public class AuthController extends HttpServlet {
             throws IOException {
         
         try {
-            // Simply clear cookie (NO database operation)
+            // Clear JWT cookie
             setCookie(response, "jwt_token", "", 0);
+            
+            // Xóa session attributes (giữ lại guest cart nếu có)
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.removeAttribute("customer");
+                session.removeAttribute("admin");
+                session.removeAttribute("userEmail");
+                session.removeAttribute("userRole");
+                session.removeAttribute("userName");
+            }
             
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
@@ -301,13 +360,13 @@ public class AuthController extends HttpServlet {
         }
     }
     
-    // Handle logout via GET request (from clicking logout link) - redirects to login page
+    // Handle logout via GET request (from clicking logout link) - redirects appropriately
     private void handleLogoutRedirect(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         
         try {
             // Lấy role trước khi xóa token để biết redirect về đâu
-            String token = extractTokenFromRequest(request);
+            String token = JwtAuthHelper.extractJwtToken(request);
             String role = null;
             if (token != null) {
                 role = JwtUtil.extractRole(token);
@@ -316,38 +375,31 @@ public class AuthController extends HttpServlet {
             // Clear JWT cookie
             setCookie(response, "jwt_token", "", 0);
             
-            // Redirect về trang login phù hợp với role
+            // Xóa session attributes (giữ lại guest cart nếu có)
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.removeAttribute("customer");
+                session.removeAttribute("admin");
+                session.removeAttribute("userEmail");
+                session.removeAttribute("userRole");
+                session.removeAttribute("userName");
+            }
+            
+            // Redirect về trang phù hợp với role
             if ("ADMIN".equals(role)) {
+                // Admin đăng xuất → về trang login admin
                 response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
             } else {
-                response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
+                // Customer đăng xuất → về trang chủ
+                response.sendRedirect(request.getContextPath() + "/");
             }
             
         } catch (Exception e) {
             logger.error("Error during logout redirect", e);
-            response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
+            response.sendRedirect(request.getContextPath() + "/");
         }
     }
     
-    // Helper method to extract token from request
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        // Check Authorization header
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        
-        // Check cookies
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("jwt_token".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
     
     // Helper methods
     private void setCookie(HttpServletResponse response, String name, String value, int maxAge) {

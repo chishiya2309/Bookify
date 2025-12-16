@@ -32,12 +32,55 @@ public class ShoppingCartServices {
     }
     
     public ShoppingCart getCartByCustomer(Customer customer) {
-        return cartDAO.findByCustomer(customer);
+        if (customer == null || customer.getUserId() == null) {
+            return null;
+        }
+        return cartDAO.findByCustomerId(customer.getUserId());
+    }
+    
+    public ShoppingCart getCartByCustomerId(Integer customerId) {
+        return cartDAO.findByCustomerId(customerId);
     }
     
     public ShoppingCart createCart(Customer customer) {
         ShoppingCart cart = new ShoppingCart(customer);
         cartDAO.save(cart);
+        // Reload cart từ DB để có managed entity
+        return cartDAO.findByCustomerId(customer.getUserId());
+    }
+    
+    /**
+     * Lấy giỏ hàng hiện có của khách hàng hoặc tạo mới nếu chưa tồn tại.
+     * 
+     * <p>Phương thức này kết hợp logic của {@link #getCartByCustomer(Customer)} và 
+     * {@link #createCart(Customer)} để đảm bảo rằng luôn có một giỏ hàng hợp lệ
+     * được trả về cho khách hàng. Nó sẽ tự động tạo giỏ hàng mới và lưu vào 
+     * cơ sở dữ liệu nếu khách hàng chưa có giỏ hàng.</p>
+     * 
+     * <p><strong>Khi nào nên sử dụng:</strong></p>
+     * <ul>
+     *   <li>Sử dụng phương thức này khi cần đảm bảo khách hàng luôn có giỏ hàng 
+     *       (ví dụ: khi thêm sản phẩm, xem giỏ hàng, hoặc merge giỏ hàng)</li>
+     *   <li>Sử dụng {@link #getCartByCustomer(Customer)} khi chỉ cần kiểm tra xem 
+     *       khách hàng có giỏ hàng hay không mà không muốn tạo mới</li>
+     *   <li>Sử dụng {@link #createCart(Customer)} khi cần tạo giỏ hàng mới một cách 
+     *       rõ ràng (ví dụ: sau khi đơn hàng được hoàn tất)</li>
+     * </ul>
+     * 
+     * @param customer Đối tượng khách hàng cần lấy hoặc tạo giỏ hàng. Không được null
+     *                 và customer.getUserId() không được null.
+     * @return Giỏ hàng hiện có hoặc mới tạo của khách hàng, đã được lưu vào cơ sở dữ liệu.
+     *         Trả về đối tượng đã được quản lý bởi EntityManager để có thể tiếp tục thao tác.
+     * @throws NullPointerException nếu customer null hoặc customer.getUserId() null khi
+     *                              cố gắng tạo giỏ hàng mới
+     * @see #getCartByCustomer(Customer)
+     * @see #createCart(Customer)
+     */
+    public ShoppingCart getOrCreateCartForCustomer(Customer customer) {
+        ShoppingCart cart = getCartByCustomer(customer);
+        if (cart == null) {
+            cart = createCart(customer);
+        }
         return cart;
     }
     
@@ -158,13 +201,8 @@ public class ShoppingCartServices {
     public MergeResult mergeGuestCartToUserCart(ShoppingCart guestCart, Customer customer) {
         MergeResult result = new MergeResult();
         
-        // Lấy giỏ hàng của user từ DB
-        ShoppingCart userCart = getCartByCustomer(customer);
-        
-        // Nếu user chưa có giỏ hàng, tạo mới
-        if (userCart == null) {
-            userCart = createCart(customer);
-        }
+        // Lấy hoặc tạo giỏ hàng của user từ DB (sử dụng method mới để xử lý detached entity)
+        ShoppingCart userCart = getOrCreateCartForCustomer(customer);
         
         // Nếu giỏ hàng guest rỗng, không cần merge
         if (guestCart == null || guestCart.getItems().isEmpty()) {

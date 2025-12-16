@@ -18,7 +18,7 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>customer/index.jsp</welcome-file>
+        <welcome-file>customer/CustomerHomePage.jsp</welcome-file>
     </welcome-file-list>
     
     <!-- Error Pages Configuration -->

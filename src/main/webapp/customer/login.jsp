@@ -14,7 +14,7 @@
         <header class="login-header">
             <i class="fas fa-book-reader fa-3x" style="color: var(--color-primary); margin-bottom: 15px;"></i>
             <h2>Welcome Bookstore</h2>
-            <p>Đăng nhập để bắt đầu mua sắm</p>
+            <p>Đăng nhập để tiếp tục mua sắm</p>
         </header>
         
         <div id="messageContainer"></div>
@@ -73,6 +73,37 @@
         var messageContainer = document.getElementById('messageContainer');
         var contextPath = '${pageContext.request.contextPath}';
         
+        // Lấy redirect URL từ query parameter (nếu có)
+        var urlParams = new URLSearchParams(window.location.search);
+        var redirectUrl = urlParams.get('redirect');
+        
+        // Validate redirectUrl to prevent open redirect vulnerability
+        function isValidRedirectUrl(url) {
+            if (!url) return false;
+            
+            // Must be a relative URL (starts with / but not //)
+            if (!url.startsWith('/') || url.startsWith('//')) {
+                return false;
+            }
+            
+            // Must not contain protocol (http:, https:, javascript:, etc.)
+            if (url.includes(':')) {
+                return false;
+            }
+            
+            // Ensure contextPath is defined and handle edge cases
+            var appContextPath = contextPath || '';
+            
+            // Must start with context path or be root
+            // When contextPath is empty, any URL starting with '/' is allowed
+            // When contextPath is set, URL must be root or start with contextPath
+            if (appContextPath && url !== '/' && !url.startsWith(appContextPath + '/')) {
+                return false;
+            }
+            
+            return true;
+        }
+        
         // ✅ Auto-focus password field if email is pre-filled
         window.addEventListener('DOMContentLoaded', function() {
             if (emailInput.value) {
@@ -119,7 +150,12 @@
                         showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                         
                         setTimeout(function() {
-                            window.location.href = contextPath + '/customer/index.jsp';
+                            // Redirect về trang trước đó nếu có, không thì về trang chủ
+                            if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
+                                window.location.href = redirectUrl;
+                            } else {
+                                window.location.href = contextPath + '/';
+                            }
                         }, 1000);
                     } else {
                         // Là ADMIN - không cho đăng nhập ở trang Customer

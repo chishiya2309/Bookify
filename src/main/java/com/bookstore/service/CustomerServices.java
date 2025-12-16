@@ -1,24 +1,27 @@
 package com.bookstore.service;
-import org.mindrot.jbcrypt.BCrypt;
 import com.bookstore.model.Customer;
+import com.bookstore.model.Category;
 import com.bookstore.data.DBUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
-public class CustomerServices extends UserServices {
+import com.bookstore.dao.CustomerHomePageDAO;
+import com.bookstore.model.Book;
+import java.util.List;
 
-    private static final int BCrypt_ROUNDS = 12;
-    
-    @Override
-    public boolean login() {
-        // code xử lý login cho Customer
-        return true;
+public class CustomerServices {
+
+    public List<Category> listAllCategories() {
+        return CustomerHomePageDAO.listAllCategories();
     }
 
-    @Override
-    public void logout() {
-        // code xử lý logout cho Customer
+    public List<Book> listNewBooks() {
+        return CustomerHomePageDAO.listNewBooks();
+    }
+
+    public List<Book> listBestSellingBooks() {
+        return CustomerHomePageDAO.listBestSellingBooks();
     }
 
     /**
@@ -55,40 +58,8 @@ public class CustomerServices extends UserServices {
             em.close();
         }
     }
-
-    /**
-     * Xác thực customer với email và password
-     * @param email Email của customer
-     * @param password Password (plain text) người dùng nhập
-     * @return Customer nếu đăng nhập thành công, null nếu thất bại
-     */
-    public Customer authenticate(String email, String password) {
-        try {
-            // Lấy customer từ database theo email
-            Customer customer = getCustomerByEmail(email);
-            
-            if (customer == null) {
-                return null; // Không tìm thấy customer
-            }
-            
-            // Lấy password đã hash từ database
-            String hashedPasswordInDb = customer.getPassword();
-            
-            // Verify password với BCrypt
-            if (BCrypt.checkpw(password, hashedPasswordInDb)) {
-                return customer; // Đăng nhập thành công
-            } else {
-                return null; // Password không khớp
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    // Helper method để hash password khi đăng ký
-    public String hashPassword(String plainPassword) {
-        return BCrypt.hashpw(plainPassword, BCrypt.gensalt(BCrypt_ROUNDS));
+    
+    public List<Book> listMostFavoredBooks() {
+        return CustomerHomePageDAO.listMostFavoredBooks();
     }
 }

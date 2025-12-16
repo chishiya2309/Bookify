@@ -3,6 +3,9 @@ package com.bookstore.controller;
 import com.bookstore.model.*;
 import com.bookstore.service.ShoppingCartServices;
 import com.bookstore.service.ShoppingCartServices.MergeResult;
+import com.bookstore.service.CustomerServices;
+import com.bookstore.service.JwtAuthHelper;
+import com.bookstore.data.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -32,6 +35,11 @@ public class ShoppingCartServlet extends HttpServlet {
         Customer customer = (Customer) session.getAttribute("customer");
         ShoppingCart cart;
         
+        // Nếu session không có customer, kiểm tra JWT cookie để khôi phục
+        if (customer == null) {
+            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
+        }
+        
         if (customer == null) {
             // Chưa đăng nhập - Lấy giỏ hàng guest từ session
             cart = getGuestCart(session);
@@ -39,14 +47,12 @@ public class ShoppingCartServlet extends HttpServlet {
         } else {
             // Đã đăng nhập - Lấy giỏ hàng user từ DB
             try {
-                System.out.println("[DEBUG] Loading cart for customer: " + customer.getUserId() + " - " + customer.getEmail());
+                System.out.println("[DEBUG] Loading cart for customer ID: " + customer.getUserId());
                 
-                cart = cartService.getCartByCustomer(customer);
+                // Sử dụng method mới để lấy hoặc tạo cart
+                cart = cartService.getOrCreateCartForCustomer(customer);
                 
-                if (cart == null) {
-                    System.out.println("[DEBUG] No cart found, creating new cart...");
-                    cart = cartService.createCart(customer);
-                } else {
+                if (cart != null) {
                     System.out.println("[DEBUG] Cart found: ID=" + cart.getCartId() + 
                                      ", Items=" + (cart.getItems() != null ? cart.getItems().size() : "NULL") +
                                      ", TotalItems=" + cart.getTotalItems());
@@ -59,9 +65,12 @@ public class ShoppingCartServlet extends HttpServlet {
                                              ", Qty=" + item.getQuantity());
                         }
                     }
+                    
+                    cartService.calculateCartTotals(cart);
+                } else {
+                    System.out.println("[DEBUG] Failed to create cart for customer");
+                    cart = new ShoppingCart(); // Tạo empty cart để tránh null
                 }
-                
-                cartService.calculateCartTotals(cart);
                 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -73,6 +82,11 @@ public class ShoppingCartServlet extends HttpServlet {
         
         request.setAttribute("cart", cart);
         request.setAttribute("isGuest", customer == null);
+        
+        // Set userEmail cho header nếu đã đăng nhập
+        if (customer != null) {
+            request.setAttribute("userEmail", customer.getEmail());
+        }
         
         // Hiển thị thông báo merge nếu có
         String mergeMessage = (String) session.getAttribute(MERGE_MESSAGE_KEY);
@@ -88,6 +102,10 @@ public class ShoppingCartServlet extends HttpServlet {
             session.removeAttribute(SUCCESS_MESSAGE_KEY);
         }
         
+        // Set categories cho header
+        CustomerServices customerServices = new CustomerServices();
+        request.setAttribute("listCategories", customerServices.listAllCategories());
+        
         request.getRequestDispatcher("/customer/cart.jsp").forward(request, response);
     }
 
@@ -98,6 +116,11 @@ public class ShoppingCartServlet extends HttpServlet {
         Customer customer = (Customer) session.getAttribute("customer");
         String action = request.getParameter("action");
         
+        // Nếu session không có customer, kiểm tra JWT cookie để khôi phục
+        if (customer == null) {
+            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
+        }
+        
         try {
             ShoppingCart cart;
             
@@ -105,11 +128,8 @@ public class ShoppingCartServlet extends HttpServlet {
                 // Guest user
                 cart = getGuestCart(session);
             } else {
-                // Logged in user
-                cart = cartService.getCartByCustomer(customer);
-                if (cart == null) {
-                    cart = cartService.createCart(customer);
-                }
+                // Logged in user - sử dụng method mới
+                cart = cartService.getOrCreateCartForCustomer(customer);
             }
             
             String successMessage = null;
@@ -204,6 +224,7 @@ public class ShoppingCartServlet extends HttpServlet {
     private void saveGuestCart(HttpSession session, ShoppingCart cart) {
         session.setAttribute(GUEST_CART_KEY, cart);
     }
+    
     
     /**
      * CART MERGING - Được gọi khi user đăng nhập thành công

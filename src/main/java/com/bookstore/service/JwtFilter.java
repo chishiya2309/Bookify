@@ -7,14 +7,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @WebFilter("/*")
 public class JwtFilter implements Filter {
     
+    // Compiled regex patterns for redirect URL validation (for efficiency)
+    private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+]*:.*");
+    private static final Pattern BACKSLASH_AT_PATTERN = Pattern.compile("^/[\\\\@].*");
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile("^/[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(?:/.*)?$");
+    
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-        "/customer/login.jsp",      // Đã sửa đúng
-        "/customer/register.jsp",   // Đã sửa đúng
+        "/",                             // Root path
+        "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
+        "/customer/login.jsp",           
+        "/customer/register.jsp",
+        "/customer/cart.jsp",            // Giỏ hàng JSP (khách có thể xem)
+        "/customer/cart",                // Giỏ hàng Servlet (query database)
         "/css/auth-style.css",
         "/admin/AdminLogin.jsp"
     );
@@ -24,7 +34,8 @@ public class JwtFilter implements Filter {
         "/auth/login",     
         "/auth/register", 
         "/auth/logout",    
-        "/auth/refresh"
+        "/auth/refresh",
+        "/customer/cart"                 // Cart servlet cho guest
     );
 
     @Override
@@ -109,13 +120,27 @@ public class JwtFilter implements Filter {
             // Token không hợp lệ hoặc không tồn tại
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             
-            // --- ĐÂY LÀ PHẦN BẠN CẦN SỬA ---
+            // Lưu URL gốc để redirect sau khi đăng nhập
+            String originalUrl = httpRequest.getRequestURI();
+            String queryString = httpRequest.getQueryString();
+            if (queryString != null) {
+                originalUrl += "?" + queryString;
+            }
+            
+            // Validate redirect URL to prevent open redirect vulnerability
+            String contextPath = httpRequest.getContextPath();
+            String redirectParam = "";
+            if (isValidRedirectUrl(originalUrl, contextPath)) {
+                // Only include redirect parameter if URL is valid
+                String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
+                redirectParam = "?redirect=" + encodedUrl;
+            }
+            
             // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin, còn lại về Customer Login
             if (path.startsWith("/admin")) {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp" + redirectParam);
             } else {
-                // SỬA TỪ "/login.jsp" THÀNH "/customer/login.jsp"
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp");
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp" + redirectParam);
             }
         }
     }
@@ -126,15 +151,15 @@ public class JwtFilter implements Filter {
             return true;
         }
         
-        // Kiểm tra prefix match
+        // Kiểm tra prefix match (chỉ với excluded paths có chiều dài > 1)
         for (String excluded : EXCLUDED_PATHS) {
-            if (path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
         
         for (String excluded : EXCLUDED_SERVLETS) {
-            if (path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
@@ -160,6 +185,67 @@ public class JwtFilter implements Filter {
         }
         
         return null;
+    }
+    
+    /**
+     * Validates that a redirect URL is a safe internal path.
+     * Prevents open redirect vulnerabilities by ensuring the URL:
+     * - Is a relative URL (starts with / but not //)
+     * - Does not contain a protocol scheme at the beginning
+     * - Starts with the application context path or is root
+     * 
+     * @param url The URL to validate
+     * @param contextPath The application context path
+     * @return true if the URL is a valid internal redirect, false otherwise
+     */
+    private boolean isValidRedirectUrl(String url, String contextPath) {
+        if (url == null || url.isEmpty()) {
+            return false;
+        }
+        
+        // Must be a relative URL (starts with / but not //)
+        if (!url.startsWith("/") || url.startsWith("//")) {
+            return false;
+        }
+        
+        // Must not contain protocol scheme at the beginning (http://, https://, javascript:, etc.)
+        // Use precompiled pattern for efficiency
+        if (PROTOCOL_PATTERN.matcher(url).matches()) {
+            return false;
+        }
+        
+        // Handle empty context path case
+        String appContextPath = (contextPath != null) ? contextPath : "";
+        
+        // Validate context path format if not empty
+        if (!appContextPath.isEmpty() && !appContextPath.startsWith("/")) {
+            // Invalid context path format, reject for safety
+            return false;
+        }
+        
+        // Must start with context path or be root
+        if (!appContextPath.isEmpty()) {
+            // When contextPath is set, URL must be root or start with contextPath
+            if (!url.equals("/") && !url.startsWith(appContextPath + "/")) {
+                return false;
+            }
+        } else {
+            // When contextPath is empty, enforce additional validation
+            // URL must not look like an external redirect to a domain
+            // Check for patterns like '//domain.com', '/\domain.com', or '/@domain.com'
+            // which are common bypass techniques for redirect vulnerabilities
+            if (BACKSLASH_AT_PATTERN.matcher(url).matches()) {
+                return false;
+            }
+            
+            // Check for simple domain-like patterns (e.g., '/evil.com' or '/evil.com/path')
+            // This pattern is more targeted to avoid rejecting valid paths with multiple dots
+            if (DOMAIN_PATTERN.matcher(url).matches()) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     @Override
