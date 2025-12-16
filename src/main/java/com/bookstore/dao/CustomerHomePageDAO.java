@@ -2,12 +2,28 @@ package com.bookstore.dao;
 
 import com.bookstore.data.DBUtil;
 import com.bookstore.model.Book;
+import com.bookstore.model.Category;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerHomePageDAO {
+    
+    // --- CATEGORIES ---
+    public static List<Category> listAllCategories() {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String qString = "SELECT c FROM Category c ORDER BY c.name ASC";
+            TypedQuery<Category> q = em.createQuery(qString, Category.class);
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
 
     // --- 1. NEW BOOKS ---
     public static List<Book> listNewBooks() {
@@ -19,7 +35,14 @@ public class CustomerHomePageDAO {
             
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             q.setMaxResults(4);
-            return q.getResultList();
+            List<Book> list = q.getResultList();
+            
+            // Ép tải images trước khi đóng EntityManager
+            for (Book b : list) {
+                b.getImages().size();
+            }
+            
+            return list;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -41,9 +64,10 @@ public class CustomerHomePageDAO {
             
             List<Book> list = q.getResultList();
             
-            // Ép tải danh sách tác giả trước khi đóng kết nối
+            // Ép tải danh sách tác giả và images trước khi đóng kết nối
             for (Book b : list) {
-                b.getAuthors().size(); 
+                b.getAuthors().size();
+                b.getImages().size();
             }
             
             return list;
@@ -68,9 +92,10 @@ public class CustomerHomePageDAO {
             
             List<Book> list = q.getResultList();
             
-            // Ép tải danh sách tác giả trước khi đóng kết nối
+            // Ép tải danh sách tác giả và images trước khi đóng kết nối
             for (Book b : list) {
-                b.getAuthors().size(); 
+                b.getAuthors().size();
+                b.getImages().size();
             }
             
             return list;

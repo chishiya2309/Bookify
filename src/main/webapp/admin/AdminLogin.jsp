@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
@@ -68,6 +67,10 @@
         // Lấy context path từ JSP
         var contextPath = '${pageContext.request.contextPath}';
         
+        // Lấy redirect URL từ query parameter (nếu có)
+        var urlParams = new URLSearchParams(window.location.search);
+        var redirectUrl = urlParams.get('redirect');
+        
         // Bắt sự kiện submit form
         adminLoginForm.addEventListener('submit', function(e) {
             e.preventDefault(); // <--- CHỐT CHẶN: Ngăn reload trang (GET request)
@@ -116,9 +119,13 @@
                     if (data.userType === 'ADMIN') {
                         showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                         
-                        // Chuyển hướng sau 1s
+                        // Chuyển hướng sau 1s - về trang trước đó nếu có
                         setTimeout(function() {
-                            window.location.href = contextPath + '/admin/dashboard.jsp';
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl;
+                            } else {
+                                window.location.href = contextPath + '/admin/dashboard.jsp';
+                            }
                         }, 1000);
                     } else {
                         // Là CUSTOMER - không cho đăng nhập ở trang Admin

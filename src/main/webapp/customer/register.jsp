@@ -60,7 +60,7 @@
 
         <p class="register-prompt">
             Đã có tài khoản? 
-            <a href="${pageContext.request.contextPath}/login.jsp">Đăng nhập ngay</a>
+            <a href="${pageContext.request.contextPath}/customer/login.jsp">Đăng nhập ngay</a>
         </p>
 
         <footer class="login-footer">
@@ -142,7 +142,7 @@
                     setTimeout(function() {
                         // Store email in sessionStorage to pre-fill form on login page
                         sessionStorage.setItem('registeredEmail', data.email);
-                        window.location.href = contextPath + '/login.jsp?registered=true';
+                        window.location.href = contextPath + '/customer/login.jsp?registered=true&email=' + encodeURIComponent(data.email);
                     }, 2000);
                     
                 } else {

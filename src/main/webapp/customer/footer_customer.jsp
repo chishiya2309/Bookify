@@ -1,12 +1,13 @@
-<link rel="stylesheet" href="css/styles.css">
+<%@ page contentType="text/html; charset=UTF-8" %>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
 
 <div class="footer-container">
-    Copyright (C) 2017 by Evergreen Books Co., Ltd
+    Copyright © 2025 Bookify. All rights reserved.
 
     <div class="footer-links">
-        <a href="#">About Us</a> |
-        <a href="#">Contact Us</a> |
-        <a href="#">Privacy Policy</a> |
-        <a href="#">Shipping & Delivery</a>
+        <a href="${pageContext.request.contextPath}/about">Về chúng tôi</a> |
+        <a href="${pageContext.request.contextPath}/contact">Liên hệ</a> |
+        <a href="${pageContext.request.contextPath}/privacy">Chính sách bảo mật</a> |
+        <a href="${pageContext.request.contextPath}/shipping">Vận chuyển & Giao hàng</a>
     </div>
 </div>

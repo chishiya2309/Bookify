@@ -1,5 +1,6 @@
 package com.bookstore.service;
 import com.bookstore.model.Customer;
+import com.bookstore.model.Category;
 import com.bookstore.data.DBUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -11,10 +12,12 @@ import java.util.List;
 
 public class CustomerServices {
 
+    public List<Category> listAllCategories() {
+        return CustomerHomePageDAO.listAllCategories();
+    }
 
     public List<Book> listNewBooks() {
         return CustomerHomePageDAO.listNewBooks();
-
     }
 
     public List<Book> listBestSellingBooks() {

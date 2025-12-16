@@ -13,8 +13,13 @@ public class JwtFilter implements Filter {
     
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-        "/customer/login.jsp",      // Đã sửa đúng
-        "/customer/register.jsp",   // Đã sửa đúng
+        "",                              // Root path (trang chủ)
+        "/",                             // Root path alternative
+        "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
+        "/customer/login.jsp",           
+        "/customer/register.jsp",
+        "/customer/cart.jsp",            // Giỏ hàng JSP (khách có thể xem)
+        "/customer/cart",                // Giỏ hàng Servlet (query database)
         "/css/auth-style.css",
         "/admin/AdminLogin.jsp"
     );
@@ -24,7 +29,8 @@ public class JwtFilter implements Filter {
         "/auth/login",     
         "/auth/register", 
         "/auth/logout",    
-        "/auth/refresh"
+        "/auth/refresh",
+        "/customer/cart"                 // Cart servlet cho guest
     );
 
     @Override
@@ -109,13 +115,21 @@ public class JwtFilter implements Filter {
             // Token không hợp lệ hoặc không tồn tại
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             
-            // --- ĐÂY LÀ PHẦN BẠN CẦN SỬA ---
+            // Lưu URL gốc để redirect sau khi đăng nhập
+            String originalUrl = httpRequest.getRequestURI();
+            String queryString = httpRequest.getQueryString();
+            if (queryString != null) {
+                originalUrl += "?" + queryString;
+            }
+            
+            // Encode URL để truyền qua parameter
+            String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
+            
             // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin, còn lại về Customer Login
             if (path.startsWith("/admin")) {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp?redirect=" + encodedUrl);
             } else {
-                // SỬA TỪ "/login.jsp" THÀNH "/customer/login.jsp"
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp");
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp?redirect=" + encodedUrl);
             }
         }
     }
@@ -126,15 +140,15 @@ public class JwtFilter implements Filter {
             return true;
         }
         
-        // Kiểm tra prefix match
+        // Kiểm tra prefix match (bỏ qua empty string để tránh match tất cả)
         for (String excluded : EXCLUDED_PATHS) {
-            if (path.startsWith(excluded)) {
+            if (!excluded.isEmpty() && path.startsWith(excluded)) {
                 return true;
             }
         }
         
         for (String excluded : EXCLUDED_SERVLETS) {
-            if (path.startsWith(excluded)) {
+            if (!excluded.isEmpty() && path.startsWith(excluded)) {
                 return true;
             }
         }

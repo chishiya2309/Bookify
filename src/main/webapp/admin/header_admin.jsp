@@ -5,24 +5,26 @@
 <header class="admin-header">
 
     <div class="admin-logo">
-        <h1>LOGO BOOK STORE</h1>
+        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp">
+            <h1>LOGO BOOK STORE</h1>
+        </a>
     </div>
 
     <div class="admin-welcome">
-        Welcome,
+        Xin chào,
         <span class="email">
-            <%= session.getAttribute("userEmail") != null ? session.getAttribute("userEmail") : "Guest" %>
+            <%= session.getAttribute("userEmail") != null ? session.getAttribute("userEmail") : "Admin" %>
         </span>
-        <a href="logout" class="logout-btn">Logout</a>
+        <a href="${pageContext.request.contextPath}/auth/logout" class="logout-btn">Đăng xuất</a>
     </div>
 
     <nav class="admin-menu">
-        <a href="users">Users</a>
-        <a href="categories">Categories</a>
-        <a href="books">Books</a>
-        <a href="customers">Customers</a>
-        <a href="reviews">Reviews</a>
-        <a href="orders">Orders</a>
+        <a href="${pageContext.request.contextPath}/admin/users.jsp">Users</a>
+        <a href="${pageContext.request.contextPath}/admin/categories.jsp">Categories</a>
+        <a href="${pageContext.request.contextPath}/admin/books.jsp">Books</a>
+        <a href="${pageContext.request.contextPath}/admin/customers.jsp">Customers</a>
+        <a href="${pageContext.request.contextPath}/admin/reviews.jsp">Reviews</a>
+        <a href="${pageContext.request.contextPath}/admin/orders.jsp">Orders</a>
     </nav>
 
 </header>

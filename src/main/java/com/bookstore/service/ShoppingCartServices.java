@@ -32,12 +32,28 @@ public class ShoppingCartServices {
     }
     
     public ShoppingCart getCartByCustomer(Customer customer) {
-        return cartDAO.findByCustomer(customer);
+        if (customer == null || customer.getUserId() == null) {
+            return null;
+        }
+        return cartDAO.findByCustomerId(customer.getUserId());
+    }
+    
+    public ShoppingCart getCartByCustomerId(Integer customerId) {
+        return cartDAO.findByCustomerId(customerId);
     }
     
     public ShoppingCart createCart(Customer customer) {
         ShoppingCart cart = new ShoppingCart(customer);
         cartDAO.save(cart);
+        // Reload cart từ DB để có managed entity
+        return cartDAO.findByCustomerId(customer.getUserId());
+    }
+    
+    public ShoppingCart getOrCreateCartForCustomer(Customer customer) {
+        ShoppingCart cart = getCartByCustomer(customer);
+        if (cart == null) {
+            cart = createCart(customer);
+        }
         return cart;
     }
     
@@ -158,13 +174,8 @@ public class ShoppingCartServices {
     public MergeResult mergeGuestCartToUserCart(ShoppingCart guestCart, Customer customer) {
         MergeResult result = new MergeResult();
         
-        // Lấy giỏ hàng của user từ DB
-        ShoppingCart userCart = getCartByCustomer(customer);
-        
-        // Nếu user chưa có giỏ hàng, tạo mới
-        if (userCart == null) {
-            userCart = createCart(customer);
-        }
+        // Lấy hoặc tạo giỏ hàng của user từ DB (sử dụng method mới để xử lý detached entity)
+        ShoppingCart userCart = getOrCreateCartForCustomer(customer);
         
         // Nếu giỏ hàng guest rỗng, không cần merge
         if (guestCart == null || guestCart.getItems().isEmpty()) {

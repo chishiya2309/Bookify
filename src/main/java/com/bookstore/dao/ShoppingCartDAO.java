@@ -23,6 +23,10 @@ public class ShoppingCartDAO {
     }
     
     public ShoppingCart findByCustomer(Customer customer) {
+        return findByCustomerId(customer.getUserId());
+    }
+    
+    public ShoppingCart findByCustomerId(Integer customerId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             // Lấy cart với items và books
@@ -33,7 +37,7 @@ public class ShoppingCartDAO {
                 "WHERE c.customer.userId = :customerId",
                 ShoppingCart.class
             );
-            query.setParameter("customerId", customer.getUserId());
+            query.setParameter("customerId", customerId);
             ShoppingCart cart = query.getSingleResult();
             
             // Fetch book images và authors (tránh MultipleBagFetchException)
@@ -56,10 +60,21 @@ public class ShoppingCartDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             em.getTransaction().begin();
+            
+            // Re-attach customer nếu đang detached
+            if (cart.getCustomer() != null && cart.getCustomer().getUserId() != null) {
+                Customer managedCustomer = em.find(Customer.class, cart.getCustomer().getUserId());
+                if (managedCustomer != null) {
+                    cart.setCustomer(managedCustomer);
+                }
+            }
+            
             em.persist(cart);
             em.getTransaction().commit();
         }catch(Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             throw e;
         }finally {
             em.close();

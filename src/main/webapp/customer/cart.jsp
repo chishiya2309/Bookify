@@ -526,6 +526,16 @@
     </style>
 </head>
 <body>
+    <%-- Header: Hiển thị theo trạng thái đăng nhập --%>
+    <c:choose>
+        <c:when test="${isGuest}">
+            <jsp:include page="/customer/header_sign_in.jsp"/>
+        </c:when>
+        <c:otherwise>
+            <jsp:include page="/customer/header_customer.jsp"/>
+        </c:otherwise>
+    </c:choose>
+
     <main>    
         <!-- Thông báo thành công -->
         <c:if test="${not empty successMessage}">
@@ -610,7 +620,7 @@
                         <i class="fas fa-shopping-cart"></i>
                         <p style="font-size: 20px; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Giỏ hàng trống</p>
                         <p style="margin-bottom: 24px; color: var(--text-light);">Hãy thêm sách vào giỏ hàng để bắt đầu!</p>
-                        <a href="books" class="btn btn-primary">
+                        <a href="${pageContext.request.contextPath}/" class="btn btn-primary">
                             <i class="fas fa-book"></i>
                             Xem sách
                         </a>
@@ -727,7 +737,7 @@
                                 Cập nhật giỏ hàng
                             </button>
                             <nav class="action-buttons">
-                                <a href="books" class="btn btn-outline">
+                                <a href="${pageContext.request.contextPath}/" class="btn btn-outline">
                                     <i class="fas fa-arrow-left"></i>
                                     Tiếp tục mua sắm
                                 </a>
@@ -832,5 +842,8 @@
             });
         });
     </script>
+
+    <%-- Footer --%>
+    <jsp:include page="/customer/footer_customer.jsp"/>
 </body>
 </html>

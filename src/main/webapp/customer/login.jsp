@@ -73,6 +73,10 @@
         var messageContainer = document.getElementById('messageContainer');
         var contextPath = '${pageContext.request.contextPath}';
         
+        // Lấy redirect URL từ query parameter (nếu có)
+        var urlParams = new URLSearchParams(window.location.search);
+        var redirectUrl = urlParams.get('redirect');
+        
         // ✅ Auto-focus password field if email is pre-filled
         window.addEventListener('DOMContentLoaded', function() {
             if (emailInput.value) {
@@ -119,7 +123,12 @@
                         showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                         
                         setTimeout(function() {
-                            window.location.href = contextPath + '/customer/index.jsp';
+                            // Redirect về trang trước đó nếu có, không thì về trang chủ
+                            if (redirectUrl) {
+                                window.location.href = redirectUrl;
+                            } else {
+                                window.location.href = contextPath + '/';
+                            }
                         }, 1000);
                     } else {
                         // Là ADMIN - không cho đăng nhập ở trang Customer
