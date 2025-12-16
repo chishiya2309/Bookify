@@ -211,7 +211,7 @@
                             <i class="fas fa-info-circle"></i>
                             <span>Chi tiết lỗi:</span>
                         </div>
-                        <p class="error-message-text">${error}</p>
+                        <p class="error-message-text"><c:out value="${error}"/></p>
                     </div>
                 </c:if>
 
