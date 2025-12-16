@@ -151,15 +151,15 @@ public class JwtFilter implements Filter {
             return true;
         }
         
-        // Kiểm tra prefix match
+        // Kiểm tra prefix match (chỉ với excluded paths có chiều dài > 1)
         for (String excluded : EXCLUDED_PATHS) {
-            if (path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
         
         for (String excluded : EXCLUDED_SERVLETS) {
-            if (path.startsWith(excluded)) {
+            if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
