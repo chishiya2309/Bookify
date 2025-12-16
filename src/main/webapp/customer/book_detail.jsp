@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8">
   <title>${book.title} - Bookify</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
+<!--  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">-->
   <style>
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .book-detail { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 20px; }
@@ -43,7 +43,15 @@
 </head>
 <body>
 
-<jsp:include page="/common/header_sign_in.jsp"></jsp:include>
+  <%-- Header: Hiển thị theo trạng thái đăng nhập --%>
+  <c:choose>
+      <c:when test="${isGuest}">
+          <jsp:include page="/customer/header_sign_in.jsp"/>
+      </c:when>
+      <c:otherwise>
+          <jsp:include page="/customer/header_customer.jsp"/>
+      </c:otherwise>
+  </c:choose>
 
 <div class="container">
   <div class="book-detail">
@@ -144,7 +152,7 @@
   </div>
 </div>
 
-<jsp:include page="/common/footer_customer.jsp"></jsp:include>
+<jsp:include page="/customer/footer_customer.jsp"></jsp:include>
 
 <script>
   const btn = document.getElementById('load-more-btn');

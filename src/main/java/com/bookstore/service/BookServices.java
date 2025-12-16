@@ -12,7 +12,7 @@ public class BookServices {
     private final BookDAO bookDAO = new BookDAO();
 
     public Book getBookById(Integer bookId) {
-        return bookDAO.findById(bookId);
+        return BookDAO.getBookById(bookId);
     }
 
     public List<Review> getReviews(Integer bookId, int page) {

@@ -21,6 +21,10 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Set encoding UTF-8
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
 
@@ -34,31 +38,40 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
                 return;
             }
 
-            int bookId = Integer.parseInt(idParam);
-            int page = Integer.parseInt(pageParam);
+            try {
+                int bookId = Integer.parseInt(idParam);
+                int page = Integer.parseInt(pageParam);
 
-            List<Review> reviews = bookServices.getReviews(bookId, page);
+                List<Review> reviews = bookServices.getReviews(bookId, page);
 
-            response.setContentType("text/html; charset=UTF-8");
-            PrintWriter out = response.getWriter();
+                response.setContentType("text/html; charset=UTF-8");
+                PrintWriter out = response.getWriter();
 
-            for (Review r : reviews) {
-                out.println("<div class=\"review-item\">");
-                out.println("<strong>" + escapeHtml(r.getCustomer().getFullName()) + "</strong> ");
+                if (reviews != null) {
+                    for (Review r : reviews) {
+                        out.println("<div class=\"review-item\">");
+                        out.println("<strong>" + escapeHtml(r.getCustomer().getFullName()) + "</strong> ");
 
-                out.print("<span class=\"rating\">");
-                for (int i = 0; i < r.getRating(); i++) {
-                    out.print("★");
+                        out.print("<span class=\"rating\">");
+                        for (int i = 0; i < r.getRating(); i++) {
+                            out.print("★");
+                        }
+                        out.println("</span> ");
+
+                        out.println("<span class=\"date\">(" + r.getReviewDate() + ")</span><br>");
+
+                        if (r.getHeadline() != null && !r.getHeadline().trim().isEmpty()) {
+                            out.println("<h4 class=\"headline\">" + escapeHtml(r.getHeadline()) + "</h4>");
+                        }
+                        out.println("<p>" + escapeHtml(r.getComment() != null ? r.getComment() : "") + "</p>");
+                        out.println("</div><hr>");
+                    }
                 }
-                out.println("</span> ");
-
-                out.println("<span class=\"date\">(" + r.getReviewDate() + ")</span><br>");
-
-                if (r.getHeadline() != null && !r.getHeadline().trim().isEmpty()) {
-                    out.println("<h4 class=\"headline\">" + escapeHtml(r.getHeadline()) + "</h4>");
-                }
-                out.println("<p>" + escapeHtml(r.getComment() != null ? r.getComment() : "") + "</p>");
-                out.println("</div><hr>");
+            } catch (NumberFormatException e) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameters");
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading reviews");
             }
             return;
         }
@@ -70,26 +83,38 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
             return;
         }
 
-        int bookId = Integer.parseInt(idParam);
-        Book book = bookServices.getBookById(bookId);
+        try {
+            int bookId = Integer.parseInt(idParam);
+            Book book = bookServices.getBookById(bookId);
 
-        if (book == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Book not found with ID: " + bookId);
-            return;
+            if (book == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Book not found with ID: " + bookId);
+                return;
+            }
+
+            List<Review> reviews = bookServices.getReviews(bookId, 0);
+            long totalReviews = bookServices.getTotalReviews(bookId);
+            Double avgRating = bookServices.getAverageRating(bookId);
+            
+            // Đảm bảo avgRating không null
+            if (avgRating == null) {
+                avgRating = 0.0;
+            }
+
+            request.setAttribute("book", book);
+            request.setAttribute("avgRating", avgRating);
+            request.setAttribute("reviews", reviews != null ? reviews : new java.util.ArrayList<>());
+            request.setAttribute("totalReviews", totalReviews);
+            request.setAttribute("loadedCount", reviews != null ? reviews.size() : 0);
+
+            // Forward đến book_detail.jsp
+            request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid book ID format");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while loading book details: " + e.getMessage());
         }
-
-        List<Review> reviews = bookServices.getReviews(bookId, 0);
-        long totalReviews = bookServices.getTotalReviews(bookId);
-        Double avgRating = bookServices.getAverageRating(bookId);
-
-        request.setAttribute("book", book);
-        request.setAttribute("avgRating", avgRating);
-        request.setAttribute("reviews", reviews);
-        request.setAttribute("totalReviews", totalReviews);
-        request.setAttribute("loadedCount", reviews.size());
-
-        // Giữ nguyên đường dẫn JSP hiện tại
-        request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
     }
 
     private String escapeHtml(String input) {
