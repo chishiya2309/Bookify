@@ -149,7 +149,17 @@
                         // Chuyển hướng sau 1s - về trang trước đó nếu có
                         setTimeout(function() {
                             if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
-                                window.location.href = redirectUrl;
+                                // Only allow same-origin relative paths (not protocol-relative or absolute URLs)
+                                if (
+                                    typeof redirectUrl === 'string' &&
+                                    redirectUrl.startsWith('/') &&
+                                    !redirectUrl.startsWith('//') &&
+                                    redirectUrl.indexOf(':') === -1
+                                ) {
+                                    window.location.href = redirectUrl;
+                                } else {
+                                    window.location.href = contextPath + '/admin/dashboard.jsp';
+                                }
                             } else {
                                 window.location.href = contextPath + '/admin/dashboard.jsp';
                             }
