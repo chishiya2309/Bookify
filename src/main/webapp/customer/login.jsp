@@ -116,10 +116,10 @@
                 if (data.success) {
                     showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                     
-                    if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
-                    if (data.email) localStorage.setItem('email', data.email);
-                    if (data.fullName) localStorage.setItem('fullName', data.fullName);
-                    if (data.userId) localStorage.setItem('userId', data.userId);
+                    // Removed localStorage.setItem calls for sensitive data
+                    
+                    
+                    
                     
                     setTimeout(function() {
                         window.location.href = contextPath + '/customer/index.jsp';
