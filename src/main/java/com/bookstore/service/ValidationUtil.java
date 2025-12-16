@@ -5,13 +5,16 @@ import java.util.regex.Pattern;
 public class ValidationUtil {
     
     // Email validation pattern (RFC 5322 simplified)
+    // Ensures no consecutive dots and proper structure
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
+        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$"
     );
     
-    // SQL injection patterns to detect common attack vectors
+    // SQL injection patterns to detect obvious attack vectors
+    // Note: This is a defense-in-depth measure. Primary protection comes from parameterized queries.
+    // This pattern focuses on SQL metacharacters and comment syntax rather than keywords
     private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-        ".*([';]|--|\\/\\*|\\*\\/|xp_|sp_|exec|execute|insert|select|delete|update|drop|create|alter|union).*",
+        ".*([';]|--|/\\*|\\*/|xp_|sp_|@@|char\\s*\\(|exec\\s*\\(|cast\\s*\\().*",
         Pattern.CASE_INSENSITIVE
     );
     
@@ -50,13 +53,45 @@ public class ValidationUtil {
     
     /**
      * Validates password strength
+     * Requires: at least 8 characters, one uppercase, one lowercase, one digit, one special character
      * @param password the password to validate
-     * @return true if password meets minimum requirements, false otherwise
+     * @return true if password meets security requirements, false otherwise
      */
     public static boolean isValidPassword(String password) {
-        if (password == null || password.length() < 6) {
+        if (password == null || password.length() < 8) {
             return false;
         }
+        
+        // Check for at least one uppercase letter
+        if (!password.matches(".*[A-Z].*")) {
+            return false;
+        }
+        
+        // Check for at least one lowercase letter
+        if (!password.matches(".*[a-z].*")) {
+            return false;
+        }
+        
+        // Check for at least one digit
+        if (!password.matches(".*[0-9].*")) {
+            return false;
+        }
+        
+        // Check for at least one special character
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
+            return false;
+        }
+        
         return true;
+    }
+    
+    /**
+     * Validates password with basic requirements (for backward compatibility)
+     * Requires: at least 6 characters
+     * @param password the password to validate
+     * @return true if password meets minimum length, false otherwise
+     */
+    public static boolean isValidPasswordBasic(String password) {
+        return password != null && password.length() >= 6;
     }
 }
