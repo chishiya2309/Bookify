@@ -42,6 +42,7 @@ public class BookImage implements Serializable {
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
     
+    @NotNull(message = "Ảnh phải thuộc về một cuốn sách")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;

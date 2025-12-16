@@ -218,6 +218,31 @@ public class Book implements Serializable {
         }
     }
     
+    /**
+     * Lấy ảnh chính (primary image) của sách
+     * Nếu không có ảnh primary, trả về ảnh đầu tiên
+     * Nếu không có ảnh nào, trả về null
+     */
+    public BookImage getPrimaryImage() {
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+        
+        // Tìm ảnh primary
+        return images.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+                .findFirst()
+                .orElse(images.get(0)); // Fallback về ảnh đầu tiên
+    }
+    
+    /**
+     * Lấy URL của ảnh chính
+     */
+    public String getPrimaryImageUrl() {
+        BookImage primary = getPrimaryImage();
+        return primary != null ? primary.getUrl() : null;
+    }
+    
     @PreUpdate
     public void preUpdate() {
         this.lastUpdated = LocalDate.now();
