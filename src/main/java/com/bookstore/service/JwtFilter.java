@@ -69,14 +69,18 @@ public class JwtFilter implements Filter {
             // Determine required role based on path
             boolean isAdminPath = path.startsWith("/admin");
             boolean isCustomerPath = path.startsWith("/customer");
+            boolean isAdmin = roles.contains("ADMIN");
+            boolean isCustomer = roles.contains("CUSTOMER");
 
             boolean hasAccess = false;
-            if (isAdminPath && roles.contains("ADMIN")) {
+            if (isAdminPath && isAdmin) {
+                // Admin chỉ được vào trang admin
                 hasAccess = true;
-            } else if (isCustomerPath && roles.contains("CUSTOMER")) {
+            } else if (isCustomerPath && isCustomer) {
+                // Customer chỉ được vào trang customer
                 hasAccess = true;
             } else if (!isAdminPath && !isCustomerPath) {
-                // For other paths, allow access if user has any role
+                // Các trang khác (shared), cho phép nếu có role
                 hasAccess = !roles.isEmpty();
             }
 
@@ -84,11 +88,21 @@ public class JwtFilter implements Filter {
                 chain.doFilter(request, response);
             } else {
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                // Optionally, redirect to login or error page
-                if (isAdminPath) {
-                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
+                
+                // Redirect về trang phù hợp với role của user
+                if (isAdmin) {
+                    // Admin cố vào trang customer -> về dashboard admin
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/dashboard.jsp");
+                } else if (isCustomer) {
+                    // Customer cố vào trang admin -> về trang customer
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/index.jsp");
                 } else {
-                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp");
+                    // Không có role hợp lệ -> về login
+                    if (isAdminPath) {
+                        httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
+                    } else {
+                        httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp");
+                    }
                 }
             }
         } else {

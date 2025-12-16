@@ -41,6 +41,28 @@ public class AuthController extends HttpServlet {
     }
     
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        String pathInfo = request.getPathInfo();
+        
+        if (pathInfo == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        
+        // Handle GET requests - only logout is supported via GET
+        switch (pathInfo) {
+            case "/logout":
+                handleLogoutRedirect(request, response);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, 
+                    "GET method is not supported for this endpoint");
+        }
+    }
+    
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -277,6 +299,54 @@ public class AuthController extends HttpServlet {
             sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 createErrorResponse("Đã xảy ra lỗi hệ thống"));
         }
+    }
+    
+    // Handle logout via GET request (from clicking logout link) - redirects to login page
+    private void handleLogoutRedirect(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        try {
+            // Lấy role trước khi xóa token để biết redirect về đâu
+            String token = extractTokenFromRequest(request);
+            String role = null;
+            if (token != null) {
+                role = JwtUtil.extractRole(token);
+            }
+            
+            // Clear JWT cookie
+            setCookie(response, "jwt_token", "", 0);
+            
+            // Redirect về trang login phù hợp với role
+            if ("ADMIN".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error during logout redirect", e);
+            response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
+        }
+    }
+    
+    // Helper method to extract token from request
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        // Check Authorization header
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        
+        // Check cookies
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
     
     // Helper methods
