@@ -32,6 +32,7 @@ public class AuthController extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private Gson gson = new Gson();
     private EntityManagerFactory emf;
+    private ShoppingCartServices cartService;
     private static final int LOCK_STRIPE_SIZE = 256;
     private static final Object[] sessionLocks = new Object[LOCK_STRIPE_SIZE];
     
@@ -42,7 +43,8 @@ public class AuthController extends HttpServlet {
     }
     
     private Object getLockForEmail(String email) {
-        int hash = Math.abs(email.hashCode() % LOCK_STRIPE_SIZE);
+        // Use bitwise AND to ensure positive hash value, avoiding Integer.MIN_VALUE issue
+        int hash = (email.hashCode() & 0x7FFFFFFF) % LOCK_STRIPE_SIZE;
         return sessionLocks[hash];
     }
     
@@ -50,6 +52,7 @@ public class AuthController extends HttpServlet {
     public void init() throws ServletException {
         try {
             emf = Persistence.createEntityManagerFactory("bookify_pu");
+            cartService = new ShoppingCartServices();
         } catch (Exception e) {
             throw new ServletException("Failed to initialize EntityManagerFactory", e);
         }
@@ -172,9 +175,6 @@ public class AuthController extends HttpServlet {
             
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
-            
-            // Prepare cart service outside synchronized block for efficiency
-            ShoppingCartServices cartService = new ShoppingCartServices();
             
             // Lưu thông tin user vào session với xử lý race condition
             // Sử dụng lock striping để chỉ lock cho cùng user đăng nhập đồng thời
