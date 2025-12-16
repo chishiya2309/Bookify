@@ -69,7 +69,7 @@ public class PublisherDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             // Sắp xếp theo tên A-Z
-            String qString = "SELECT p FROM Publisher p";
+            String qString = "SELECT p FROM Publisher p ORDER BY p.name ASC";
             TypedQuery<Publisher> q = em.createQuery(qString, Publisher.class);
             return q.getResultList();
         } catch (Exception e) {
