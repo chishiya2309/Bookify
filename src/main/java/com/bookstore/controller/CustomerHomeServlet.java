@@ -19,10 +19,25 @@ public class CustomerHomeServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
     // Gọi Service (đã khớp tên file CustomerServices.java trong project của bạn)
-    private final CustomerServices customerService = new CustomerServices();
+    private CustomerServices customerService;
 
     public CustomerHomeServlet() {
         super();
+    }
+
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        customerService = new CustomerServices();
+    }
+
+    @Override
+    public void destroy() {
+        // If CustomerServices needs explicit cleanup, do it here.
+        // For example: customerService.close(); if such a method exists.
+        customerService = null;
+        super.destroy();
     }
 
     @Override
