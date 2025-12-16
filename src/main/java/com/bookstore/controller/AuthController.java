@@ -161,19 +161,35 @@ public class AuthController extends HttpServlet {
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
             
             // Lưu thông tin user vào session với xử lý race condition
-            // Kiểm tra session hiện tại và invalidate nếu cần để tránh session fixation
-            HttpSession oldSession = request.getSession(false);
-            if (oldSession != null) {
-                // Invalidate old session để tránh session fixation attack
-                oldSession.invalidate();
-            }
-            
-            // Tạo session mới và đồng bộ hóa để tránh race condition
-            HttpSession session = request.getSession(true);
-            synchronized (session) {
+            // Synchronize trên email để chỉ lock cho cùng user đăng nhập đồng thời
+            HttpSession session;
+            synchronized (email.intern()) {
+                // Kiểm tra session hiện tại và invalidate nếu cần để tránh session fixation
+                HttpSession oldSession = request.getSession(false);
+                if (oldSession != null) {
+                    // Invalidate old session để tránh session fixation attack
+                    oldSession.invalidate();
+                }
+                
+                // Tạo session mới
+                session = request.getSession(true);
+                
+                // Set các thuộc tính session cơ bản
                 session.setAttribute("userEmail", email);
                 session.setAttribute("userRole", role);
                 session.setAttribute("userName", user.getFullName());
+                
+                // Set thuộc tính theo loại user
+                if (user instanceof Customer) {
+                    Customer customer = (Customer) user;
+                    session.setAttribute("customer", customer);
+                    
+                    // Merge guest cart với user cart khi đăng nhập (trong synchronized block)
+                    ShoppingCartServices cartService = new ShoppingCartServices();
+                    ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
+                } else if (user instanceof Admin) {
+                    session.setAttribute("admin", user);
+                }
             }
             
             // Prepare response
@@ -189,21 +205,8 @@ public class AuthController extends HttpServlet {
                 Customer customer = (Customer) user;
                 result.put("userType", "CUSTOMER");
                 result.put("phoneNumber", customer.getPhoneNumber());
-                
-                // Lưu Customer vào session để sử dụng cho cart với đồng bộ hóa
-                synchronized (session) {
-                    session.setAttribute("customer", customer);
-                }
-                
-                // Merge guest cart với user cart khi đăng nhập
-                ShoppingCartServices cartService = new ShoppingCartServices();
-                ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
-                
             } else if (user instanceof Admin) {
                 result.put("userType", "ADMIN");
-                synchronized (session) {
-                    session.setAttribute("admin", user);
-                }
             }
             
             sendJsonResponse(response, HttpServletResponse.SC_OK, result);
