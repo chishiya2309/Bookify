@@ -152,7 +152,8 @@
     btn.addEventListener('click', function() {
       let page = parseInt(this.getAttribute('data-page')) || 1;
 
-      fetch('${pageContext.request.contextPath}/book_detail?action=loadMore&bookId=${book.bookId}&page=' + page)
+      // ← ĐÃ SỬA: dùng /view_book và id=
+      fetch('${pageContext.request.contextPath}/view_book?action=loadMore&id=${book.bookId}&page=' + page)
               .then(response => response.text())
               .then(html => {
                 document.getElementById('reviews-list').insertAdjacentHTML('beforeend', html);
@@ -170,13 +171,11 @@
   function addToCart(bookId) {
     const quantity = document.getElementById('quantity').value;
     alert('Added book ID ' + bookId + ' (quantity: ' + quantity + ') to cart!');
-    // Implement real cart logic later
   }
 
   function buyNow(bookId) {
     const quantity = document.getElementById('quantity').value;
     alert('Proceeding to checkout: book ID ' + bookId + ' (quantity: ' + quantity + ')');
-    // Redirect to checkout page later
   }
 </script>
 

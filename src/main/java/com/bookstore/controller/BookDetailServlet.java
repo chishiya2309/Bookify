@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/book_detail")
-public class BookDetailServlet extends HttpServlet {
+@WebServlet("/view_book")  // ← ĐÃ SỬA: từ "/book_detail" thành "/view_book"
+public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên class
 
     private final BookServices bookServices = new BookServices();
 
@@ -25,15 +25,16 @@ public class BookDetailServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("loadMore".equals(action)) {
-            String bookIdParam = request.getParameter("bookId");
+            // ← ĐÃ SỬA: dùng "id" thay vì "bookId"
+            String idParam = request.getParameter("id");
             String pageParam = request.getParameter("page");
 
-            if (bookIdParam == null || pageParam == null) {
+            if (idParam == null || pageParam == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
-            int bookId = Integer.parseInt(bookIdParam);
+            int bookId = Integer.parseInt(idParam);
             int page = Integer.parseInt(pageParam);
 
             List<Review> reviews = bookServices.getReviews(bookId, page);
@@ -62,14 +63,14 @@ public class BookDetailServlet extends HttpServlet {
             return;
         }
 
-        // Main book detail page
-        String bookIdParam = request.getParameter("bookId");
-        if (bookIdParam == null || bookIdParam.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing bookId parameter");
+        // ← ĐÃ SỬA: dùng "id" thay vì "bookId"
+        String idParam = request.getParameter("id");
+        if (idParam == null || idParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing book id parameter");
             return;
         }
 
-        int bookId = Integer.parseInt(bookIdParam);
+        int bookId = Integer.parseInt(idParam);
         Book book = bookServices.getBookById(bookId);
 
         if (book == null) {
@@ -87,6 +88,7 @@ public class BookDetailServlet extends HttpServlet {
         request.setAttribute("totalReviews", totalReviews);
         request.setAttribute("loadedCount", reviews.size());
 
+        // Giữ nguyên đường dẫn JSP hiện tại
         request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
     }
 
