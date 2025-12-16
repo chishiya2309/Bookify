@@ -2,6 +2,7 @@ package com.bookstore.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ public class JwtUtil {
     private static final String SECRET_KEY = "your-very-secure-256-bit-secret-key-change-this-in-production-please-make-it-long-enough";
     
     // Cached signing key to avoid repeated computation
-    private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     
     // Token validity: 24 hours
     private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
