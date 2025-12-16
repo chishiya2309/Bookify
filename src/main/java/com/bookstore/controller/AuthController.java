@@ -13,6 +13,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @WebServlet("/auth/*")
 public class AuthController extends HttpServlet {
     
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private Gson gson = new Gson();
     private EntityManagerFactory emf;
     
@@ -65,9 +68,10 @@ public class AuthController extends HttpServlet {
             throws IOException {
         
         EntityManager em = emf.createEntityManager();
+        String email = null;
         
         try {
-            String email = request.getParameter("email");
+            email = request.getParameter("email");
             String password = request.getParameter("password");
             
             // Validate input
@@ -122,7 +126,7 @@ public class AuthController extends HttpServlet {
             sendJsonResponse(response, HttpServletResponse.SC_OK, result);
             
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during login for email: {}", email, e);
             sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 createErrorResponse("Đã xảy ra lỗi hệ thống"));
         } finally {
@@ -134,10 +138,11 @@ public class AuthController extends HttpServlet {
         throws IOException {
     
     EntityManager em = emf.createEntityManager();
+    String email = null;
     
     try {
         // Get parameters
-        String email = request.getParameter("email");
+        email = request.getParameter("email");
         String password = request.getParameter("password");
         String fullName = request.getParameter("fullName");
         String phoneNumber = request.getParameter("phoneNumber");
@@ -200,7 +205,7 @@ public class AuthController extends HttpServlet {
         if (em.getTransaction().isActive()) {
             em.getTransaction().rollback();
         }
-        e.printStackTrace();
+        logger.error("Error during registration for email: {}", email, e);
         sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
             createErrorResponse("Đã xảy ra lỗi hệ thống"));
     } finally {
@@ -222,7 +227,7 @@ public class AuthController extends HttpServlet {
             sendJsonResponse(response, HttpServletResponse.SC_OK, result);
             
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during logout", e);
             sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 createErrorResponse("Đã xảy ra lỗi hệ thống"));
         }
