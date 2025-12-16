@@ -14,6 +14,10 @@ import java.util.Optional;
 /**
  * Utility class for JWT authentication operations.
  * Centralizes JWT token extraction and customer restoration logic.
+ * 
+ * Note: This class uses System.out.println for debug logging to maintain
+ * consistency with the existing codebase. In production, consider migrating
+ * to a proper logging framework like SLF4J.
  */
 public class JwtAuthHelper {
     
