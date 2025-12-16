@@ -32,11 +32,30 @@ public class AuthController extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private Gson gson = new Gson();
     private EntityManagerFactory emf;
+    private ShoppingCartServices cartService;
+    private static final int LOCK_STRIPE_SIZE = 256;
+    private static final Object[] sessionLocks = new Object[LOCK_STRIPE_SIZE];
+    
+    static {
+        for (int i = 0; i < LOCK_STRIPE_SIZE; i++) {
+            sessionLocks[i] = new Object();
+        }
+    }
+    
+    private Object getLockForEmail(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
+        // Use bitwise AND to ensure positive hash value, avoiding Integer.MIN_VALUE issue
+        int hash = (email.hashCode() & 0x7FFFFFFF) % LOCK_STRIPE_SIZE;
+        return sessionLocks[hash];
+    }
     
     @Override
     public void init() throws ServletException {
         try {
             emf = Persistence.createEntityManagerFactory("bookify_pu");
+            cartService = new ShoppingCartServices();
         } catch (Exception e) {
             throw new ServletException("Failed to initialize EntityManagerFactory", e);
         }
@@ -160,11 +179,33 @@ public class AuthController extends HttpServlet {
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
             
-            // Lưu thông tin user vào session
-            HttpSession session = request.getSession();
-            session.setAttribute("userEmail", email);
-            session.setAttribute("userRole", role);
-            session.setAttribute("userName", user.getFullName());
+            // Lưu thông tin user vào session với xử lý race condition
+            // Sử dụng lock striping để chỉ lock cho cùng user đăng nhập đồng thời
+            HttpSession session;
+            synchronized (getLockForEmail(email)) {
+                // Get or create session
+                session = request.getSession(true);
+                
+                // Change session ID to prevent session fixation attack
+                // This is better than invalidate() as it preserves session data if needed
+                request.changeSessionId();
+                
+                // Set các thuộc tính session cơ bản
+                session.setAttribute("userEmail", email);
+                session.setAttribute("userRole", role);
+                session.setAttribute("userName", user.getFullName());
+                
+                // Set thuộc tính theo loại user
+                if (user instanceof Customer) {
+                    Customer customer = (Customer) user;
+                    session.setAttribute("customer", customer);
+                    
+                    // Merge guest cart với user cart khi đăng nhập (trong synchronized block)
+                    ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
+                } else if (user instanceof Admin) {
+                    session.setAttribute("admin", user);
+                }
+            }
             
             // Prepare response
             Map<String, Object> result = new HashMap<>();
@@ -179,17 +220,8 @@ public class AuthController extends HttpServlet {
                 Customer customer = (Customer) user;
                 result.put("userType", "CUSTOMER");
                 result.put("phoneNumber", customer.getPhoneNumber());
-                
-                // Lưu Customer vào session để sử dụng cho cart
-                session.setAttribute("customer", customer);
-                
-                // Merge guest cart với user cart khi đăng nhập
-                ShoppingCartServices cartService = new ShoppingCartServices();
-                ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
-                
             } else if (user instanceof Admin) {
                 result.put("userType", "ADMIN");
-                session.setAttribute("admin", user);
             }
             
             sendJsonResponse(response, HttpServletResponse.SC_OK, result);
