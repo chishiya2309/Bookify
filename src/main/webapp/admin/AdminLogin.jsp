@@ -158,10 +158,12 @@
                                 ) {
                                     window.location.href = redirectUrl;
                                 } else {
-                                    window.location.href = contextPath + '/admin/dashboard.jsp';
+                                    // Mặc định chuyển tới servlet AdminHomeServlet (dashboard)
+                                    window.location.href = contextPath + '/admin/';
                                 }
                             } else {
-                                window.location.href = contextPath + '/admin/dashboard.jsp';
+                                // Mặc định chuyển tới servlet AdminHomeServlet (dashboard)
+                                window.location.href = contextPath + '/admin/';
                             }
                         }, 1000);
                     } else {
