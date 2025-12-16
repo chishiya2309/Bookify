@@ -114,16 +114,22 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
-                    
-                    // Removed localStorage.setItem calls for sensitive data
-                    
-                    
-                    
-                    
-                    setTimeout(function() {
-                        window.location.href = contextPath + '/customer/index.jsp';
-                    }, 1000);
+                    // Kiểm tra phải là CUSTOMER mới cho đăng nhập ở trang này
+                    if (data.userType === 'CUSTOMER') {
+                        showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
+                        
+                        setTimeout(function() {
+                            window.location.href = contextPath + '/customer/index.jsp';
+                        }, 1000);
+                    } else {
+                        // Là ADMIN - không cho đăng nhập ở trang Customer
+                        // Gọi logout để xóa HttpOnly cookie
+                        fetch(contextPath + '/auth/logout', { method: 'POST' })
+                            .finally(function() {
+                                setLoadingState(false);
+                                showMessage('error', 'Tài khoản Admin vui lòng đăng nhập tại trang quản trị!');
+                            });
+                    }
                 } else {
                     setLoadingState(false);
                     showMessage('error', data.message || 'Đăng nhập thất bại!');

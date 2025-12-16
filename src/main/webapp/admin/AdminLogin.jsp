@@ -115,18 +115,18 @@
                     if (data.userType === 'ADMIN') {
                         showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                         
-                        // Lưu thông tin (nếu cần)
-                        // accessToken is stored in HttpOnly cookie by backend; do not store in localStorage
-                        localStorage.setItem('userType', 'ADMIN');
-                        
                         // Chuyển hướng sau 1s
                         setTimeout(function() {
                             window.location.href = contextPath + '/admin/dashboard.jsp';
                         }, 1000);
                     } else {
-                        // Đăng nhập được nhưng không phải Admin
-                        setLoadingState(false);
-                        showMessage('error', 'Tài khoản này không có quyền truy cập Admin!');
+                        // Là CUSTOMER - không cho đăng nhập ở trang Admin
+                        // Gọi logout để xóa HttpOnly cookie
+                        fetch(contextPath + '/auth/logout', { method: 'POST' })
+                            .finally(function() {
+                                setLoadingState(false);
+                                showMessage('error', 'Tài khoản khách hàng không có quyền truy cập Admin!');
+                            });
                     }
                 } else {
                     // Server báo lỗi logic (sai pass, v.v.)

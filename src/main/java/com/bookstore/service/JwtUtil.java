@@ -4,8 +4,10 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -80,6 +82,20 @@ public class JwtUtil {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    // Extract roles from token (returns list for multi-role support)
+    public static List<String> extractRoles(String token) {
+        List<String> roles = new ArrayList<>();
+        try {
+            String role = extractRole(token);
+            if (role != null && !role.isEmpty()) {
+                roles.add(role);
+            }
+        } catch (Exception e) {
+            // Return empty list on error
+        }
+        return roles;
     }
     
     // Extract expiration date
