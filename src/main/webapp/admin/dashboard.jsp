@@ -12,7 +12,6 @@
     
     // Verify user has admin privileges
     if (!"ADMIN".equals(userRole)) {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
         return;
     }

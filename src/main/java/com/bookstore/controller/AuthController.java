@@ -106,7 +106,11 @@ public class AuthController extends HttpServlet {
             } else if (user instanceof Customer) {
                 role = "CUSTOMER";
             } else {
-                role = "USER";
+                // Unexpected user type - log and reject
+                logger.error("Unexpected user type for email: {}", email);
+                sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    createErrorResponse("Lỗi hệ thống: loại người dùng không hợp lệ"));
+                return;
             }
             
             // Generate JWT token with role (NO REFRESH TOKEN)

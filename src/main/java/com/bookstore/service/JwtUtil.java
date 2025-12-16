@@ -26,8 +26,7 @@ public class JwtUtil {
     
     // Generate token for user (email-based)
     public static String generateToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email, JWT_TOKEN_VALIDITY);
+        return createToken(new HashMap<>(), email, JWT_TOKEN_VALIDITY);
     }
     
     // Generate token with role
