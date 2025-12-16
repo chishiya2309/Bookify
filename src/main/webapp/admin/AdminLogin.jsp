@@ -116,7 +116,7 @@
                         showMessage('success', 'Đăng nhập thành công! Đang chuyển trang...');
                         
                         // Lưu thông tin (nếu cần)
-                        if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+                        // accessToken is stored in HttpOnly cookie by backend; do not store in localStorage
                         localStorage.setItem('userType', 'ADMIN');
                         
                         // Chuyển hướng sau 1s
