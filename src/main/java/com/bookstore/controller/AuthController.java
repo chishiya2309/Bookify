@@ -32,6 +32,19 @@ public class AuthController extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private Gson gson = new Gson();
     private EntityManagerFactory emf;
+    private static final int LOCK_STRIPE_SIZE = 256;
+    private static final Object[] sessionLocks = new Object[LOCK_STRIPE_SIZE];
+    
+    static {
+        for (int i = 0; i < LOCK_STRIPE_SIZE; i++) {
+            sessionLocks[i] = new Object();
+        }
+    }
+    
+    private Object getLockForEmail(String email) {
+        int hash = Math.abs(email.hashCode() % LOCK_STRIPE_SIZE);
+        return sessionLocks[hash];
+    }
     
     @Override
     public void init() throws ServletException {
@@ -160,19 +173,19 @@ public class AuthController extends HttpServlet {
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours
             
+            // Prepare cart service outside synchronized block for efficiency
+            ShoppingCartServices cartService = new ShoppingCartServices();
+            
             // Lưu thông tin user vào session với xử lý race condition
-            // Synchronize trên email để chỉ lock cho cùng user đăng nhập đồng thời
+            // Sử dụng lock striping để chỉ lock cho cùng user đăng nhập đồng thời
             HttpSession session;
-            synchronized (email.intern()) {
-                // Kiểm tra session hiện tại và invalidate nếu cần để tránh session fixation
-                HttpSession oldSession = request.getSession(false);
-                if (oldSession != null) {
-                    // Invalidate old session để tránh session fixation attack
-                    oldSession.invalidate();
-                }
-                
-                // Tạo session mới
+            synchronized (getLockForEmail(email)) {
+                // Get or create session
                 session = request.getSession(true);
+                
+                // Change session ID to prevent session fixation attack
+                // This is better than invalidate() as it preserves session data if needed
+                request.changeSessionId();
                 
                 // Set các thuộc tính session cơ bản
                 session.setAttribute("userEmail", email);
@@ -185,7 +198,6 @@ public class AuthController extends HttpServlet {
                     session.setAttribute("customer", customer);
                     
                     // Merge guest cart với user cart khi đăng nhập (trong synchronized block)
-                    ShoppingCartServices cartService = new ShoppingCartServices();
                     ShoppingCartServlet.mergeCartOnLogin(session, customer, cartService);
                 } else if (user instanceof Admin) {
                     session.setAttribute("admin", user);
