@@ -231,8 +231,11 @@ public class ShoppingCartServlet extends HttpServlet {
         String bookIdParam = request.getParameter("bookId");
         String quantityParam = request.getParameter("quantity");
         
-        if (bookIdParam == null || quantityParam == null) {
-            throw new IllegalArgumentException("Missing required parameters: bookId or quantity");
+        if (bookIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: bookId");
+        }
+        if (quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: quantity");
         }
         
         try {
@@ -241,7 +244,7 @@ public class ShoppingCartServlet extends HttpServlet {
             
             cartService.addItemToCart(cart, bookId, quantity);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid bookId or quantity parameter", e);
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
         }
     }
 
@@ -306,8 +309,11 @@ public class ShoppingCartServlet extends HttpServlet {
         String itemIdParam = request.getParameter("itemId");
         String quantityParam = request.getParameter("quantity");
         
-        if (itemIdParam == null || quantityParam == null) {
-            throw new IllegalArgumentException("Missing required parameters: itemId or quantity");
+        if (itemIdParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: itemId");
+        }
+        if (quantityParam == null) {
+            throw new IllegalArgumentException("Missing required parameter: quantity");
         }
         
         try {
@@ -315,7 +321,7 @@ public class ShoppingCartServlet extends HttpServlet {
             Integer quantity = Integer.parseInt(quantityParam);
             cartService.updateItemQuantity(cart, itemId, quantity);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid itemId or quantity parameter", e);
+            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
         }
     }
 }
