@@ -12,7 +12,7 @@ import com.bookstore.model.Category;
 import java.util.List;
 
 public class BookServices {
-    public List<Book> getALlBooks() {
+    public List<Book> getAllBooks() {
         return BookDAO.getAllBooks();
     }
     public Book getBookById(Integer id) {
