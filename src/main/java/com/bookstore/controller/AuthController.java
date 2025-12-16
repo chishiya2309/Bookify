@@ -43,6 +43,9 @@ public class AuthController extends HttpServlet {
     }
     
     private Object getLockForEmail(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
         // Use bitwise AND to ensure positive hash value, avoiding Integer.MIN_VALUE issue
         int hash = (email.hashCode() & 0x7FFFFFFF) % LOCK_STRIPE_SIZE;
         return sessionLocks[hash];
