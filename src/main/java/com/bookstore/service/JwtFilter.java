@@ -19,7 +19,7 @@ public class JwtFilter implements Filter {
         "/admin/AdminLogin.jsp"
     );
     
-    // 2. Cập nhật đường dẫn cho Servlet (API) ko cần dăng nhập
+    // 2. Cập nhật đường dẫn cho Servlet (API) ko cần đăng nhập
     private static final List<String> EXCLUDED_SERVLETS = Arrays.asList(
         "/auth/login",     
         "/auth/register", 
