@@ -7,9 +7,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @WebFilter("/*")
 public class JwtFilter implements Filter {
+    
+    // Compiled regex patterns for redirect URL validation (for efficiency)
+    private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+]*:.*");
+    private static final Pattern BACKSLASH_AT_PATTERN = Pattern.compile("^/[\\\\@].*");
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile("^/[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(?:/.*)?$");
     
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
@@ -204,8 +210,8 @@ public class JwtFilter implements Filter {
         }
         
         // Must not contain protocol scheme at the beginning (http://, https://, javascript:, etc.)
-        // Use a more restrictive pattern to match only valid protocol schemes
-        if (url.matches("^[a-zA-Z][a-zA-Z0-9+]*:.*")) {
+        // Use precompiled pattern for efficiency
+        if (PROTOCOL_PATTERN.matcher(url).matches()) {
             return false;
         }
         
@@ -229,7 +235,13 @@ public class JwtFilter implements Filter {
             // URL must not look like an external redirect to a domain
             // Check for patterns like '//domain.com', '/\domain.com', or '/@domain.com'
             // which are common bypass techniques for redirect vulnerabilities
-            if (url.matches("^/[\\\\@].*") || url.matches("^/[a-zA-Z0-9-]+\\.[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(?:/.*)?$")) {
+            if (BACKSLASH_AT_PATTERN.matcher(url).matches()) {
+                return false;
+            }
+            
+            // Check for simple domain-like patterns (e.g., '/evil.com' or '/evil.com/path')
+            // This pattern is more targeted to avoid rejecting valid paths with multiple dots
+            if (DOMAIN_PATTERN.matcher(url).matches()) {
                 return false;
             }
         }
