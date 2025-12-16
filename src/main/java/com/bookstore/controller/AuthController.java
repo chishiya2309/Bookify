@@ -140,7 +140,6 @@ public class AuthController extends HttpServlet {
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Đăng nhập thành công");
-            result.put("accessToken", accessToken);
             result.put("email", email);
             result.put("fullName", user.getFullName());
             result.put("userId", user.getUserId());
