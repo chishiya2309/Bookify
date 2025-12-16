@@ -14,7 +14,7 @@
         <header class="login-header">
             <i class="fas fa-book-reader fa-3x" style="color: var(--color-primary); margin-bottom: 15px;"></i>
             <h2>Welcome Bookstore</h2>
-            <p>Đăng nhập để bắt đầu mua sắm</p>
+            <p>Đăng nhập để tiếp tục mua sắm</p>
         </header>
         
         <div id="messageContainer"></div>
