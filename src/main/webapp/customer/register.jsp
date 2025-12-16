@@ -140,8 +140,9 @@
                     
                     // ✅ Redirect to login page with email parameter
                     setTimeout(function() {
-                        // Pass email to login page to pre-fill form
-                        window.location.href = contextPath + '/login.jsp?registered=true&email=' + encodeURIComponent(data.email);
+                        // Store email in sessionStorage to pre-fill form on login page
+                        sessionStorage.setItem('registeredEmail', data.email);
+                        window.location.href = contextPath + '/login.jsp?registered=true';
                     }, 2000);
                     
                 } else {
