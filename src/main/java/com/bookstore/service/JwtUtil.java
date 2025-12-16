@@ -26,7 +26,13 @@ public class JwtUtil {
     
     // Generate token for user (email-based)
     public static String generateToken(String email) {
+        return createToken(new HashMap<>(), email, JWT_TOKEN_VALIDITY);
+    }
+    
+    // Generate token with role
+    public static String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
         return createToken(claims, email, JWT_TOKEN_VALIDITY);
     }
     
@@ -61,6 +67,16 @@ public class JwtUtil {
     // Alias for backward compatibility
     public static String extractUsername(String token) {
         return extractEmail(token);
+    }
+    
+    // Extract role from token
+    public static String extractRole(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.get("role", String.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     // Extract expiration date

@@ -99,8 +99,22 @@ public class AuthController extends HttpServlet {
                 return;
             }
             
-            // Generate JWT token (NO REFRESH TOKEN)
-            String accessToken = JwtUtil.generateToken(email);
+            // Determine user role
+            String role;
+            if (user instanceof Admin) {
+                role = "ADMIN";
+            } else if (user instanceof Customer) {
+                role = "CUSTOMER";
+            } else {
+                // Unexpected user type - log and reject
+                logger.error("Unexpected user type for email: {}", email);
+                sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    createErrorResponse("Lỗi hệ thống: loại người dùng không hợp lệ"));
+                return;
+            }
+            
+            // Generate JWT token with role (NO REFRESH TOKEN)
+            String accessToken = JwtUtil.generateToken(email, role);
             
             // Set cookie (ONLY access token)
             setCookie(response, "jwt_token", accessToken, 24 * 60 * 60); // 24 hours

@@ -1,4 +1,21 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    // Server-side authentication check
+    String username = (String) request.getAttribute("username");
+    String userRole = (String) request.getAttribute("userRole");
+    
+    // Verify user is authenticated
+    if (username == null || username.isEmpty()) {
+        response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+        return;
+    }
+    
+    // Verify user has admin privileges
+    if (!"ADMIN".equals(userRole)) {
+        response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
+        return;
+    }
+%>
 <!DOCTYPE html>
 <html>
     <head>
