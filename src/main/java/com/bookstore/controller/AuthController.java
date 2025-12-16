@@ -1,6 +1,7 @@
 package com.bookstore.controller;
 
 import com.bookstore.service.JwtUtil;
+import com.bookstore.service.ValidationUtil;
 import com.bookstore.dao.UserRepository;
 import com.bookstore.model.User;
 import com.bookstore.model.Customer;
@@ -78,6 +79,21 @@ public class AuthController extends HttpServlet {
             if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
                 sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
                     createErrorResponse("Email và mật khẩu không được để trống"));
+                return;
+            }
+            
+            // Validate email format
+            if (!ValidationUtil.isValidEmail(email)) {
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
+                    createErrorResponse("Định dạng email không hợp lệ"));
+                return;
+            }
+            
+            // Check for SQL injection patterns
+            if (ValidationUtil.containsSqlInjection(email) || ValidationUtil.containsSqlInjection(password)) {
+                logger.warn("Potential SQL injection attempt detected for email: {}", email);
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, 
+                    createErrorResponse("Dữ liệu đầu vào không hợp lệ"));
                 return;
             }
             
@@ -166,6 +182,22 @@ public class AuthController extends HttpServlet {
             email.isEmpty() || password.isEmpty() || fullName.isEmpty() || phoneNumber.isEmpty()) {
             sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                 createErrorResponse("Vui lòng điền đầy đủ thông tin bắt buộc"));
+            return;
+        }
+        
+        // Validate email format
+        if (!ValidationUtil.isValidEmail(email)) {
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                createErrorResponse("Định dạng email không hợp lệ"));
+            return;
+        }
+        
+        // Check for SQL injection patterns
+        if (ValidationUtil.containsSqlInjection(email) || ValidationUtil.containsSqlInjection(password) ||
+            ValidationUtil.containsSqlInjection(fullName) || ValidationUtil.containsSqlInjection(phoneNumber)) {
+            logger.warn("Potential SQL injection attempt detected during registration for email: {}", email);
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                createErrorResponse("Dữ liệu đầu vào không hợp lệ"));
             return;
         }
         
