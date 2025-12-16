@@ -227,11 +227,15 @@ public class ShoppingCartServlet extends HttpServlet {
         }
     }
 
-    private void addToCart(HttpServletRequest request, ShoppingCart cart) {
-        Integer bookId = Integer.parseInt(request.getParameter("bookId"));
-        Integer quantity = Integer.parseInt(request.getParameter("quantity"));
-        
-        cartService.addItemToCart(cart, bookId, quantity);
+    private void addToCart(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        try {
+            Integer bookId = Integer.parseInt(request.getParameter("bookId"));
+            Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+            
+            cartService.addItemToCart(cart, bookId, quantity);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid bookId or quantity parameter", e);
+        }
     }
 
     /**
@@ -276,14 +280,22 @@ public class ShoppingCartServlet extends HttpServlet {
         System.out.println("[UPDATE CART] Complete! Updated: " + updatedCount + ", Removed: " + removedCount);
     }
 
-    private void removeItem(HttpServletRequest request, ShoppingCart cart) {
-        Integer itemId = Integer.parseInt(request.getParameter("itemId"));
-        cartService.removeItemFromCart(cart, itemId);
+    private void removeItem(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        try {
+            Integer itemId = Integer.parseInt(request.getParameter("itemId"));
+            cartService.removeItemFromCart(cart, itemId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid itemId parameter", e);
+        }
     }
 
-    private void updateQuantity(HttpServletRequest request, ShoppingCart cart) {
-        Integer itemId = Integer.parseInt(request.getParameter("itemId"));
-        Integer quantity = Integer.parseInt(request.getParameter("quantity"));
-        cartService.updateItemQuantity(cart, itemId, quantity);
+    private void updateQuantity(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
+        try {
+            Integer itemId = Integer.parseInt(request.getParameter("itemId"));
+            Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+            cartService.updateItemQuantity(cart, itemId, quantity);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid itemId or quantity parameter", e);
+        }
     }
 }
