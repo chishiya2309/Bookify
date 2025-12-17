@@ -7,7 +7,6 @@
 <head>
   <meta charset="UTF-8">
   <title>${book.title} - Bookify</title>
-<!--  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">-->
   <style>
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .book-detail { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 20px; }
