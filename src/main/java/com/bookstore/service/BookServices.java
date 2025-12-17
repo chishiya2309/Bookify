@@ -28,7 +28,7 @@ public class BookServices {
     }
 
     public List<Book> getAllBooks() {
-        return BookDAO.getAllBooks();
+        return bookDAO.getAllBooks();
     }
     
     public void updateBook(Book book) {
