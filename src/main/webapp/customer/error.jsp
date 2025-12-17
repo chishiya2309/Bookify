@@ -234,7 +234,7 @@
                         <i class="fas fa-home"></i>
                         Về trang chủ
                     </a>
-                    <a href="cart" class="btn btn-outline">
+                    <a href="${pageContext.request.contextPath}/customer/cart" class="btn btn-outline">
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
                     </a>

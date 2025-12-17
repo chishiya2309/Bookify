@@ -19,8 +19,10 @@ public class JwtFilter implements Filter {
     
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
+        "",
         "/",                             // Root path
         "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
+        "/customer/book_detail.jsp",     // Trang chi tiết sách (không cần đăng nhập)
         "/customer/login.jsp",           
         "/customer/register.jsp",
         "/customer/cart.jsp",            // Giỏ hàng JSP (khách có thể xem)
@@ -35,7 +37,8 @@ public class JwtFilter implements Filter {
         "/auth/register", 
         "/auth/logout",    
         "/auth/refresh",
-        "/customer/cart"                 // Cart servlet cho guest
+        "/customer/cart",                // Cart servlet cho guest
+        "/view_book"                     // Xem chi tiết sách (không cần đăng nhập)
     );
 
     @Override
@@ -58,24 +61,28 @@ public class JwtFilter implements Filter {
             return;
         }
         
-        // Lấy token từ header hoặc cookie
-        String token = extractToken(httpRequest);
-        
-        // Kiểm tra nếu là ADMIN cố vào trang customer (ngay cả khi path được exclude)
-        if (token != null && JwtUtil.validateToken(token)) {
-            String role = JwtUtil.extractRole(token);
-            // Nếu là admin và đang vào trang customer hoặc trang chủ, redirect về admin
-            if ("ADMIN".equals(role) && (path.equals("/") || path.startsWith("/customer/"))) {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/");
-                return;
-            }
-        }
-        
-        // Bỏ qua các URL không cần xác thực
+        // Bỏ qua các URL không cần xác thực (kiểm tra TRƯỚC khi kiểm tra token)
+        // Đảm bảo path "/" luôn được phép truy cập để hiển thị CustomerHomePage
         if (shouldExclude(path)) {
+            // Lấy token để kiểm tra nếu là ADMIN thì redirect
+            String token = extractToken(httpRequest);
+            
+            // Kiểm tra nếu là ADMIN cố vào trang customer hoặc trang chủ
+            if (token != null && JwtUtil.validateToken(token)) {
+                String role = JwtUtil.extractRole(token);
+                // Nếu là admin và đang vào trang customer hoặc trang chủ, redirect về admin
+                if ("ADMIN".equals(role) && (path.equals("/") || path.startsWith("/customer/"))) {
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/");
+                    return;
+                }
+            }
+            
             chain.doFilter(request, response);
             return;
         }
+        
+        // Lấy token từ header hoặc cookie
+        String token = extractToken(httpRequest);
         
         if (token != null && JwtUtil.validateToken(token)) {
             // Token hợp lệ, lấy username và role và set vào request
