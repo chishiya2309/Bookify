@@ -14,6 +14,6 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>admin/book/show.jsp</welcome-file>
+        <welcome-file>customer/BookDetails.jsp</welcome-file>
     </welcome-file-list>
 </web-app>

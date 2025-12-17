@@ -4,6 +4,7 @@ import com.bookstore.data.DBUtil;
 import com.bookstore.model.Author;
 import com.bookstore.model.Book;
 import com.bookstore.model.Category;
+import com.bookstore.model.Review;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
@@ -159,5 +160,13 @@ public class BookDAO {
         } finally {
             em.close();
         }
+    }
+
+    public static long countReviewsBook(Integer bookId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        String jpql = "SELECT COUNT(r) FROM Review r WHERE r.book.bookId = :bookId";
+        TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+        query.setParameter("bookId", bookId);
+        return query.getSingleResult();
     }
 }
