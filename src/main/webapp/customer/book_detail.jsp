@@ -99,7 +99,7 @@
 
       <div class="description">
         <strong>Description:</strong><br>
-        ${book.description}
+        <c:out value="${book.description}"/>
       </div>
 
       <div class="quantity-section">
