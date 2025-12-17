@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -28,18 +28,18 @@
         </tr>
     </c:if>
 
-    <c:forEach var="user" items="${listPublishers}">
+    <c:forEach var="publisher" items="${listPublishers}">
         <tr>
-            <td>${user.publisherId}</td>
-            <td>${user.name}</td>
-            <td>${user.contactEmail}</td>
-            <td>${user.address}</td>
-            <td>${user.website}</td>
+            <td>${publisher.publisherId}</td>
+            <td>${publisher.name}</td>
+            <td>${publisher.contactEmail}</td>
+            <td>${publisher.address}</td>
+            <td>${publisher.website}</td>
             <td>
-                <a href="${pageContext.request.contextPath}/admin/publishers?action=showUpdate&id=${user.publisherId}">Edit</a>
+                <a href="${pageContext.request.contextPath}/admin/publishers?action=showUpdate&id=${publisher.publisherId}">Edit</a>
                 <br>
-                <a href="${pageContext.request.contextPath}/admin/publishers?action=delete&id=${user.publisherId}"
-                   onclick="return confirm('Are you sure you want to delete the user with ID= ${user.publisherId}?')">
+                <a href="${pageContext.request.contextPath}/admin/publishers?action=delete&id=${publisher.publisherId}"
+                   onclick="return confirm('Are you sure you want to delete the user with ID= ${publisher.publisherId}?')">
                     Delete
                 </a>
             </td>

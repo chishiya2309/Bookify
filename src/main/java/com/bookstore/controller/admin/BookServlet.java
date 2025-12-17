@@ -69,7 +69,7 @@ public class BookServlet extends HttpServlet {
     }
 
     private void listBooks(HttpServletRequest request, HttpServletResponse response) {
-        List<Book> books = bookService.getALlBooks();
+        List<Book> books = bookService.getAllBooks();
         request.setAttribute("books", books);
     }
 
