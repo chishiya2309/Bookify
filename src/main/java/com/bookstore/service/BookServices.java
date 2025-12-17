@@ -3,7 +3,6 @@ import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Book;
 import com.bookstore.model.Review;
 import com.bookstore.model.Author;
-import com.bookstore.model.Book;
 import com.bookstore.model.Category;
 import java.util.List;
 
