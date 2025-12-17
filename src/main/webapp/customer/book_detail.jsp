@@ -132,15 +132,15 @@
     <div id="reviews-list">
       <c:forEach items="${reviews}" var="r">
         <div class="review-item">
-          <strong>${r.customer.fullName}</strong>
+          <strong><c:out value="${r.customer.fullName}"/></strong>
           <span class="rating">
                             <c:forEach begin="1" end="${r.rating}">★</c:forEach>
                         </span>
           <span class="date">(${r.reviewDate})</span><br>
           <c:if test="${not empty r.headline}">
-            <h4 class="headline">${r.headline}</h4>
+            <h4 class="headline"><c:out value="${r.headline}"/></h4>
           </c:if>
-          <p>${r.comment}</p>
+          <p><c:out value="${r.comment}"/></p>
         </div>
       </c:forEach>
     </div>
