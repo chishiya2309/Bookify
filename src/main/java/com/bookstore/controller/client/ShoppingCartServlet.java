@@ -1,4 +1,4 @@
-package com.bookstore.controller;
+package com.bookstore.controller.client;
 
 import com.bookstore.model.*;
 import com.bookstore.service.ShoppingCartServices;
@@ -99,7 +99,6 @@ public class ShoppingCartServlet extends HttpServlet {
         if (customer != null) {
             request.setAttribute("userEmail", customer.getEmail());
         }
-        
         // Hiển thị thông báo merge nếu có
         String mergeMessage = (String) session.getAttribute(MERGE_MESSAGE_KEY);
         if (mergeMessage != null) {

@@ -94,8 +94,19 @@ public class BookServlet extends HttpServlet {
             throws ServletException, IOException {
 
         Book book = new Book();
-        // Gọi hàm đọc dữ liệu từ form (tránh viết lặp lại code)
+
+        // Đọc dữ liệu từ form
         readBookFields(book, request);
+
+        // Validate dữ liệu
+        String validationError = validateBook(book, request, true);
+        if (validationError != null) {
+            request.setAttribute("errorMessage", validationError);
+            request.setAttribute("listCategory", bookService.getAllCategories());
+            request.setAttribute("listAuthors", bookService.getAllAuthors());
+            getServletContext().getRequestDispatcher("/admin/book/create.jsp").forward(request, response);
+            return;
+        }
 
         bookService.createBook(book);
 
@@ -116,7 +127,18 @@ public class BookServlet extends HttpServlet {
             // 2. Cập nhật thông tin mới vào sách cũ
             readBookFields(book, request);
 
-            // 3. Lưu xuống DB
+            // 3. Validate dữ liệu
+            String validationError = validateBook(book, request, false);
+            if (validationError != null) {
+                request.setAttribute("errorMessage", validationError);
+                request.setAttribute("book", book);
+                request.setAttribute("listCategory", bookService.getAllCategories());
+                request.setAttribute("listAuthors", bookService.getAllAuthors());
+                getServletContext().getRequestDispatcher("/admin/book/update.jsp").forward(request, response);
+                return;
+            }
+
+            // 4. Lưu xuống DB
             bookService.updateBook(book);
         }
 
@@ -130,6 +152,89 @@ public class BookServlet extends HttpServlet {
             bookService.deleteBook(Integer.parseInt(bookIdStr));
             listBooks(request, response);
         }
+    }
+
+    // --- VALIDATION METHOD ---
+    private String validateBook(Book book, HttpServletRequest request, boolean isCreate) throws ServletException, IOException {
+        // 1. Validate Title
+        if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
+            return "Title is required.";
+        }
+        if (book.getTitle().length() > 255) {
+            return "Title must not exceed 255 characters.";
+        }
+        // 2. Validate ISBN
+        if (book.getIsbn() == null || book.getIsbn().trim().isEmpty()) {
+            return "ISBN is required.";
+        }
+        if (book.getIsbn().length() < 10 || book.getIsbn().length() > 20) {
+            return "ISBN must be between 10 and 20 characters.";
+        }
+        if (!book.getIsbn().matches("[0-9\\-]{10,20}")) {
+            return "ISBN must contain only digits and hyphens.";
+        }
+
+        // 3. Validate Price
+        if (book.getPrice() == null) {
+            return "Price is required.";
+        }
+        if (book.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            return "Price must be greater than 0.";
+        }
+        if (book.getPrice().compareTo(new BigDecimal("99999999.99")) > 0) {
+            return "Price must not exceed 99,999,999.99.";
+        }
+
+        // 4. Validate Publish Date
+        if (book.getPublishDate() == null) {
+            return "Publish date is required.";
+        }
+        if (book.getPublishDate().isAfter(LocalDate.now())) {
+            return "Publish date cannot be in the future.";
+        }
+
+        // 5. Validate Category
+        if (book.getCategory() == null) {
+            return "Category is required.";
+        }
+
+        // 6. Validate Authors
+        if (book.getAuthors() == null || book.getAuthors().isEmpty()) {
+            return "At least one author is required.";
+        }
+
+        // 7. Validate Description (optional but if provided, check length)
+        if (book.getDescription() != null && !book.getDescription().trim().isEmpty()) {
+            if (book.getDescription().trim().length() < 10) {
+                return "Description must be at least 10 characters if provided.";
+            }
+            if (book.getDescription().length() > 5000) {
+                return "Description must not exceed 5000 characters.";
+            }
+        }
+
+        // 8. Validate Book Image (required for create, optional for update)
+        if (isCreate) {
+            Part imagePart = request.getPart("bookImage");
+            if (imagePart == null || imagePart.getSize() == 0) {
+                return "Book image is required.";
+            }
+
+            // Validate file type
+            String contentType = imagePart.getContentType();
+            if (!contentType.equals("image/jpeg") && !contentType.equals("image/png") &&
+                !contentType.equals("image/jpg") && !contentType.equals("image/webp")) {
+                return "Invalid image format. Only JPEG, PNG, JPG, WEBP are allowed.";
+            }
+
+            // Validate file size (max 5MB)
+            long maxFileSize = 5 * 1024 * 1024; // 5MB
+            if (imagePart.getSize() > maxFileSize) {
+                return "Image file size must not exceed 5MB.";
+            }
+        }
+
+        return null; // No validation errors
     }
 
     // --- HÀM HỖ TRỢ ĐỌC DỮ LIỆU TỪ FORM (Dùng chung cho Create và Update) ---

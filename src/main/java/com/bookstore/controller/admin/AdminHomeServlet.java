@@ -1,4 +1,4 @@
-package com.bookstore.controller;
+package com.bookstore.controller.admin;
 
 import com.bookstore.model.Order;
 import com.bookstore.model.Review;
