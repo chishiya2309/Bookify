@@ -20,21 +20,21 @@ import java.util.Optional;
  * to a proper logging framework like SLF4J.
  */
 public class JwtAuthHelper {
-    
+
     /**
-     * Extract JWT token from request cookies or Authorization header.
+     * Kiểm tra JWT token từ request cookies hoặc Authorization header.
      * 
      * @param request The HTTP request
-     * @return JWT token string, or null if not found
+     * @return JWT token string, hoặc null nếu không tìm thấy
      */
     public static String extractJwtToken(HttpServletRequest request) {
-        // Check Authorization header first
+        // Kiểm tra Authorization header first
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        
-        // Check cookies
+
+        // Kiểm tra cookies
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -45,47 +45,48 @@ public class JwtAuthHelper {
         }
         return null;
     }
-    
+
     /**
      * Restore Customer from JWT token and update session attributes.
      * Only restores customers with CUSTOMER role (not ADMIN).
      * 
      * @param request The HTTP request
      * @param session The HTTP session
-     * @param emf EntityManagerFactory for database access
+     * @param emf     EntityManagerFactory for database access
      * @return Customer object if successfully restored, null otherwise
      */
-    public static Customer restoreCustomerFromJwt(HttpServletRequest request, HttpSession session, EntityManagerFactory emf) {
+    public static Customer restoreCustomerFromJwt(HttpServletRequest request, HttpSession session,
+            EntityManagerFactory emf) {
         String token = extractJwtToken(request);
-        
+
         if (token == null || !JwtUtil.validateToken(token)) {
             return null;
         }
-        
+
         try {
             String email = JwtUtil.extractEmail(token);
             String role = JwtUtil.extractRole(token);
-            
+
             // Only restore for CUSTOMER, not ADMIN
             if (!"CUSTOMER".equals(role)) {
                 return null;
             }
-            
+
             // Find customer from database
             EntityManager em = emf.createEntityManager();
             try {
                 UserRepository userRepo = new UserRepository(em);
                 Optional<User> optionalUser = userRepo.findByEmail(email);
-                
+
                 if (optionalUser.isPresent() && optionalUser.get() instanceof Customer) {
                     Customer customer = (Customer) optionalUser.get();
-                    
+
                     // Restore session attributes
                     session.setAttribute("customer", customer);
                     session.setAttribute("userEmail", email);
                     session.setAttribute("userRole", role);
                     session.setAttribute("userName", customer.getFullName());
-                    
+
                     System.out.println("[DEBUG] Restored customer from JWT: " + email);
                     return customer;
                 }
@@ -95,10 +96,10 @@ public class JwtAuthHelper {
         } catch (Exception e) {
             System.out.println("[DEBUG] Failed to restore customer from JWT: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Check login status from JWT token and set request attributes.
      * Sets isLoggedIn, userEmail, and userRole attributes.
@@ -109,16 +110,16 @@ public class JwtAuthHelper {
      */
     public static void checkLoginStatus(HttpServletRequest request) {
         String token = extractJwtToken(request);
-        
+
         if (token != null && JwtUtil.validateToken(token)) {
             try {
                 String email = JwtUtil.extractEmail(token);
                 String role = JwtUtil.extractRole(token);
-                
+
                 // Always set user info
                 request.setAttribute("userEmail", email);
                 request.setAttribute("userRole", role);
-                
+
                 // Only set isLoggedIn=true for CUSTOMER role
                 // Admin should not be able to access customer pages
                 if ("CUSTOMER".equals(role)) {
