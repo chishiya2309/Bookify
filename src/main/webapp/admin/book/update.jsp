@@ -16,6 +16,23 @@
 <div class="container">
     <h2>Edit Book</h2>
 
+    <c:if test="${not empty errorMessage}">
+        <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #c33;">
+            <strong>Error:</strong> ${errorMessage}
+            <br>
+            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Back to Books List</a>
+        </div>
+    </c:if>
+
+    <c:if test="${empty book}">
+        <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #c33;">
+            <strong>Error:</strong> Book not found!
+            <br>
+            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Back to Books List</a>
+        </div>
+    </c:if>
+
+    <c:if test="${not empty book}">
     <form action="${pageContext.request.contextPath}/admin/books" method="post" enctype="multipart/form-data" class="form-card" novalidate>
 
         <input type="hidden" name="action" value="update"/>
@@ -88,7 +105,19 @@
 
         <div class="form-row" style="grid-template-columns: 160px 1fr;">
             <label></label>
-            <img style="max-height: 250px; display: none" id="thumbnail" alt="Image Preview"/>
+            <c:choose>
+                <c:when test="${not empty book.primaryImageUrl}">
+                    <img id="thumbnail"
+                         src="${book.primaryImageUrl}"
+                         style="max-height:250px; display:block;"
+                         alt="Current Book Image"/>
+                </c:when>
+                <c:otherwise>
+                    <img id="thumbnail"
+                         style="max-height:250px; display:none;"
+                         alt="Image Preview"/>
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <div class="form-row">
@@ -118,6 +147,7 @@
         </div>
 
     </form>
+    </c:if>
 </div>
 
 <jsp:include page="../footer_admin.jsp" />

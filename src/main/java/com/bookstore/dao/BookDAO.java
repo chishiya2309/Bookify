@@ -30,8 +30,10 @@ public class BookDAO {
         trans.begin();
         try {
             em.persist(book);
+            em.flush();
             trans.commit();
         } catch (Exception e) {
+            System.err.println("ERROR: Failed to create book");
             e.printStackTrace();
             if (trans.isActive()) {
                 trans.rollback();
@@ -57,14 +59,24 @@ public class BookDAO {
             String qString = "SELECT DISTINCT b FROM Book b " +
                              "LEFT JOIN FETCH b.authors " +
                              "LEFT JOIN FETCH b.category " +
-                             //"LEFT JOIN FETCH b.images " +
                              "ORDER BY b.title ASC";
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             List<Book> books = q.getResultList();
+
+            // Fetch images separately for each book to avoid MultipleBagFetchException
+            for (Book book : books) {
+                String imageQuery = "SELECT img FROM BookImage img WHERE img.book.bookId = :bookId ORDER BY img.isPrimary DESC, img.sortOrder ASC";
+                TypedQuery<BookImage> imgQuery = em.createQuery(imageQuery, BookImage.class);
+                imgQuery.setParameter("bookId", book.getBookId());
+                List<BookImage> images = imgQuery.getResultList();
+                book.setImages(images != null ? images : new ArrayList<>());
+            }
+
             return books;
         } catch (Exception e) {
+            System.err.println("ERROR: Failed to get all books");
             e.printStackTrace();
-            return null;
+            return new ArrayList<>(); // Return empty list instead of null
         } finally {
             em.close();
         }

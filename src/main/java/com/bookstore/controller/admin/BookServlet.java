@@ -3,17 +3,20 @@ package com.bookstore.controller.admin;
 import com.bookstore.model.*;
 import com.bookstore.service.BookServices;
 
+import com.bookstore.util.CloudinaryUtil;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig; // QUAN TRỌNG
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/admin/books")
 @MultipartConfig( // BẮT BUỘC ĐỂ UPLOAD ẢNH
@@ -34,6 +37,7 @@ public class BookServlet extends HttpServlet {
         if (action == null || action.isEmpty()) {
             action = "list";
         }
+
 
         String url = "/admin/book/show.jsp";
 
@@ -79,14 +83,25 @@ public class BookServlet extends HttpServlet {
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        String bookIdStr = request.getParameter("bookId");
-        if (bookIdStr != null && !bookIdStr.isEmpty()) {
-            int bookId = Integer.parseInt(bookIdStr);
-            Book book = bookService.getBookById(bookId);
-            request.setAttribute("book", book);
-            request.setAttribute("listCategory", bookService.getAllCategories());
-            request.setAttribute("listAuthors", bookService.getAllAuthors());
+        try {
+            String bookIdStr = request.getParameter("bookId");
+            if (bookIdStr != null && !bookIdStr.isEmpty()) {
+                int bookId = Integer.parseInt(bookIdStr);
+                Book book = bookService.getBookById(bookId);
+
+                if (book == null) {
+                    throw new ServletException("Book not found with ID: " + bookId);
+                }
+
+                request.setAttribute("book", book);
+                request.setAttribute("listCategory", bookService.getAllCategories());
+                request.setAttribute("listAuthors", bookService.getAllAuthors());
+            } else {
+                throw new ServletException("Book ID is required");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Failed to load book: " + e.getMessage());
         }
     }
 
@@ -141,19 +156,51 @@ public class BookServlet extends HttpServlet {
             // 4. Lưu xuống DB
             bookService.updateBook(book);
         }
-
         listBooks(request, response);
         getServletContext().getRequestDispatcher("/admin/book/show.jsp").forward(request, response);
     }
 
+
     private void deleteBook(HttpServletRequest request, HttpServletResponse response) {
         String bookIdStr = request.getParameter("bookId");
+
         if (bookIdStr != null) {
-            bookService.deleteBook(Integer.parseInt(bookIdStr));
+            int bookId = Integer.parseInt(bookIdStr);
+
+            Book book = bookService.getBookById(bookId);
+            Cloudinary cloudinary = CloudinaryUtil.cloudinary;
+
+            for (BookImage img : book.getImages()) {
+                try {
+                    String publicId = extractPublicId(img.getUrl());
+                    cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                } catch (IOException e) {
+                    // Log lại là đủ, KHÔNG nên stop delete book
+                    e.printStackTrace();
+                }
+            }
+
+            bookService.deleteBook(bookId);
             listBooks(request, response);
         }
     }
 
+
+    private String extractPublicId(String imageUrl) {
+        // Ví dụ URL:
+        // https://res.cloudinary.com/demo/image/upload/v123456/bookstore/books/book_9781234567890.jpg
+
+        String[] parts = imageUrl.split("/upload/");
+        if (parts.length < 2) return null;
+
+        String publicPath = parts[1];
+
+        // bỏ version v123456/
+        publicPath = publicPath.replaceFirst("^v\\d+/", "");
+
+        // bỏ đuôi .jpg / .png / ...
+        return publicPath.substring(0, publicPath.lastIndexOf('.'));
+    }
     // --- VALIDATION METHOD ---
     private String validateBook(Book book, HttpServletRequest request, boolean isCreate) throws ServletException, IOException {
         // 1. Validate Title
@@ -222,10 +269,10 @@ public class BookServlet extends HttpServlet {
 
             // Validate file type
             String contentType = imagePart.getContentType();
-            if (!contentType.equals("image/jpeg") && !contentType.equals("image/png") &&
-                !contentType.equals("image/jpg") && !contentType.equals("image/webp")) {
-                return "Invalid image format. Only JPEG, PNG, JPG, WEBP are allowed.";
+            if (!contentType.startsWith("image/")) {
+                return "Invalid image format.";
             }
+
 
             // Validate file size (max 5MB)
             long maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -277,24 +324,49 @@ public class BookServlet extends HttpServlet {
         if (authorIds != null) {
             book.setAuthors(authors);
         }
-
-        // 5. Xử lý ẢNH (File Upload)
+// 5. XỬ LÝ ẢNH (Cloudinary + BookImage)
         Part part = request.getPart("bookImage");
         if (part != null && part.getSize() > 0) {
-            String fileName = part.getSubmittedFileName();
+            try {
+                Cloudinary cloudinary = CloudinaryUtil.cloudinary;
 
-            // Tạo thư mục lưu ảnh nếu chưa có
-            String path = request.getServletContext().getRealPath("/") + "images";
-            File dir = new File(path);
-            if (!dir.exists()) dir.mkdirs();
+                // Đọc InputStream thành byte[] array
+                byte[] imageBytes = part.getInputStream().readAllBytes();
 
-            // Ghi file
-            part.write(path + File.separator + fileName);
+                // Upload lên Cloudinary
+                Map uploadResult = cloudinary.uploader().upload(
+                        imageBytes,
+                        ObjectUtils.asMap(
+                                "folder", "bookstore/books",
+                                "public_id", "book_" + book.getIsbn(),
+                                "overwrite", true,
+                                "resource_type", "image"
+                        )
+                );
 
-            // TODO: Lưu tên ảnh vào Book
-            // Nếu Book.java của bạn có trường `imagePath` hoặc list `images`
-            // Ví dụ: book.setImage(fileName);
-            // Hoặc tạo BookImage object và add vào list như code mẫu trước đó
+                String imageUrl = uploadResult.get("secure_url").toString();
+
+                // TẠO BookImage
+                BookImage image = new BookImage();
+                image.setUrl(imageUrl);
+                image.setIsPrimary(true);
+                image.setSortOrder(0);
+                image.setBook(book);
+
+                // Đảm bảo images list được khởi tạo
+                if (book.getImages() == null) {
+                    book.setImages(new ArrayList<>());
+                }
+
+                // Nếu là UPDATE: xóa ảnh primary cũ
+                book.getImages().removeIf(img -> Boolean.TRUE.equals(img.getIsPrimary()));
+
+                // Add ảnh mới
+                book.getImages().add(image);
+
+            } catch (Exception e) {
+                throw new ServletException("Failed to upload image: " + e.getMessage(), e);
+            }
         }
     }
 

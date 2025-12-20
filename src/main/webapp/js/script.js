@@ -471,14 +471,65 @@ function validatePublisherForm(form) {
     return isValid;
 }
 
+// Validate category form before submit
+function validateCategoryForm(form) {
+    let isValid = true;
+    let firstInvalidField = null;
+
+    // Clear all previous errors
+    form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+    form.querySelectorAll('.error-message').forEach(el => el.remove());
+
+    // Validate Name
+    const name = form.querySelector('#name');
+    if (!name.value.trim()) {
+        showError(name, 'Tên danh mục không được để trống.');
+        if (!firstInvalidField) firstInvalidField = name;
+        isValid = false;
+    } else if (name.value.length > 100) {
+        showError(name, 'Tên danh mục không được vượt quá 100 ký tự.');
+        if (!firstInvalidField) firstInvalidField = name;
+        isValid = false;
+    } else {
+        name.classList.add('valid');
+    }
+
+    // Focus on first invalid field
+    if (!isValid && firstInvalidField) {
+        firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return isValid;
+}
+
+// Validate individual category field
+function validateCategoryField(field) {
+    clearError(field);
+
+    if (field.id === 'name') {
+        if (!field.value.trim()) {
+            showError(field, 'Tên danh mục không được để trống.');
+            return false;
+        } else if (field.value.length > 100) {
+            showError(field, 'Tên danh mục không được vượt quá 100 ký tự.');
+            return false;
+        }
+    }
+
+    field.classList.add('valid');
+    return true;
+}
+
 // Global reference to Tom Select instance
 let authorTomSelect = null;
 let authorFieldTouched = false; // Flag to track if user has interacted with author field
 
 $(document).ready(function() {
-    // Form validation on submit - check if it's Book form or Publisher form
-    const bookForm = document.querySelector('.form-card:not(.publisher-form)');
+    // Form validation on submit - check if it's Book form, Publisher form, or Category form
+    const bookForm = document.querySelector('.form-card:not(.publisher-form):not(.category-form)');
     const publisherForm = document.querySelector('.form-card.publisher-form');
+    const categoryForm = document.querySelector('.form-card.category-form');
 
     if (bookForm) {
         bookForm.addEventListener('submit', function(e) {
@@ -517,6 +568,28 @@ $(document).ready(function() {
         publisherForm.querySelectorAll('input').forEach(function(field) {
             field.addEventListener('blur', function() {
                 validatePublisherField(this);
+            });
+
+            // Clear error on input
+            field.addEventListener('input', function() {
+                clearError(this);
+            });
+        });
+    }
+
+    // Category form validation
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', function(e) {
+            if (!validateCategoryForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Add blur validation for real-time feedback
+        categoryForm.querySelectorAll('input').forEach(function(field) {
+            field.addEventListener('blur', function() {
+                validateCategoryField(this);
             });
 
             // Clear error on input

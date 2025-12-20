@@ -25,6 +25,7 @@
         <tr>
             <th>Index</th>
             <th>ID</th>
+            <th>Image</th>
             <th>Title</th>
             <th>Author</th>
             <th>Category</th>
@@ -36,7 +37,7 @@
         <tbody>
         <c:if test="${empty books}">
             <tr>
-                <td colspan="8" style="text-align: center;">No data available.</td>
+                <td colspan="9" style="text-align: center;">No data available.</td>
             </tr>
         </c:if>
 
@@ -44,6 +45,18 @@
             <tr>
                 <td>${status.index + 1}</td>
                 <td>${book.bookId}</td>
+                <td>
+                    <c:if test="${not empty book.images}">
+                        <c:forEach var="img" items="${book.images}">
+                            <c:if test="${img.isPrimary}">
+                                <img src="${img.url}" alt="${book.title}" style="width: 50px; height: 70px; object-fit: cover;">
+                            </c:if>
+                        </c:forEach>
+                    </c:if>
+                    <c:if test="${empty book.images}">
+                        <span style="color: #999;">No image</span>
+                    </c:if>
+                </td>
                 <td>${book.title}</td>
                 <td>
                     <c:if test="${not empty book.authors}">
