@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -267,10 +268,11 @@ public class BookServlet extends HttpServlet {
                 return "Book image is required.";
             }
 
-            // Validate file type
+            // Validate file type - đồng bộ với client-side validation
             String contentType = imagePart.getContentType();
-            if (!contentType.startsWith("image/")) {
-                return "Invalid image format.";
+            List<String> allowedTypes = Arrays.asList("image/jpeg", "image/png", "image/jpg", "image/webp");
+            if (!allowedTypes.contains(contentType.toLowerCase())) {
+                return "Invalid image format. Only JPEG, PNG, JPG, WEBP are allowed.";
             }
 
 
