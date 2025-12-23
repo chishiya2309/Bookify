@@ -18,7 +18,6 @@ import java.util.List;
 public class CustomerHomeServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    // Gọi Service (đã khớp tên file CustomerServices.java trong project của bạn)
     private CustomerServices customerService;
 
     public CustomerHomeServlet() {
@@ -34,8 +33,8 @@ public class CustomerHomeServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        // If CustomerServices needs explicit cleanup, do it here.
-        // For example: customerService.close(); if such a method exists.
+       
+        
         customerService = null;
         super.destroy();
     }
@@ -44,7 +43,7 @@ public class CustomerHomeServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        // 0. Kiểm tra trạng thái đăng nhập từ JWT token
+
         JwtAuthHelper.checkLoginStatus(request);
         
         // 0.1. Kiểm tra nếu là ADMIN thì redirect về trang admin
@@ -68,7 +67,7 @@ public class CustomerHomeServlet extends HttpServlet {
         request.setAttribute("listCategories", listCategories);
 
         // 3. Forward sang trang JSP
-        // ĐƯỜNG DẪN QUAN TRỌNG: Phải khớp với thư mục 'customer' trong ảnh bạn gửi
+        // ĐƯỜNG DẪN QUAN TRỌNG: Phải khớp với thư mục 'customer' 
         String homepage = "customer/CustomerHomePage.jsp"; 
         
         RequestDispatcher dispatcher = request.getRequestDispatcher(homepage);

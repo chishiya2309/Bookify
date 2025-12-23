@@ -62,4 +62,8 @@ public class CustomerServices {
     public List<Book> listMostFavoredBooks() {
         return CustomerHomePageDAO.listMostFavoredBooks();
     }
+
+    public Object listCategories() {
+        return null;
+    }
 }

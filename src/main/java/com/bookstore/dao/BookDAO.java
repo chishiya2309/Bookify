@@ -246,4 +246,59 @@ public class BookDAO {
             em.close();
         }
     }
+    
+    public static List<Book> searchBooks(String keyword) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            // 1. Tìm sách theo tiêu đề 
+            String qString = "SELECT DISTINCT b FROM Book b " +
+                             "LEFT JOIN FETCH b.authors a " +
+                             "WHERE lower(b.title) LIKE :keyword";
+
+            TypedQuery<Book> q = em.createQuery(qString, Book.class);
+            q.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+
+            List<Book> list = q.getResultList();
+
+            // 2. KHẮC PHỤC LỖI LAZY LOADING CHO ẢNH
+            for (Book b : list) {
+                b.getImages().size(); 
+            }
+
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    public static List<Book> listBooksByCategory(int categoryId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            // 1. Lấy sách + Tác giả (JOIN FETCH để tránh lỗi tác giả)
+            String qString = "SELECT b FROM Book b " +
+                             "LEFT JOIN FETCH b.authors " +
+                             "WHERE b.category.categoryId = :catId " +
+                             "ORDER BY b.publishDate DESC";
+
+            TypedQuery<Book> q = em.createQuery(qString, Book.class);
+            q.setParameter("catId", categoryId);
+
+            List<Book> list = q.getResultList();
+
+            // 2. KHẮC PHỤC LỖI ẢNH 
+            for (Book b : list) {
+                b.getImages().size(); // Kích hoạt tải ảnh
+            }
+
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
 }

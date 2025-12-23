@@ -183,6 +183,12 @@ td { text-align: center; }
     margin-right: 20px;
 }
 
+.search-bar form {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .search-bar input, .search-input {
     background-color: var(--bg-body);
     border: 1px solid var(--color-secondary);
@@ -200,7 +206,6 @@ td { text-align: center; }
     padding: 8px 20px;
     font-weight: bold;
     cursor: pointer;
-    margin-left: 5px;
     border-radius: 4px;
     transition: opacity 0.2s;
 }
@@ -355,4 +360,171 @@ a[href*="cart"], a[href*="Cart"] { color: var(--color-accent) !important; }
     color: var(--text-main);
     font-size: 14px;
     background-color: var(--bg-white);
+}
+/* ==========================================================================
+   7. TRANG KẾT QUẢ TÌM KIẾM (SEARCH RESULT PAGE) - LIST VIEW
+   ========================================================================== */
+
+/* Tiêu đề trang search */
+.search-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.search-header .highlight {
+    font-style: italic;
+    color: var(--text-main);
+}
+
+/* Khung bao quanh danh sách */
+.search-list {
+    display: flex;
+    flex-direction: column; /* Xếp dọc các dòng */
+    gap: 20px;
+    max-width: 900px; /* Giới hạn chiều rộng cho đẹp */
+    margin: 0 auto;
+}
+
+/* Từng dòng kết quả (Card ngang) */
+.search-item {
+    display: flex;          /* Flex ngang */
+    background-color: var(--bg-white);
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 20px;
+    transition: box-shadow 0.2s;
+    align-items: start; /* Căn hàng trên cùng */
+}
+
+.search-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border-color: #ccc;
+}
+
+/* 1. Cột Ảnh */
+.search-item-img {
+    flex: 0 0 120px; /* Cố định chiều rộng ảnh */
+    margin-right: 20px;
+}
+.search-item-img img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #eee;
+}
+
+/* 2. Cột Thông tin (Giữa) */
+.search-item-info {
+    flex: 1; /* Chiếm hết khoảng trống còn lại */
+    padding-right: 20px;
+}
+
+.item-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.item-title a { color: var(--color-primary); }
+.item-title a:hover { text-decoration: underline; }
+
+.item-rating {
+    color: var(--color-warning); /* Màu vàng */
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.item-author {
+    font-size: 14px;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.item-desc {
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+/* 3. Cột Giá & Nút (Phải) */
+.search-item-action {
+    flex: 0 0 150px; /* Cố định chiều rộng cột phải */
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.item-price {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--text-main); /* Hoặc dùng var(--color-error) nếu muốn đỏ */
+    margin-bottom: 15px;
+}
+
+.btn-add-cart {
+    display: inline-block;
+    padding: 8px 0;
+    font-weight: bold;
+    color: var(--text-main);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.btn-add-cart:hover {
+    color: var(--color-primary);
+}
+/* =========================================
+   STYLE CHO TRANG DANH MỤC (CATEGORY PAGE)
+   ========================================= */
+
+/* Tiêu đề danh mục căn giữa */
+.category-title {
+    text-align: center;
+    margin: 30px 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    text-transform: uppercase;
+    position: relative;
+}
+
+/* Màu chữ highlight (ví dụ tên danh mục) */
+.category-title .highlight {
+    color: #0D6EFD; /* Màu xanh chủ đạo */
+    color: var(--color-primary, #0D6EFD);
+}
+
+/* Container chứa lưới sách */
+.book-section {
+    padding: 20px 0;
+    width: 100%;
+}
+
+/* Lưới hiển thị sách (Grid Layout) */
+/* Nếu bạn chưa có class .book-grid này trong file css cũ thì hãy thêm vào, nếu có rồi thì thôi */
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Tự động chia cột */
+    gap: 25px; /* Khoảng cách giữa các ô */
+    padding: 10px;
+}
+
+/* Thông báo khi không có sách */
+.empty-category-msg {
+    width: 100%;
+    text-align: center;
+    padding: 50px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.empty-category-msg a {
+    color: #0D6EFD;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.empty-category-msg a:hover {
+    text-decoration: underline;
 }
