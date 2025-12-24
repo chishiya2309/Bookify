@@ -12,6 +12,8 @@ import java.util.List;
 
 public class CustomerServices {
 
+    private final CategoryService categoryService = new CategoryService();
+
     public List<Category> listAllCategories() {
         return CustomerHomePageDAO.listAllCategories();
     }
@@ -63,7 +65,7 @@ public class CustomerServices {
         return CustomerHomePageDAO.listMostFavoredBooks();
     }
 
-    public Object listCategories() {
-        return null;
+    public List<Category> listCategories() {
+        return categoryService.listAll();
     }
 }
