@@ -126,4 +126,25 @@ public class PaymentDAO {
             em.close();
         }
     }
+
+    /**
+     * Tìm thanh toán theo Transaction ID
+     * 
+     * @param transactionId Transaction ID from payment gateway
+     * @return Payment object or null if not found
+     */
+    public Payment findByTransactionId(String transactionId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            TypedQuery<Payment> query = em.createQuery(
+                    "SELECT p FROM Payment p WHERE p.transactionId = :transactionId",
+                    Payment.class);
+            query.setParameter("transactionId", transactionId);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        } finally {
+            em.close();
+        }
+    }
 }
