@@ -19,9 +19,11 @@ public class OrderService {
 
     private static final Logger LOGGER = Logger.getLogger(OrderService.class.getName());
     private final OrderDAO orderDAO;
+    private final EmailService emailService;
 
     public OrderService() {
         this.orderDAO = new OrderDAO();
+        this.emailService = new EmailService();
     }
 
     /**
@@ -86,6 +88,16 @@ public class OrderService {
 
             LOGGER.log(Level.INFO, "Order created successfully from cart. OrderId: {0}, Total: {1}",
                     new Object[] { order.getOrderId(), totalAmount });
+
+            // Send order confirmation email
+            try {
+                emailService.sendOrderConfirmation(order);
+                LOGGER.log(Level.INFO, "Order confirmation email sent for order: {0}", order.getOrderId());
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Failed to send order confirmation email for order: " + order.getOrderId(),
+                        e);
+                // Don't fail the order creation if email fails
+            }
 
             return order;
 

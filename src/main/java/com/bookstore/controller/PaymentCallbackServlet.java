@@ -1,6 +1,9 @@
 package com.bookstore.controller;
 
+import com.bookstore.model.Order;
 import com.bookstore.model.Payment;
+import com.bookstore.service.EmailService;
+import com.bookstore.service.OrderService;
 import com.bookstore.service.PaymentService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,6 +28,8 @@ public class PaymentCallbackServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(PaymentCallbackServlet.class.getName());
     private final PaymentService paymentService = new PaymentService();
+    private final OrderService orderService = new OrderService();
+    private final EmailService emailService = new EmailService();
 
     /**
      * Handle GET requests - User return from payment gateway
@@ -53,6 +58,18 @@ public class PaymentCallbackServlet extends HttpServlet {
                 Payment payment = paymentService.getPaymentByTransactionId(transactionId);
                 if (payment != null) {
                     paymentService.handlePaymentSuccess(payment, transactionId);
+
+                    // Send payment confirmation email
+                    try {
+                        Order order = payment.getOrder();
+                        if (order != null) {
+                            emailService.sendPaymentConfirmation(order, payment);
+                            LOGGER.log(Level.INFO, "Payment confirmation email sent for order: {0}",
+                                    order.getOrderId());
+                        }
+                    } catch (Exception emailEx) {
+                        LOGGER.log(Level.WARNING, "Failed to send payment confirmation email", emailEx);
+                    }
                 }
 
                 // Redirect to success page
@@ -96,6 +113,18 @@ public class PaymentCallbackServlet extends HttpServlet {
                 if (payment != null) {
                     if ("success".equalsIgnoreCase(status)) {
                         paymentService.handlePaymentSuccess(payment, transactionId);
+
+                        // Send payment confirmation email
+                        try {
+                            Order order = payment.getOrder();
+                            if (order != null) {
+                                emailService.sendPaymentConfirmation(order, payment);
+                                LOGGER.log(Level.INFO, "Payment confirmation email sent for order: {0}",
+                                        order.getOrderId());
+                            }
+                        } catch (Exception emailEx) {
+                            LOGGER.log(Level.WARNING, "Failed to send payment confirmation email", emailEx);
+                        }
 
                         // Return success response to gateway
                         response.setStatus(HttpServletResponse.SC_OK);
