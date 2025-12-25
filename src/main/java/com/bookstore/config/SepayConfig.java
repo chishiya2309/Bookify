@@ -1,88 +1,249 @@
 package com.bookstore.config;
 
 /**
- * Sepay Configuration
- * Store Sepay API credentials and endpoints
- * In production, load from environment variables or config file
+ * Sepay Configuration - HARDCODED FOR TESTING
+ * TODO: Move to environment variables for production!
+ * 
+ * Sepay Documentation: https://docs.sepay.vn/
  */
 public class SepayConfig {
 
-    // Sepay API endpoints
-    public static final String SEPAY_API_BASE_URL = "https://my.sepay.vn/userapi";
-    public static final String SEPAY_PAYMENT_URL = SEPAY_API_BASE_URL + "/transactions/create";
-    public static final String SEPAY_VERIFY_URL = SEPAY_API_BASE_URL + "/transactions/check";
+    // ========== SEPAY API CONFIGURATION ==========
 
-    // Merchant credentials - MUST be configured from environment variables
-    private static String merchantId = System.getenv("SEPAY_MERCHANT_ID");
-    private static String secretKey = System.getenv("SEPAY_SECRET_KEY");
-    private static String apiToken = System.getenv("SEPAY_API_TOKEN");
+    /**
+     * Sepay API Base URL
+     */
+    public static final String API_BASE_URL = "https://my.sepay.vn/userapi";
 
-    // Callback URLs
+    /**
+     * API Token - Lấy từ Sepay Dashboard → API
+     * TODO: Replace with your actual Sepay API Token
+     */
+    private static final String API_TOKEN = "FDN2CAWWJGRZDHZIY75C8XROHB7EXAOEGQRXTSBJJIFFHBHIE4O3UG8QVK9KUQMI";
+
+    /**
+     * Account Number - Số tài khoản ngân hàng nhận tiền
+     * TODO: Replace with your bank account number
+     */
+    private static final String ACCOUNT_NUMBER = "0347983243"; // MBBank account from screenshot
+
+    /**
+     * Bank Code - Mã ngân hàng
+     * Common codes: VCB, TCB, MB, ACB, VTB, TPB, etc.
+     */
+    private static final String BANK_CODE = "MB"; // MBBank
+
+    // ========== PAYMENT SETTINGS ==========
+
+    /**
+     * Payment timeout in minutes
+     */
+    public static final int PAYMENT_TIMEOUT_MINUTES = 15;
+
+    /**
+     * Currency
+     */
+    public static final String CURRENCY = "VND";
+
+    /**
+     * Transfer content prefix
+     */
+    public static final String TRANSFER_CONTENT_PREFIX = "BOOKIFY";
+
+    // ========== SEPAY MERCHANT CONFIGURATION ==========
+
+    /**
+     * Merchant ID (Mã đơn vị) - Get from Sepay Dashboard -> Cổng thanh toán QR
+     * TODO: Replace with your actual Merchant ID
+     */
+    private static final String MERCHANT_ID = "SP-LIVE-LQ4B4233";
+
+    /**
+     * Secret Key - Get from Sepay Dashboard -> Cổng thanh toán QR
+     * TODO: Replace with your actual Secret Key
+     */
+    private static final String SECRET_KEY = "spsk_live_cysAJev94vsKPese3nF3gpigozDYirtJ";
+
+    // ========== CALLBACK URLs ==========
+
+    /**
+     * Return URL - Where customer is redirected after payment
+     * For local testing with ngrok: https://abc123.ngrok.io/Bookify/payment/return
+     */
     private static String returnUrl = "http://localhost:8080/Bookify/payment/return";
+
+    /**
+     * Notify URL - Webhook endpoint for Sepay notifications
+     * For local testing with ngrok: https://abc123.ngrok.io/Bookify/payment/notify
+     */
     private static String notifyUrl = "http://localhost:8080/Bookify/payment/notify";
 
-    // Rate limit: 2 calls per second
-    public static final int RATE_LIMIT_PER_SECOND = 2;
-
-    public static String getMerchantId() {
-        if (merchantId == null || merchantId.isEmpty()) {
-            // For development, use test credentials
-            return "test_merchant_id";
-        }
-        return merchantId;
-    }
-
-    public static void setMerchantId(String merchantId) {
-        SepayConfig.merchantId = merchantId;
-    }
-
-    public static String getSecretKey() {
-        if (secretKey == null || secretKey.isEmpty()) {
-            // For development, use test credentials
-            return "test_secret_key";
-        }
-        return secretKey;
-    }
-
-    public static void setSecretKey(String secretKey) {
-        SepayConfig.secretKey = secretKey;
-    }
+    // ========== GETTERS ==========
 
     public static String getApiToken() {
-        if (apiToken == null || apiToken.isEmpty()) {
-            // For development, use test token
-            return "test_api_token";
-        }
-        return apiToken;
+        return API_TOKEN;
     }
 
-    public static void setApiToken(String apiToken) {
-        SepayConfig.apiToken = apiToken;
+    public static String getAccountNumber() {
+        return ACCOUNT_NUMBER;
+    }
+
+    public static String getBankCode() {
+        return BANK_CODE;
     }
 
     public static String getReturnUrl() {
         return returnUrl;
     }
 
-    public static void setReturnUrl(String returnUrl) {
-        SepayConfig.returnUrl = returnUrl;
+    public static void setReturnUrl(String url) {
+        returnUrl = url;
     }
 
     public static String getNotifyUrl() {
         return notifyUrl;
     }
 
-    public static void setNotifyUrl(String notifyUrl) {
-        SepayConfig.notifyUrl = notifyUrl;
+    public static void setNotifyUrl(String url) {
+        notifyUrl = url;
+    }
+
+    public static String getMerchantId() {
+        return MERCHANT_ID;
+    }
+
+    public static String getSecretKey() {
+        return SECRET_KEY;
+    }
+
+    /**
+     * Generate transfer content for order
+     * Format: BOOKIFY [ORDER_ID]
+     */
+    public static String generateTransferContent(Integer orderId) {
+        return String.format("%s %d", TRANSFER_CONTENT_PREFIX, orderId);
+    }
+
+    /**
+     * Verify IPN signature from Sepay
+     * Uses HMAC-SHA256 with secret key for production
+     * 
+     * @param payload   Request body
+     * @param signature Signature from X-Sepay-Signature header
+     * @return true if signature is valid
+     */
+    public static boolean verifyWebhookSignature(String payload, String signature) {
+        // If no secret key configured, trust all requests (for testing)
+        if (SECRET_KEY.equals("YOUR_SECRET_KEY_HERE")) {
+            return true;
+        }
+
+        // TODO: Implement HMAC-SHA256 signature verification
+        // For production:
+        // 1. Calculate HMAC-SHA256 of payload using SECRET_KEY
+        // 2. Compare with signature from header
+        // 3. Return true if match
+
+        return true; // For now, trust all requests
     }
 
     /**
      * Check if Sepay is properly configured
-     * 
-     * @return true if configured
      */
     public static boolean isConfigured() {
-        return merchantId != null && !merchantId.isEmpty()
-                && secretKey != null && !secretKey.isEmpty();
+        return !API_TOKEN.equals("YOUR_SEPAY_API_TOKEN_HERE")
+                && !SECRET_KEY.equals("YOUR_SECRET_KEY_HERE");
+    }
+
+    /**
+     * Get bank name from code
+     */
+    public static String getBankName(String code) {
+        switch (code.toUpperCase()) {
+            case "VCB":
+                return "Vietcombank";
+            case "TCB":
+                return "Techcombank";
+            case "MB":
+                return "MBBank";
+            case "ACB":
+                return "ACB";
+            case "VTB":
+                return "VietinBank";
+            case "TPB":
+                return "TPBank";
+            case "BIDV":
+                return "BIDV";
+            case "AGR":
+                return "Agribank";
+            case "SCB":
+                return "Sacombank";
+            case "VPB":
+                return "VPBank";
+            default:
+                return code;
+        }
+    }
+
+    /**
+     * Get full bank name
+     */
+    public static String getFullBankName() {
+        return getBankName(BANK_CODE);
+    }
+
+    /**
+     * Get bank BIN (Bank Identification Number) for VietQR
+     * Reference: https://api.vietqr.io/v2/banks
+     */
+    public static String getBankBin(String code) {
+        switch (code.toUpperCase()) {
+            case "VCB":
+                return "970436";
+            case "TCB":
+                return "970407";
+            case "MB":
+                return "970422";
+            case "ACB":
+                return "970416";
+            case "VTB":
+                return "970415";
+            case "TPB":
+                return "970423";
+            case "BIDV":
+                return "970418";
+            case "AGR":
+                return "970405";
+            case "SCB":
+                return "970403";
+            case "VPB":
+                return "970432";
+            default:
+                return code;
+        }
+    }
+
+    /**
+     * Generate VietQR URL for displaying QR code
+     * Uses img.vietqr.io API
+     * 
+     * @param orderId Order ID
+     * @param amount  Amount in VND
+     * @return VietQR image URL
+     */
+    public static String generateVietQRUrl(Integer orderId, long amount) {
+        String bankBin = getBankBin(BANK_CODE);
+        String transferContent = generateTransferContent(orderId);
+
+        // VietQR URL format:
+        // https://img.vietqr.io/image/{BANK_BIN}-{ACCOUNT_NO}-{TEMPLATE}.png
+        // With query params: ?amount={AMOUNT}&addInfo={CONTENT}&accountName={NAME}
+        return String.format(
+                "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
+                bankBin,
+                ACCOUNT_NUMBER,
+                amount,
+                java.net.URLEncoder.encode(transferContent, java.nio.charset.StandardCharsets.UTF_8),
+                java.net.URLEncoder.encode("BOOKIFY SHOP", java.nio.charset.StandardCharsets.UTF_8));
     }
 }

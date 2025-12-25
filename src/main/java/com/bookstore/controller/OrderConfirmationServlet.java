@@ -86,6 +86,21 @@ public class OrderConfirmationServlet extends HttpServlet {
             request.setAttribute("order", order);
             request.setAttribute("user", customer);
 
+            // If payment method is BANK_TRANSFER and not yet paid, add VietQR info
+            if ("BANK_TRANSFER".equals(order.getPaymentMethod())
+                    && order.getPaymentStatus() != Order.PaymentStatus.PAID) {
+                // Generate VietQR URL
+                String vietQRUrl = com.bookstore.config.SepayConfig.generateVietQRUrl(
+                        order.getOrderId(),
+                        order.getTotalAmount().longValue());
+                request.setAttribute("vietQRUrl", vietQRUrl);
+                request.setAttribute("bankName", com.bookstore.config.SepayConfig.getFullBankName());
+                request.setAttribute("accountNumber", com.bookstore.config.SepayConfig.getAccountNumber());
+                request.setAttribute("transferContent",
+                        com.bookstore.config.SepayConfig.generateTransferContent(order.getOrderId()));
+                request.setAttribute("showPaymentQR", true);
+            }
+
             // Check for success message from session
             String confirmationMessage = (String) session.getAttribute("orderConfirmation");
             if (confirmationMessage != null) {

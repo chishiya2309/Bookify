@@ -665,6 +665,77 @@
                     </div>
                 </div>
 
+                <!-- VietQR Payment Section (for BANK_TRANSFER) -->
+                <c:if test="${showPaymentQR}">
+                    <div class="info-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); border: 2px solid #ffc107;">
+                        <h2 class="card-title" style="color: #856404;">
+                            <i class="fas fa-qrcode"></i>
+                            Quét mã để thanh toán
+                        </h2>
+                        
+                        <div style="display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;">
+                            <!-- QR Code -->
+                            <div style="text-align: center;">
+                                <img src="${vietQRUrl}" alt="VietQR" style="width: 250px; height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <p style="margin-top: 12px; font-size: 13px; color: var(--text-light);">
+                                    Sử dụng app ngân hàng để quét mã QR
+                                </p>
+                            </div>
+                            
+                            <!-- Bank Info -->
+                            <div style="flex: 1; min-width: 280px;">
+                                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                    <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--text-main);">
+                                        <i class="fas fa-university" style="color: #0D6EFD;"></i>
+                                        Thông tin chuyển khoản
+                                    </h3>
+                                    
+                                    <div style="margin-bottom: 14px;">
+                                        <span style="font-size: 13px; color: var(--text-light);">Ngân hàng</span>
+                                        <div style="font-weight: 600; font-size: 16px;">${bankName}</div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 14px;">
+                                        <span style="font-size: 13px; color: var(--text-light);">Số tài khoản</span>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-weight: 600; font-size: 18px; font-family: monospace;">${accountNumber}</span>
+                                            <button onclick="copyToClipboard('${accountNumber}')" 
+                                                    style="border: none; background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                <i class="fas fa-copy"></i> Sao chép
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 14px;">
+                                        <span style="font-size: 13px; color: var(--text-light);">Nội dung chuyển khoản</span>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-weight: 700; font-size: 18px; color: #d32f2f; font-family: monospace;">${transferContent}</span>
+                                            <button onclick="copyToClipboard('${transferContent}')" 
+                                                    style="border: none; background: #ffebee; color: #c62828; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                <i class="fas fa-copy"></i> Sao chép
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 14px;">
+                                        <span style="font-size: 13px; color: var(--text-light);">Số tiền</span>
+                                        <div style="font-weight: 700; font-size: 20px; color: #198754;">
+                                            <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>₫
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top: 20px; padding: 12px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                        <p style="margin: 0; font-size: 13px; color: #856404;">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <strong>Lưu ý quan trọng:</strong> Vui lòng nhập <strong>chính xác</strong> nội dung chuyển khoản để đơn hàng được xác nhận tự động.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
+
                 <!-- Shipping Address -->
                 <div class="info-card">
                     <h2 class="card-title">
@@ -755,6 +826,24 @@
     </div>
 
     <jsp:include page="/customer/footer_customer.jsp"/>
+
+    <!-- Copy to Clipboard Script -->
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show toast notification
+                var toast = document.createElement('div');
+                toast.textContent = 'Đã sao chép: ' + text;
+                toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; z-index: 9999; animation: fadeIn 0.3s ease;';
+                document.body.appendChild(toast);
+                setTimeout(function() {
+                    toast.remove();
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Không thể sao chép: ', err);
+            });
+        }
+    </script>
 
 </body>
 </html>

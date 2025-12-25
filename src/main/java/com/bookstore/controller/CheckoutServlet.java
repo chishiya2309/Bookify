@@ -219,6 +219,12 @@ public class CheckoutServlet extends HttpServlet {
                 if (result.requiresRedirect()) {
                     // Redirect to payment gateway
                     response.sendRedirect(result.getRedirectUrl());
+                } else if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER) {
+                    // Bank transfer - redirect to QR payment page
+                    session.setAttribute("orderConfirmation",
+                            "Vui lòng quét mã QR để thanh toán đơn hàng #" + order.getOrderId());
+                    response.sendRedirect(
+                            request.getContextPath() + "/customer/bank-transfer-payment?orderId=" + order.getOrderId());
                 } else {
                     // Payment completed (COD) - redirect to confirmation
                     session.setAttribute("orderConfirmation",

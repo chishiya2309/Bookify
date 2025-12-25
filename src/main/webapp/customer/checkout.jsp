@@ -780,11 +780,7 @@
                                 
                                 <select name="paymentMethod" required>
                                     <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-                                    <option value="BANK_TRANSFER">Chuyển khoản ngân hàng</option>
-                                    <option value="CREDIT_CARD">Thẻ tín dụng</option>
-                                    <option value="MOMO">Momo</option>
-                                    <option value="SEPAY">SEPAY</option>
-                                    <option value="VNPAY">VNPAY</option>
+                                    <option value="BANK_TRANSFER">Chuyển khoản ngân hàng (VietQR)</option>
                                 </select>
                             </div>
 

@@ -1,7 +1,6 @@
 package com.bookstore.service;
 
 import com.bookstore.dao.PaymentDAO;
-import com.bookstore.config.SepayConfig;
 import com.bookstore.model.Order;
 import com.bookstore.model.Payment;
 import com.bookstore.model.Payment.PaymentMethod;
@@ -79,15 +78,10 @@ public class PaymentService {
             switch (payment.getMethod()) {
                 case COD:
                     return processCODPayment(payment);
-                case SEPAY:
-                    return processSepayPayment(payment, paymentDetails);
-                case CREDIT_CARD:
-                    return processCreditCardPayment(payment, paymentDetails);
                 case BANK_TRANSFER:
                     return processBankTransferPayment(payment, paymentDetails);
-                case VNPAY:
-                case MOMO:
-                    return processMockOnlinePayment(payment); // Mock for now
+                case CREDIT_CARD:
+                    return processCreditCardPayment(payment, paymentDetails);// Mock for now
                 default:
                     throw new IllegalArgumentException("Unsupported payment method: " + payment.getMethod());
             }
@@ -112,11 +106,8 @@ public class PaymentService {
             return false;
         }
 
-        // For Sepay, verify with gateway API
-        if (payment.getMethod() == PaymentMethod.SEPAY) {
-            return verifySepayTransaction(transactionId);
-        }
-
+        // For bank transfer, payment is verified via Sepay webhook
+        // Just check the current status
         return payment.getStatus() == PaymentStatus.COMPLETED;
     }
 
@@ -158,38 +149,6 @@ public class PaymentService {
     }
 
     /**
-     * Process Sepay payment - integrate with Sepay API
-     * 
-     * @param payment        Payment to process
-     * @param paymentDetails Payment details
-     * @return Payment result with redirect URL
-     */
-    private PaymentResult processSepayPayment(Payment payment, Map<String, Object> paymentDetails) {
-        try {
-            // Build Sepay payment request
-            Map<String, Object> sepayRequest = buildSepayPaymentRequest(payment);
-
-            // In production, call Sepay API here
-            // String redirectUrl = callSepayAPI(sepayRequest);
-
-            // For now, generate a mock redirect URL
-            String redirectUrl = generateSepayRedirectUrl(payment);
-
-            payment.setStatus(PaymentStatus.PENDING);
-            paymentDAO.update(payment);
-
-            LOGGER.log(Level.INFO, "Sepay payment initiated: {0}", payment.getTransactionId());
-
-            return new PaymentResult(true, "Redirect to Sepay gateway",
-                    PaymentStatus.PENDING, redirectUrl);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Sepay payment failed", e);
-            return new PaymentResult(false, "Sepay payment failed: " + e.getMessage(),
-                    PaymentStatus.FAILED, null);
-        }
-    }
-
-    /**
      * Process credit card payment (mock implementation)
      * 
      * @param payment        Payment to process
@@ -206,19 +165,30 @@ public class PaymentService {
     }
 
     /**
-     * Process bank transfer payment
+     * Process bank transfer payment using VietQR
+     * Payment status remains PENDING until Sepay webhook confirms payment
+     * 
+     * Flow:
+     * 1. Create payment with PENDING status
+     * 2. User sees VietQR code on order-confirmation page
+     * 3. User transfers money via banking app
+     * 4. Sepay monitors bank account and sends webhook
+     * 5. SepayWebhookServlet updates order to PAID
      * 
      * @param payment        Payment to process
-     * @param paymentDetails Bank details
+     * @param paymentDetails Bank details (not used for VietQR)
      * @return Payment result
      */
     private PaymentResult processBankTransferPayment(Payment payment, Map<String, Object> paymentDetails) {
-        String bankCode = (String) paymentDetails.get("bankCode");
-
         payment.setStatus(PaymentStatus.PENDING);
+        payment.setPaymentGateway("VietQR");
         paymentDAO.update(payment);
 
-        return new PaymentResult(true, "Bank transfer initiated. Please complete the transfer.",
+        LOGGER.log(Level.INFO, "Bank transfer payment initiated: {0}", payment.getTransactionId());
+
+        // No redirect - user stays on order-confirmation page with QR code
+        return new PaymentResult(true,
+                "Vui lòng quét mã QR hoặc chuyển khoản theo thông tin bên dưới",
                 PaymentStatus.PENDING, null);
     }
 
@@ -234,73 +204,6 @@ public class PaymentService {
 
         return new PaymentResult(true, "Online payment initiated (mock)",
                 PaymentStatus.PENDING, null);
-    }
-
-    // ==================== SEPAY INTEGRATION HELPERS ====================
-
-    /**
-     * Build Sepay payment request
-     * 
-     * @param payment Payment object
-     * @return Request map
-     */
-    private Map<String, Object> buildSepayPaymentRequest(Payment payment) {
-        Map<String, Object> request = new HashMap<>();
-        request.put("merchant_id", SepayConfig.getMerchantId());
-        request.put("transaction_id", payment.getTransactionId());
-        request.put("amount", payment.getAmount().longValue());
-        request.put("order_id", payment.getOrder().getOrderId());
-        request.put("return_url", SepayConfig.getReturnUrl());
-        request.put("notify_url", SepayConfig.getNotifyUrl());
-
-        // Add signature for security
-        String signature = generateSepaySignature(request);
-        request.put("signature", signature);
-
-        return request;
-    }
-
-    /**
-     * Generate Sepay redirect URL
-     * 
-     * @param payment Payment object
-     * @return Redirect URL
-     */
-    private String generateSepayRedirectUrl(Payment payment) {
-        // In production, this would be the actual Sepay payment URL
-        return String.format("%s/payment?transaction_id=%s&amount=%s",
-                SepayConfig.SEPAY_API_BASE_URL,
-                payment.getTransactionId(),
-                payment.getAmount());
-    }
-
-    /**
-     * Verify Sepay transaction with API
-     * 
-     * @param transactionId Transaction ID
-     * @return true if verified
-     */
-    private boolean verifySepayTransaction(String transactionId) {
-        // In production, call Sepay API to verify transaction
-        // For now, return true for testing
-        LOGGER.log(Level.INFO, "Verifying Sepay transaction: {0}", transactionId);
-        return true;
-    }
-
-    /**
-     * Generate Sepay signature for security
-     * 
-     * @param request Request data
-     * @return Signature string
-     */
-    private String generateSepaySignature(Map<String, Object> request) {
-        // In production, implement proper HMAC-SHA256 signature using
-        // SepayConfig.getSecretKey()
-        // String secretKey = SepayConfig.getSecretKey();
-        // Implement HMAC-SHA256 with secretKey
-
-        // For now, return a mock signature
-        return "mock_signature_" + UUID.randomUUID().toString();
     }
 
     // ==================== VALIDATION ====================
