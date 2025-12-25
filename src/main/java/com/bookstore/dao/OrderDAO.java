@@ -67,6 +67,7 @@ public class OrderDAO {
 
     /**
      * Find order by ID with OrderDetails eagerly loaded
+     * Uses two-step fetch to avoid MultipleBagFetchException
      * 
      * @param orderId ID of the order
      * @return Order with details or null if not found
@@ -75,10 +76,43 @@ public class OrderDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
 
         try {
-            String jpql = "SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.orderId = :orderId";
-            TypedQuery<Order> query = em.createQuery(jpql, Order.class);
-            query.setParameter("orderId", orderId);
-            return query.getSingleResult();
+            // Step 1: Fetch Order with OrderDetails and Books
+            String jpql1 = "SELECT DISTINCT o FROM Order o " +
+                    "LEFT JOIN FETCH o.orderDetails od " +
+                    "LEFT JOIN FETCH od.book " +
+                    "WHERE o.orderId = :orderId";
+            TypedQuery<Order> query1 = em.createQuery(jpql1, Order.class);
+            query1.setParameter("orderId", orderId);
+            Order order = query1.getSingleResult();
+
+            // Step 2: Fetch Authors for each book (if needed)
+            if (order != null && order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                String jpql2 = "SELECT DISTINCT b FROM Book b " +
+                        "LEFT JOIN FETCH b.authors " +
+                        "WHERE b.bookId IN :bookIds";
+
+                // Get book IDs
+                List<Integer> bookIds = order.getOrderDetails().stream()
+                        .map(od -> od.getBook().getBookId())
+                        .distinct()
+                        .toList();
+
+                if (!bookIds.isEmpty()) {
+                    TypedQuery<com.bookstore.model.Book> query2 = em.createQuery(jpql2, com.bookstore.model.Book.class);
+                    query2.setParameter("bookIds", bookIds);
+                    query2.getResultList(); // Populate authors in persistence context
+
+                    // Step 3: Fetch Images for each book
+                    String jpql3 = "SELECT DISTINCT b FROM Book b " +
+                            "LEFT JOIN FETCH b.images " +
+                            "WHERE b.bookId IN :bookIds";
+                    TypedQuery<com.bookstore.model.Book> query3 = em.createQuery(jpql3, com.bookstore.model.Book.class);
+                    query3.setParameter("bookIds", bookIds);
+                    query3.getResultList(); // Populate images in persistence context
+                }
+            }
+
+            return order;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error finding Order with details by ID: " + orderId, e);
             return null;
@@ -164,6 +198,7 @@ public class OrderDAO {
 
     /**
      * Find all orders for a customer with OrderDetails eagerly loaded
+     * Uses two-step fetch to avoid MultipleBagFetchException
      * 
      * @param customerId ID of the customer
      * @return List of Orders with details
@@ -172,13 +207,44 @@ public class OrderDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
 
         try {
-            String jpql = "SELECT DISTINCT o FROM Order o " +
-                    "LEFT JOIN FETCH o.orderDetails " +
+            // Step 1: Fetch Orders with OrderDetails and Books
+            String jpql1 = "SELECT DISTINCT o FROM Order o " +
+                    "LEFT JOIN FETCH o.orderDetails od " +
+                    "LEFT JOIN FETCH od.book " +
                     "WHERE o.customer.userId = :customerId " +
                     "ORDER BY o.orderDate DESC";
-            TypedQuery<Order> query = em.createQuery(jpql, Order.class);
-            query.setParameter("customerId", customerId);
-            return query.getResultList();
+            TypedQuery<Order> query1 = em.createQuery(jpql1, Order.class);
+            query1.setParameter("customerId", customerId);
+            List<Order> orders = query1.getResultList();
+
+            // Step 2: Fetch Authors for all books
+            if (!orders.isEmpty()) {
+                // Collect all unique book IDs
+                List<Integer> bookIds = orders.stream()
+                        .flatMap(o -> o.getOrderDetails().stream())
+                        .map(od -> od.getBook().getBookId())
+                        .distinct()
+                        .toList();
+
+                if (!bookIds.isEmpty()) {
+                    String jpql2 = "SELECT DISTINCT b FROM Book b " +
+                            "LEFT JOIN FETCH b.authors " +
+                            "WHERE b.bookId IN :bookIds";
+                    TypedQuery<com.bookstore.model.Book> query2 = em.createQuery(jpql2, com.bookstore.model.Book.class);
+                    query2.setParameter("bookIds", bookIds);
+                    query2.getResultList(); // Populate authors in persistence context
+
+                    // Step 3: Fetch Images for all books
+                    String jpql3 = "SELECT DISTINCT b FROM Book b " +
+                            "LEFT JOIN FETCH b.images " +
+                            "WHERE b.bookId IN :bookIds";
+                    TypedQuery<com.bookstore.model.Book> query3 = em.createQuery(jpql3, com.bookstore.model.Book.class);
+                    query3.setParameter("bookIds", bookIds);
+                    query3.getResultList(); // Populate images in persistence context
+                }
+            }
+
+            return orders;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error finding Orders with details by customerId: " + customerId, e);
             return List.of();
