@@ -3,13 +3,16 @@ package com.bookstore.controller;
 import java.io.IOException;
 
 import com.bookstore.data.DBUtil;
+import com.bookstore.model.Address;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.model.Payment;
 import com.bookstore.model.ShoppingCart;
+import com.bookstore.dao.AddressDAO;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.JwtUtil;
+import com.bookstore.service.OrderService;
 import com.bookstore.service.PaymentService;
 import com.bookstore.service.ShoppingCartServices;
 
@@ -31,13 +34,17 @@ public class CheckoutServlet extends HttpServlet {
     private static final String GUEST_CART_KEY = "guestCart";
     private ShoppingCartServices cartService;
     private PaymentService paymentService;
+    private OrderService orderService;
     private CustomerServices customerServices;
+    private AddressDAO addressDAO;
 
     @Override
     public void init() throws ServletException {
         cartService = new ShoppingCartServices();
         paymentService = new PaymentService();
+        orderService = new OrderService();
         customerServices = new CustomerServices();
+        addressDAO = new AddressDAO();
     }
 
     /**
@@ -147,38 +154,55 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Get shipping information from form
-            String fullName = request.getParameter("fullName");
-            String phoneNumber = request.getParameter("phoneNumber");
-            String streetLine = request.getParameter("streetLine");
-            String ward = request.getParameter("ward");
-            String district = request.getParameter("district");
-            String province = request.getParameter("province");
-            String zipCode = request.getParameter("zipCode");
-            String country = request.getParameter("country");
-
-            // Get payment method
-            String paymentMethodStr = request.getParameter("paymentMethod");
-            Payment.PaymentMethod paymentMethod = Payment.PaymentMethod.valueOf(paymentMethodStr);
-
-            // Validate required fields
-            if (fullName == null || fullName.trim().isEmpty() ||
-                    phoneNumber == null || phoneNumber.trim().isEmpty() ||
-                    streetLine == null || streetLine.trim().isEmpty()) {
-                request.setAttribute("error", "Vui lòng điền đầy đủ thông tin giao hàng");
+            // Get selected address ID
+            String selectedAddressIdStr = request.getParameter("selectedAddressId");
+            if (selectedAddressIdStr == null || selectedAddressIdStr.trim().isEmpty()) {
+                request.setAttribute("error", "Vui lòng chọn địa chỉ giao hàng");
                 request.setAttribute("cart", cart);
                 request.setAttribute("user", customer);
                 request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
                 return;
             }
 
-            // Build shipping address string (for display purposes)
-            String shippingAddressStr = buildShippingAddress(streetLine, ward, district, province, country, zipCode);
+            // Get payment method
+            String paymentMethodStr = request.getParameter("paymentMethod");
+            if (paymentMethodStr == null || paymentMethodStr.trim().isEmpty()) {
+                request.setAttribute("error", "Vui lòng chọn phương thức thanh toán");
+                request.setAttribute("cart", cart);
+                request.setAttribute("user", customer);
+                request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
+                return;
+            }
 
-            // TODO: Create Order with proper Address object
-            // For now, we'll create a mock order
-            // In production, you should create an Address object and save it to database
-            Order order = createMockOrder(customer, cart, shippingAddressStr, fullName, phoneNumber);
+            Payment.PaymentMethod paymentMethod = Payment.PaymentMethod.valueOf(paymentMethodStr);
+
+            // Load selected address
+            Integer selectedAddressId = Integer.parseInt(selectedAddressIdStr);
+            Address shippingAddress = addressDAO.findById(selectedAddressId);
+
+            if (shippingAddress == null) {
+                request.setAttribute("error", "Địa chỉ giao hàng không tồn tại");
+                request.setAttribute("cart", cart);
+                request.setAttribute("user", customer);
+                request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
+                return;
+            }
+
+            // Validate address belongs to customer (security check)
+            if (!shippingAddress.getCustomer().getUserId().equals(customer.getUserId())) {
+                request.setAttribute("error", "Địa chỉ không hợp lệ");
+                request.setAttribute("cart", cart);
+                request.setAttribute("user", customer);
+                request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
+                return;
+            }
+
+            // Create real order from cart using OrderService
+            Order order = orderService.createOrderFromCart(
+                    customer,
+                    shippingAddress,
+                    cart,
+                    paymentMethodStr);
 
             // Create payment
             String gateway = paymentMethod == Payment.PaymentMethod.SEPAY ? "Sepay" : null;
@@ -188,13 +212,15 @@ public class CheckoutServlet extends HttpServlet {
             PaymentService.PaymentResult result = paymentService.processPayment(payment, new java.util.HashMap<>());
 
             if (result.isSuccess()) {
+                // Clear cart after successful order creation
+                cartService.clearCart(cart);
+                session.setAttribute("cart", cart);
+
                 if (result.requiresRedirect()) {
                     // Redirect to payment gateway
                     response.sendRedirect(result.getRedirectUrl());
                 } else {
-                    // Payment completed (COD) - clear cart and redirect to confirmation
-                    cartService.clearCart(cart);
-
+                    // Payment completed (COD) - redirect to confirmation
                     session.setAttribute("orderConfirmation",
                             "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderId());
                     response.sendRedirect(
@@ -233,82 +259,6 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         return cart;
-    }
-
-    /**
-     * Build shipping address string
-     */
-    private String buildShippingAddress(String streetLine, String ward, String district,
-            String province, String country, String zipCode) {
-        StringBuilder address = new StringBuilder();
-
-        if (streetLine != null && !streetLine.trim().isEmpty()) {
-            address.append(streetLine.trim());
-        }
-
-        if (ward != null && !ward.trim().isEmpty()) {
-            if (address.length() > 0)
-                address.append(", ");
-            address.append(ward.trim());
-        }
-
-        if (district != null && !district.trim().isEmpty()) {
-            if (address.length() > 0)
-                address.append(", ");
-            address.append(district.trim());
-        }
-
-        if (province != null && !province.trim().isEmpty()) {
-            if (address.length() > 0)
-                address.append(", ");
-            address.append(province.trim());
-        }
-
-        if (country != null && !country.trim().isEmpty()) {
-            if (address.length() > 0)
-                address.append(", ");
-            address.append(country.trim());
-        }
-
-        if (zipCode != null && !zipCode.trim().isEmpty()) {
-            address.append(" ").append(zipCode.trim());
-        }
-
-        return address.toString();
-    }
-
-    /**
-     * Create mock order (temporary until OrderDAO is implemented)
-     * Note: This creates a minimal Order object without Address entity
-     * In production, create proper Address entity and save to database
-     */
-    private Order createMockOrder(Customer customer, ShoppingCart cart, String shippingAddressStr,
-            String recipientName, String recipientPhone) {
-        Order order = new Order();
-        order.setOrderId(generateMockOrderId());
-        order.setCustomer(customer);
-        order.setTotalAmount(cart.getTotalAmount());
-        order.setOrderStatus(Order.OrderStatus.PENDING);
-        order.setPaymentStatus(Order.PaymentStatus.UNPAID);
-        order.setRecipientName(recipientName);
-        order.setOrderDate(java.time.LocalDateTime.now());
-
-        // Note: shippingAddress requires Address entity
-        // For now, we skip setting it (will be null)
-        // TODO: Create Address entity and set it properly
-        // Address address = new Address();
-        // address.setStreetLine(streetLine);
-        // ... set other fields
-        // order.setShippingAddress(address);
-
-        return order;
-    }
-
-    /**
-     * Generate mock order ID
-     */
-    private Integer generateMockOrderId() {
-        return (int) (System.currentTimeMillis() % 100000);
     }
 
     @Override
