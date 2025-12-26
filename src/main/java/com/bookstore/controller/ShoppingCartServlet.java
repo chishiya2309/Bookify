@@ -25,6 +25,10 @@ public class ShoppingCartServlet extends HttpServlet {
     private static final String MERGE_MESSAGE_KEY = "mergeMessage";
     private static final String SUCCESS_MESSAGE_KEY = "successMessage";
 
+    // Cart limits to prevent abuse and memory bloat
+    private static final int MAX_CART_ITEMS = 50; // Max unique products in cart
+    private static final int MAX_QUANTITY_PER_ITEM = 10; // Max quantity per product
+
     @Override
     public void init() throws ServletException {
         cartService = new ShoppingCartServices();
@@ -289,28 +293,49 @@ public class ShoppingCartServlet extends HttpServlet {
                 throw new IllegalArgumentException("Sách không tồn tại");
             }
 
-            if (!book.isActive()) {
-                throw new IllegalArgumentException("Sách '" + book.getTitle() + "' hiện không khả dụng");
-            }
-
             // Check current stock
             int currentStock = book.getQuantityInStock();
             if (currentStock <= 0) {
                 throw new IllegalArgumentException("Sách '" + book.getTitle() + "' đã hết hàng");
             }
 
+            // ========== CART LIMITS VALIDATION ==========
+            // Check max quantity per item
+            if (quantity > MAX_QUANTITY_PER_ITEM) {
+                throw new IllegalArgumentException(
+                        String.format("Số lượng tối đa cho mỗi sản phẩm là %d", MAX_QUANTITY_PER_ITEM));
+            }
+
             // Check if requested quantity exceeds available stock
             // Also consider items already in cart
             int existingInCart = 0;
+            boolean isNewItem = true;
             if (cart.getItems() != null) {
                 for (CartItem item : cart.getItems()) {
                     if (item.getBook().getBookId().equals(bookId)) {
                         existingInCart = item.getQuantity();
+                        isNewItem = false;
                         break;
                     }
                 }
             }
 
+            // Check max cart items (only for new items)
+            if (isNewItem && cart.getItems() != null && cart.getItems().size() >= MAX_CART_ITEMS) {
+                throw new IllegalArgumentException(
+                        String.format("Giỏ hàng đã đạt giới hạn tối đa %d sản phẩm", MAX_CART_ITEMS));
+            }
+
+            // Check max quantity per item including existing
+            int totalQuantity = existingInCart + quantity;
+            if (totalQuantity > MAX_QUANTITY_PER_ITEM) {
+                throw new IllegalArgumentException(
+                        String.format("Tổng số lượng cho sản phẩm này không được vượt quá %d (hiện tại: %d)",
+                                MAX_QUANTITY_PER_ITEM, existingInCart));
+            }
+            // ========== END CART LIMITS VALIDATION ==========
+
+            // Also check stock availability
             int totalRequested = existingInCart + quantity;
             if (totalRequested > currentStock) {
                 if (existingInCart > 0) {
