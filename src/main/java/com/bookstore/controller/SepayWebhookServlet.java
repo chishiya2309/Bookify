@@ -1,11 +1,14 @@
 package com.bookstore.controller;
 
 import com.bookstore.config.SepayConfig;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.model.Payment;
+import com.bookstore.model.ShoppingCart;
 import com.bookstore.service.EmailService;
 import com.bookstore.service.OrderService;
 import com.bookstore.service.PaymentService;
+import com.bookstore.service.ShoppingCartServices;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.servlet.ServletException;
@@ -38,6 +41,7 @@ public class SepayWebhookServlet extends HttpServlet {
     private final PaymentService paymentService = new PaymentService();
     private final OrderService orderService = new OrderService();
     private final EmailService emailService = new EmailService();
+    private final ShoppingCartServices cartService = new ShoppingCartServices();
 
     /**
      * Handle POST webhook from Sepay
@@ -126,6 +130,22 @@ public class SepayWebhookServlet extends HttpServlet {
             orderService.updateOrderStatus(orderId, Order.OrderStatus.PROCESSING);
 
             LOGGER.log(Level.INFO, "Order {0} payment confirmed via Sepay", orderId);
+
+            // Clear customer cart after successful payment
+            try {
+                Customer customer = order.getCustomer();
+                if (customer != null) {
+                    ShoppingCart cart = cartService.getCartByCustomer(customer);
+                    if (cart != null && cart.getItems() != null && !cart.getItems().isEmpty()) {
+                        cartService.clearCart(cart);
+                        LOGGER.log(Level.INFO, "Cart cleared for customer {0} after payment confirmed",
+                                customer.getUserId());
+                    }
+                }
+            } catch (Exception cartEx) {
+                LOGGER.log(Level.WARNING, "Failed to clear cart after payment", cartEx);
+                // Don't fail webhook if cart clear fails
+            }
 
             // Send payment confirmation email
             try {

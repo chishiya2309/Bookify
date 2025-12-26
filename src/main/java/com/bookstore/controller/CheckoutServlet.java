@@ -223,15 +223,19 @@ public class CheckoutServlet extends HttpServlet {
             PaymentService.PaymentResult result = paymentService.processPayment(payment, new java.util.HashMap<>());
 
             if (result.isSuccess()) {
-                // Clear cart after successful order creation
-                cartService.clearCart(cart);
-                session.setAttribute("cart", cart);
+                // Chỉ xóa cart ngay cho COD (thanh toán được coi là "hoàn tất" về mặt logic)
+                // BANK_TRANSFER: cart sẽ được xóa khi webhook xác nhận đã nhận tiền
+                if (paymentMethod == Payment.PaymentMethod.COD) {
+                    cartService.clearCart(cart);
+                    session.setAttribute("cart", cart);
+                }
 
                 if (result.requiresRedirect()) {
                     // Redirect to payment gateway
                     response.sendRedirect(result.getRedirectUrl());
                 } else if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER) {
                     // Bank transfer - redirect to QR payment page
+                    // Cart will be cleared after payment confirmed via webhook
                     session.setAttribute("orderConfirmation",
                             "Vui lòng quét mã QR để thanh toán đơn hàng #" + order.getOrderId());
                     response.sendRedirect(
