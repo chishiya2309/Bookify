@@ -50,13 +50,17 @@ public class AdminServices {
      * @return null if valid, error message if invalid
      */
     public String validateEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
+        if (email == null) {
             return "Email không được để trống";
         }
-        if (!ValidationUtil.isValidEmail(email.trim())) {
+        String trimmedEmail = email.trim();
+        if (trimmedEmail.isEmpty()) {
+            return "Email không được để trống";
+        }
+        if (!ValidationUtil.isValidEmail(trimmedEmail)) {
             return "Email không đúng định dạng";
         }
-        if (ValidationUtil.containsSqlInjection(email)) {
+        if (ValidationUtil.containsSqlInjection(trimmedEmail)) {
             return "Dữ liệu không hợp lệ";
         }
         return null; // Valid
