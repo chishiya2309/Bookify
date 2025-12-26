@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,6 +28,7 @@ public class EmailService {
 
     private static final Logger LOGGER = Logger.getLogger(EmailService.class.getName());
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    @SuppressWarnings("deprecation")
     private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getInstance(new Locale("vi", "VN"));
 
     /**
@@ -121,6 +121,24 @@ public class EmailService {
 
             // Load and populate template
             String template = loadTemplate("order-confirmation.html");
+            
+            // Format shipping fee - show "Miễn phí" if shipping fee is 0, otherwise show the amount
+            String shippingFeeDisplay;
+            if (order.getShippingFee() == null || order.getShippingFee().compareTo(BigDecimal.ZERO) == 0) {
+                shippingFeeDisplay = "Miễn phí";
+            } else {
+                shippingFeeDisplay = CURRENCY_FORMATTER.format(order.getShippingFee()) + "₫";
+            }
+            
+            // Get subtotal - use order.getSubtotal() if available, otherwise calculate from order details
+            BigDecimal subtotal = order.getSubtotal();
+            if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) == 0) {
+                // Calculate subtotal from order details if not set
+                subtotal = order.getOrderDetails().stream()
+                        .map(OrderDetail::getSubTotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
+            
             String html = template
                     .replace("{{customerName}}", customerName)
                     .replace("{{orderId}}", order.getOrderId().toString())
@@ -130,9 +148,9 @@ public class EmailService {
                     .replace("{{recipientName}}", order.getRecipientName())
                     .replace("{{recipientPhone}}", order.getShippingAddress().getPhoneNumber())
                     .replace("{{paymentMethod}}", formatPaymentMethod(order.getPaymentMethod()))
-                    .replace("{{subtotal}}", CURRENCY_FORMATTER.format(order.getTotalAmount()))
-                    .replace("{{shipping}}", "Miễn phí")
-                    .replace("{{totalAmount}}", CURRENCY_FORMATTER.format(order.getTotalAmount()));
+                    .replace("{{subtotal}}", CURRENCY_FORMATTER.format(subtotal) + "₫")
+                    .replace("{{shipping}}", shippingFeeDisplay)
+                    .replace("{{totalAmount}}", CURRENCY_FORMATTER.format(order.getTotalAmount()) + "₫");
 
             sendEmail(customerEmail, "Xác nhận đơn hàng #" + order.getOrderId(), html);
 

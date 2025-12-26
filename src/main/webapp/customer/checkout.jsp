@@ -900,17 +900,46 @@
                                 <div class="summary-row">
                                     <span class="summary-label">Tạm tính</span>
                                     <span class="summary-value">
-                                        <fmt:formatNumber value="${cart.totalAmount}" pattern="#,###"/>₫
+                                        <fmt:formatNumber value="${subtotal}" pattern="#,###"/>₫
                                     </span>
                                 </div>
                                 <div class="summary-row">
-                                    <span class="summary-label">Phí vận chuyển</span>
-                                    <span class="summary-value">Miễn phí</span>
-                                </div>
-                                <div class="summary-row total">
-                                    <span class="summary-label">Tổng cộng</span>
+                                    <span class="summary-label">
+                                        Phí vận chuyển
+                                        <c:if test="${not empty shippingRegion}">
+                                            <small style="color: #6c757d; font-weight: normal;">(${shippingRegion})</small>
+                                        </c:if>
+                                    </span>
                                     <span class="summary-value">
-                                        <fmt:formatNumber value="${cart.totalAmount}" pattern="#,###"/>₫
+                                        <c:choose>
+                                            <c:when test="${shippingFee == 0}">
+                                                <span style="color: #28a745; font-weight: 600;">Miễn phí</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <fmt:formatNumber value="${shippingFee}" pattern="#,###"/>₫
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </div>
+                                
+                                <!-- Free shipping progress -->
+                                <c:if test="${freeShippingNeeded > 0}">
+                                    <div style="background: #f8f9fa; border-radius: 8px; padding: 12px; margin: 12px 0;">
+                                        <div style="font-size: 13px; color: #6c757d; margin-bottom: 8px;">
+                                            <i class="fas fa-truck" style="color: #198754;"></i>
+                                            Mua thêm <strong style="color: #198754;"><fmt:formatNumber value="${freeShippingNeeded}" pattern="#,###"/>₫</strong> để được <strong style="color: #198754;">MIỄN PHÍ VẬN CHUYỂN</strong>
+                                        </div>
+                                        <div style="background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden;">
+                                            <c:set var="progress" value="${(subtotal / freeShippingThreshold) * 100}" />
+                                            <div style="background: linear-gradient(90deg, #28a745, #20c997); height: 100%; width: ${progress > 100 ? 100 : progress}%; border-radius: 4px;"></div>
+                                        </div>
+                                    </div>
+                                </c:if>
+                                
+                                <div class="summary-row total" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #eee;">
+                                    <span class="summary-label" style="font-size: 16px;">Tổng cộng</span>
+                                    <span class="summary-value" style="font-size: 20px; color: #198754;">
+                                        <fmt:formatNumber value="${grandTotal}" pattern="#,###"/>₫
                                     </span>
                                 </div>
                             </div>

@@ -898,11 +898,34 @@
                     <div class="order-totals">
                         <div class="total-row">
                             <span>Tạm tính</span>
-                            <span><fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>₫</span>
+                            <span>
+                                <c:choose>
+                                    <c:when test="${not empty order.subtotal}">
+                                        <fmt:formatNumber value="${order.subtotal}" pattern="#,###"/>₫
+                                    </c:when>
+                                    <c:otherwise>
+                                        <%-- Calculate subtotal = totalAmount - shippingFee if subtotal not set --%>
+                                        <c:set var="calcSubtotal" value="${order.totalAmount}"/>
+                                        <c:if test="${not empty order.shippingFee}">
+                                            <c:set var="calcSubtotal" value="${order.totalAmount - order.shippingFee}"/>
+                                        </c:if>
+                                        <fmt:formatNumber value="${calcSubtotal}" pattern="#,###"/>₫
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
                         </div>
                         <div class="total-row">
                             <span>Phí vận chuyển</span>
-                            <span>Miễn phí</span>
+                            <span>
+                                <c:choose>
+                                    <c:when test="${empty order.shippingFee or order.shippingFee == 0}">
+                                        <span style="color: var(--color-success); font-weight: bold;">Miễn phí</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <fmt:formatNumber value="${order.shippingFee}" pattern="#,###"/>₫
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
                         </div>
                         <div class="total-row grand-total">
                             <span>Tổng cộng</span>

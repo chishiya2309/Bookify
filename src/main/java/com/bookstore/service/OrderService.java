@@ -2,6 +2,7 @@ package com.bookstore.service;
 
 import com.bookstore.dao.BookDAO;
 import com.bookstore.dao.OrderDAO;
+import com.bookstore.config.ShippingConfig;
 import com.bookstore.data.DBUtil;
 import com.bookstore.model.*;
 import com.bookstore.model.Order.OrderStatus;
@@ -128,7 +129,18 @@ public class OrderService {
                 throw new IllegalStateException("Lỗi kiểm tra tồn kho:\n• " + String.join("\n• ", stockErrors));
             }
 
-            order.setTotalAmount(totalAmount);
+            // Calculate shipping fee based on province
+            BigDecimal subtotal = totalAmount;
+            BigDecimal shippingFee = ShippingConfig.calculateShippingFee(
+                    shippingAddress.getProvince(), subtotal);
+            BigDecimal grandTotal = subtotal.add(shippingFee);
+
+            order.setSubtotal(subtotal);
+            order.setShippingFee(shippingFee);
+            order.setTotalAmount(grandTotal);
+
+            LOGGER.log(Level.INFO, "Order pricing - Subtotal: {0}, Shipping: {1}, Total: {2}",
+                    new Object[] { subtotal, shippingFee, grandTotal });
 
             // Persist order (cascade saves OrderDetails)
             em.persist(order);
@@ -137,7 +149,7 @@ public class OrderService {
             tx.commit();
 
             LOGGER.log(Level.INFO, "Order created successfully with locking. OrderId: {0}, Total: {1}",
-                    new Object[] { order.getOrderId(), totalAmount });
+                    new Object[] { order.getOrderId(), grandTotal });
 
             // Send order confirmation email (outside transaction)
             try {

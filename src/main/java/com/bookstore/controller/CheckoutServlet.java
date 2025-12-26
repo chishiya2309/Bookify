@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.bookstore.data.DBUtil;
+import com.bookstore.config.ShippingConfig;
 import com.bookstore.dao.AddressDAO;
 import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Address;
@@ -20,6 +21,8 @@ import com.bookstore.service.JwtUtil;
 import com.bookstore.service.OrderService;
 import com.bookstore.service.PaymentService;
 import com.bookstore.service.ShoppingCartServices;
+
+import java.math.BigDecimal;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -124,6 +127,36 @@ public class CheckoutServlet extends HttpServlet {
         com.bookstore.dao.AddressDAO addressDAO = new com.bookstore.dao.AddressDAO();
         java.util.List<com.bookstore.model.Address> addresses = addressDAO.findByCustomerId(customer.getUserId());
         request.setAttribute("customerAddresses", addresses);
+
+        // ========== SHIPPING FEE PREVIEW ==========
+        // Calculate shipping fee based on default address or first address
+        BigDecimal subtotal = cart.getTotalAmount();
+        BigDecimal shippingFee = BigDecimal.ZERO;
+        String shippingRegion = "";
+
+        Address defaultAddress = null;
+        if (addresses != null && !addresses.isEmpty()) {
+            // Find default address or use first
+            defaultAddress = addresses.stream()
+                    .filter(a -> Boolean.TRUE.equals(a.getIsDefault()))
+                    .findFirst()
+                    .orElse(addresses.get(0));
+
+            shippingFee = ShippingConfig.calculateShippingFee(
+                    defaultAddress.getProvince(), subtotal);
+            shippingRegion = ShippingConfig.getRegionName(defaultAddress.getProvince());
+        }
+
+        BigDecimal grandTotal = subtotal.add(shippingFee);
+        BigDecimal freeShippingNeeded = ShippingConfig.getAmountForFreeShipping(subtotal);
+
+        request.setAttribute("subtotal", subtotal);
+        request.setAttribute("shippingFee", shippingFee);
+        request.setAttribute("shippingRegion", shippingRegion);
+        request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("freeShippingThreshold", ShippingConfig.FREE_SHIPPING_THRESHOLD);
+        request.setAttribute("freeShippingNeeded", freeShippingNeeded);
+        // ========== END SHIPPING FEE PREVIEW ==========
 
         // Set categories for header
         request.setAttribute("listCategories", customerServices.listAllCategories());
