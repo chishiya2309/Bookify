@@ -1,6 +1,9 @@
 package com.bookstore.controller;
 
+import com.bookstore.data.DBUtil;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
+import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.OrderService;
 import com.google.gson.JsonObject;
 import jakarta.servlet.ServletException;
@@ -8,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -16,6 +20,8 @@ import java.util.logging.Logger;
 /**
  * PaymentStatusServlet - API endpoint to check payment status
  * Used by bank-transfer-payment.jsp to poll for payment confirmation
+ * 
+ * SECURITY: Only the order owner can view payment status
  */
 @WebServlet(name = "PaymentStatusServlet", urlPatterns = { "/api/payment/status" })
 public class PaymentStatusServlet extends HttpServlet {
@@ -38,6 +44,28 @@ public class PaymentStatusServlet extends HttpServlet {
         JsonObject result = new JsonObject();
 
         try {
+            // ========== AUTHENTICATION CHECK ==========
+            HttpSession session = request.getSession(false);
+            Customer customer = null;
+
+            if (session != null) {
+                customer = (Customer) session.getAttribute("customer");
+            }
+
+            // Try to restore from JWT if not in session
+            if (customer == null) {
+                customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
+            }
+
+            if (customer == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                result.addProperty("error", "Unauthorized - Please login");
+                result.addProperty("paid", false);
+                response.getWriter().write(result.toString());
+                return;
+            }
+            // ========== END AUTHENTICATION ==========
+
             String orderIdStr = request.getParameter("orderId");
 
             if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
@@ -58,6 +86,19 @@ public class PaymentStatusServlet extends HttpServlet {
                 response.getWriter().write(result.toString());
                 return;
             }
+
+            // ========== AUTHORIZATION CHECK ==========
+            // Verify the order belongs to the logged-in customer
+            if (!order.getCustomer().getUserId().equals(customer.getUserId())) {
+                LOGGER.log(Level.WARNING, "Customer {0} attempted to access order {1} belonging to customer {2}",
+                        new Object[] { customer.getUserId(), orderId, order.getCustomer().getUserId() });
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                result.addProperty("error", "Forbidden - You do not own this order");
+                result.addProperty("paid", false);
+                response.getWriter().write(result.toString());
+                return;
+            }
+            // ========== END AUTHORIZATION ==========
 
             // Check payment status
             boolean isPaid = order.getPaymentStatus() == Order.PaymentStatus.PAID;
@@ -84,6 +125,6 @@ public class PaymentStatusServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "Payment Status API - Check if order is paid";
+        return "Payment Status API - Check if order is paid (authenticated)";
     }
 }
