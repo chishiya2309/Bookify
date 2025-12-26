@@ -181,7 +181,10 @@ public class CustomerDAO {
         try {
             trans.begin();
             
-            // Use native SQL to delete in correct order to avoid foreign key constraints
+            // Use native SQL to delete in correct order to avoid foreign key constraints.
+            // All deletions are wrapped in a transaction to ensure atomicity - if any
+            // deletion fails, the entire transaction will be rolled back, preventing
+            // database inconsistencies such as orphaned child records.
             
             // 1. Delete payments for customer's orders
             em.createNativeQuery("DELETE FROM payments WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = ?)")
