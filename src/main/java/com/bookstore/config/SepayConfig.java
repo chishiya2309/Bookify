@@ -53,6 +53,8 @@ public class SepayConfig {
      */
     private static final String SECRET_KEY = "spsk_live_cysAJev94vsKPese3nF3gpigozDYirtJ";
 
+    private static final String WEBHOOK_API_KEY = "P0Zx9hPEnDhqdN7PrCqkOm372A6v32xb";
+
     // ========== CALLBACK URLs ==========
     /**
      * Return URL - Where customer is redirected after payment
@@ -110,26 +112,93 @@ public class SepayConfig {
     }
 
     /**
-     * Verify IPN signature from Sepay
-     * Uses HMAC-SHA256 with secret key for production
+     * Verify IPN signature from Sepay using HMAC-SHA256
      * 
      * @param payload   Request body
      * @param signature Signature from X-Sepay-Signature header
      * @return true if signature is valid
      */
     public static boolean verifyWebhookSignature(String payload, String signature) {
-        // If no secret key configured, trust all requests (for testing)
-        if (SECRET_KEY.equals("YOUR_SECRET_KEY_HERE")) {
+        // If no signature provided, fail verification
+        if (signature == null || signature.isEmpty()) {
+            return false;
+        }
+
+        // If secret key not configured, skip signature verification
+        if (SECRET_KEY == null || SECRET_KEY.isEmpty() || SECRET_KEY.equals("YOUR_SECRET_KEY_HERE")) {
+            // Log warning but allow for testing purposes
             return true;
         }
 
-        // TODO: Implement HMAC-SHA256 signature verification
-        // For production:
-        // 1. Calculate HMAC-SHA256 of payload using SECRET_KEY
-        // 2. Compare with signature from header
-        // 3. Return true if match
+        try {
+            javax.crypto.Mac sha256Hmac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(
+                    SECRET_KEY.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+            sha256Hmac.init(secretKeySpec);
 
-        return true; // For now, trust all requests
+            byte[] hash = sha256Hmac.doFinal(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String calculatedSignature = java.util.Base64.getEncoder().encodeToString(hash);
+
+            // Constant-time comparison to prevent timing attacks
+            return java.security.MessageDigest.isEqual(
+                    calculatedSignature.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    signature.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Verify API Key from webhook request header
+     * The API Key should match the one configured in Sepay Dashboard
+     * 
+     * @param apiKey API Key from X-Sepay-Api-Key or Authorization header
+     * @return true if API Key is valid
+     */
+    public static boolean verifyWebhookApiKey(String apiKey) {
+        // Nếu WEBHOOK_API_KEY chưa cấu hình (rỗng), cho phép tất cả requests
+        // Điều này cho phép hoạt động khi chưa setup API Key trong Sepay
+        if (WEBHOOK_API_KEY == null || WEBHOOK_API_KEY.isEmpty()) {
+            return true;
+        }
+
+        // Nếu đã cấu hình API Key, bắt buộc phải verify
+        if (apiKey == null || apiKey.isEmpty()) {
+            return false;
+        }
+
+        // Verify API Key matches
+        return WEBHOOK_API_KEY.equals(apiKey);
+    }
+
+    /**
+     * Get Webhook API Key (for testing/debugging)
+     */
+    public static String getWebhookApiKey() {
+        return WEBHOOK_API_KEY;
+    }
+
+    /**
+     * Combined webhook verification - checks both API Key and Signature
+     * 
+     * @param apiKey    API Key from header
+     * @param payload   Request body
+     * @param signature Signature from header (optional)
+     * @return true if verification passes
+     */
+    public static boolean verifyWebhook(String apiKey, String payload, String signature) {
+        // Step 1: Verify API Key (required)
+        if (!verifyWebhookApiKey(apiKey)) {
+            return false;
+        }
+
+        // Step 2: Verify Signature if provided
+        if (signature != null && !signature.isEmpty()) {
+            return verifyWebhookSignature(payload, signature);
+        }
+
+        return true;
     }
 
     /**

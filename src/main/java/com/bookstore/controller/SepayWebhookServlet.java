@@ -56,9 +56,53 @@ public class SepayWebhookServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Read webhook payload
+            // Read webhook payload first
             String payload = readRequestBody(request);
             LOGGER.log(Level.INFO, "Sepay webhook received: {0}", payload);
+
+            // ========== AUTHENTICATION VERIFICATION ==========
+            // Layer 1: Verify API Key from header
+            // Sepay sends: Authorization: Apikey <YOUR_KEY>
+            String apiKey = request.getHeader("X-Sepay-Api-Key");
+            if (apiKey == null) {
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null) {
+                    // Sepay format: "Apikey <KEY>" (note: lowercase 'pikey')
+                    if (authHeader.startsWith("Apikey ")) {
+                        apiKey = authHeader.substring(7); // "Apikey " = 7 chars
+                    } else if (authHeader.startsWith("apikey ")) {
+                        apiKey = authHeader.substring(7);
+                    } else if (authHeader.startsWith("Sepay ")) {
+                        apiKey = authHeader.substring(6);
+                    } else if (authHeader.startsWith("Bearer ")) {
+                        apiKey = authHeader.substring(7);
+                    } else {
+                        apiKey = authHeader; // Use as-is
+                    }
+                }
+            }
+
+            LOGGER.log(Level.INFO, "Authorization header received, API Key: {0}",
+                    apiKey != null ? apiKey.substring(0, Math.min(10, apiKey.length())) + "..." : "null");
+
+            // Layer 2: Get signature from header (optional but recommended)
+            String signature = request.getHeader("X-Sepay-Signature");
+
+            // Verify webhook authenticity
+            if (!SepayConfig.verifyWebhook(apiKey, payload, signature)) {
+                LOGGER.log(Level.WARNING, "Webhook authentication failed. API Key: {0}, Expected: {1}",
+                        new Object[] {
+                                apiKey != null ? apiKey.substring(0, Math.min(10, apiKey.length())) + "..." : "null",
+                                SepayConfig.getWebhookApiKey().isEmpty() ? "(not configured - should pass)"
+                                        : "configured"
+                        });
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+                return;
+            }
+
+            LOGGER.log(Level.INFO, "Webhook authentication passed");
+            // ========== END AUTHENTICATION ==========
 
             // Parse JSON
             JsonObject webhookData = gson.fromJson(payload, JsonObject.class);
