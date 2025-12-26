@@ -184,48 +184,48 @@ public class CustomerDAO {
             // Use native SQL to delete in correct order to avoid foreign key constraints
             
             // 1. Delete payments for customer's orders
-            em.createNativeQuery("DELETE FROM payments WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = ?)")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM payments WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = :customerId)")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 2. Delete order details for customer's orders
-            em.createNativeQuery("DELETE FROM order_details WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = ?)")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM order_details WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = :customerId)")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 3. Delete orders (must be before addresses since orders reference addresses)
-            em.createNativeQuery("DELETE FROM orders WHERE customer_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM orders WHERE customer_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 4. Delete reviews
-            em.createNativeQuery("DELETE FROM reviews WHERE customer_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM reviews WHERE customer_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 5. Delete shopping cart items
-            em.createNativeQuery("DELETE FROM cart_items WHERE cart_id IN (SELECT cart_id FROM shopping_carts WHERE customer_id = ?)")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM cart_items WHERE cart_id IN (SELECT cart_id FROM shopping_carts WHERE customer_id = :customerId)")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 6. Delete shopping cart
-            em.createNativeQuery("DELETE FROM shopping_carts WHERE customer_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM shopping_carts WHERE customer_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 7. Delete addresses (after orders since orders reference addresses)
-            em.createNativeQuery("DELETE FROM addresses WHERE customer_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM addresses WHERE customer_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 8. Delete customer from customers table
-            em.createNativeQuery("DELETE FROM customers WHERE user_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM customers WHERE user_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             // 9. Delete from users table (parent table)
-            em.createNativeQuery("DELETE FROM users WHERE user_id = ?")
-              .setParameter(1, id)
+            em.createNativeQuery("DELETE FROM users WHERE user_id = :customerId")
+              .setParameter("customerId", id)
               .executeUpdate();
             
             trans.commit();
