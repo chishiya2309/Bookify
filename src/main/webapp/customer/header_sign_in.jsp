@@ -17,7 +17,7 @@
     </div>
 
     <div class="auth-links">
-        <a href="${pageContext.request.contextPath}/customer/login.jsp">Đăng nhập</a> |
+        <a href="${pageContext.request.contextPath}/customer/login.jsp" id="loginLink">Đăng nhập</a> |
         <a href="${pageContext.request.contextPath}/customer/register.jsp">Đăng ký</a> |
         <a href="${pageContext.request.contextPath}/customer/cart">Giỏ hàng</a>
     </div>
@@ -36,3 +36,28 @@
         </c:choose>
     </div>
 </div>
+
+<script>
+// Thêm redirect parameter vào link đăng nhập với URL hiện tại từ browser
+(function() {
+    var loginLink = document.getElementById('loginLink');
+    if (loginLink) {
+        var currentPath = window.location.pathname + window.location.search;
+        var contextPath = '${pageContext.request.contextPath}';
+        var redirectPath = currentPath;
+document.addEventListener('DOMContentLoaded', function () {
+    var loginLink = document.getElementById('loginLink');
+    if (loginLink) {
+        var currentPath = window.location.pathname + window.location.search;
+        var contextPath = '${pageContext.request.contextPath}';
+
+        // Chỉ thêm redirect nếu không phải trang chủ hoặc trang login/register
+        if (currentPath !== contextPath + '/' &&
+            currentPath !== contextPath &&
+            currentPath.indexOf('/login') === -1 &&
+            currentPath.indexOf('/register') === -1) {
+            loginLink.href = contextPath + '/customer/login.jsp?redirect=' + encodeURIComponent(currentPath);
+        }
+    }
+});
+</script>
