@@ -188,16 +188,22 @@ public class CustomerServlet extends HttpServlet {
         if (password != null && !password.isEmpty() && !password.equals(confirmPassword)) {
             try {
                 int id = Integer.parseInt(idParam);
-                Customer formCustomer = new Customer();
-                formCustomer.setUserId(id);
-                formCustomer.setEmail(email);
-                formCustomer.setFullName(fullName);
-                formCustomer.setPhoneNumber(phoneNumber);
-                request.setAttribute("customer", formCustomer);
-                request.setAttribute("error", "Mật khẩu xác nhận không khớp");
-                request.setAttribute("isEdit", true);
-                getServletContext().getRequestDispatcher("/admin/customer/form_customer.jsp").forward(request, response);
-                return;
+                Customer existingCustomer = customerServices.getCustomerById(id);
+                if (existingCustomer != null) {
+                    // Update with form values for fields that user is trying to change
+                    existingCustomer.setFullName(fullName);
+                    existingCustomer.setPhoneNumber(phoneNumber);
+                    request.setAttribute("customer", existingCustomer);
+                    request.setAttribute("error", "Mật khẩu xác nhận không khớp");
+                    request.setAttribute("isEdit", true);
+                    getServletContext().getRequestDispatcher("/admin/customer/form_customer.jsp").forward(request, response);
+                    return;
+                } else {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("error", "Khách hàng không tồn tại");
+                    response.sendRedirect(request.getContextPath() + "/admin/customers?action=list");
+                    return;
+                }
             } catch (NumberFormatException e) {
                 HttpSession session = request.getSession();
                 session.setAttribute("error", "ID khách hàng không hợp lệ");
@@ -219,15 +225,20 @@ public class CustomerServlet extends HttpServlet {
         } catch (Exception e) {
             try {
                 Integer id = Integer.parseInt(idParam);
-                Customer formCustomer = new Customer();
-                formCustomer.setUserId(id);
-                formCustomer.setEmail(email);
-                formCustomer.setFullName(fullName);
-                formCustomer.setPhoneNumber(phoneNumber);
-                request.setAttribute("customer", formCustomer);
-                request.setAttribute("error", e.getMessage());
-                request.setAttribute("isEdit", true);
-                getServletContext().getRequestDispatcher("/admin/customer/form_customer.jsp").forward(request, response);
+                Customer existingCustomer = customerServices.getCustomerById(id);
+                if (existingCustomer != null) {
+                    // Update with form values for fields that user is trying to change
+                    existingCustomer.setFullName(fullName);
+                    existingCustomer.setPhoneNumber(phoneNumber);
+                    request.setAttribute("customer", existingCustomer);
+                    request.setAttribute("error", e.getMessage());
+                    request.setAttribute("isEdit", true);
+                    getServletContext().getRequestDispatcher("/admin/customer/form_customer.jsp").forward(request, response);
+                } else {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("error", "Khách hàng không tồn tại");
+                    response.sendRedirect(request.getContextPath() + "/admin/customers?action=list");
+                }
             } catch (Exception ex) {
                 HttpSession session = request.getSession();
                 session.setAttribute("error", e.getMessage());

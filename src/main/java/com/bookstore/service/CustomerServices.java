@@ -12,6 +12,7 @@ import com.bookstore.data.DBUtil;
 import com.bookstore.model.Book;
 import com.bookstore.model.Category;
 import com.bookstore.model.Customer;
+import com.bookstore.service.AdminServices.ValidationException;
 
 import jakarta.persistence.EntityManager;
 
