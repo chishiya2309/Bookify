@@ -82,6 +82,12 @@
         function isValidRedirectUrl(url) {
             if (!url) return false;
             
+            // Allow relative paths (like 'checkout', 'cart')
+            // They will be converted to absolute paths later
+            if (!url.startsWith('/') && !url.startsWith('//') && !url.includes(':')) {
+                return true;
+            }
+            
             // Must be a relative URL (starts with / but not //)
             if (!url.startsWith('/') || url.startsWith('//')) {
                 return false;
@@ -103,6 +109,19 @@
             }
             
             return true;
+        }
+        
+        // Convert relative path to absolute URL
+        function getFullRedirectUrl(redirectPath) {
+            if (!redirectPath) return contextPath + '/';
+            
+            // Already an absolute URL starting with contextPath
+            if (redirectPath.startsWith(contextPath + '/') || redirectPath.startsWith('/')) {
+                return redirectPath;
+            }
+            
+            // Relative path like 'checkout' or 'cart' - prepend contextPath/customer/
+            return contextPath + '/customer/' + redirectPath;
         }
         
         // ✅ Auto-focus password field if email is pre-filled
@@ -153,7 +172,7 @@
                         setTimeout(function() {
                             // Redirect về trang trước đó nếu có, không thì về trang chủ
                             if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
-                                window.location.href = redirectUrl;
+                                window.location.href = getFullRedirectUrl(redirectUrl);
                             } else {
                                 window.location.href = contextPath + '/';
                             }

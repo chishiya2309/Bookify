@@ -341,6 +341,78 @@
             font-weight: 500;
         }
 
+        /* ==================== ADDRESS ACTION BUTTONS ==================== */
+        .address-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-edit-address,
+        .btn-delete-address {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-edit-address {
+            background: #fff;
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .btn-edit-address:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-delete-address {
+            background: #fff;
+            color: var(--color-error);
+            border-color: var(--color-error);
+        }
+
+        .btn-delete-address:hover:not(:disabled) {
+            background: var(--color-error);
+            color: white;
+        }
+
+        .btn-delete-address:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-set-default {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--color-success);
+            background: #fff;
+            color: var(--color-success);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-set-default:hover {
+            background: var(--color-success);
+            color: white;
+        }
+
         /* ==================== PAYMENT SECTION ==================== */
         .payment-section {
             margin-bottom: 40px;
@@ -787,7 +859,7 @@
                                     <c:choose>
                                         <c:when test="${not empty customerAddresses}">
                                             <c:forEach var="addr" items="${customerAddresses}">
-                                                <article class="address-card ${addr.isDefault ? 'default-address' : ''}">
+                                                <article class="address-card ${addr.isDefault ? 'default-address' : ''}" data-address-id="${addr.addressId}">
                                                     <label class="address-radio-label">
                                                         <input type="radio" name="selectedAddressId" 
                                                                value="${addr.addressId}" 
@@ -811,6 +883,19 @@
                                                                     <i class="fas fa-map-marker-alt"></i>
                                                                     <c:out value="${addr.street}, ${addr.ward}, ${addr.district}, ${addr.province}"/>
                                                                 </p>
+                                                            </div>
+                                                            <div class="address-actions">
+                                                                <button type="button" class="btn-edit-address" onclick="event.stopPropagation(); editAddress(${addr.addressId})">
+                                                                    <i class="fas fa-edit"></i> Sửa
+                                                                </button>
+                                                                <c:if test="${!addr.isDefault}">
+                                                                    <button type="button" class="btn-set-default" onclick="event.stopPropagation(); setDefaultAddress(${addr.addressId})">
+                                                                        <i class="fas fa-star"></i> Đặt mặc định
+                                                                    </button>
+                                                                </c:if>
+                                                                <button type="button" class="btn-delete-address" onclick="event.stopPropagation(); deleteAddress(${addr.addressId})">
+                                                                    <i class="fas fa-trash"></i> Xóa
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </label>

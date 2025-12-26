@@ -179,32 +179,70 @@
 
   function addToCart(bookId) {
     const quantity = document.getElementById('quantity').value;
+    const btn = event.target.closest('button');
     
-    // POST to ShoppingCartServlet
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '${pageContext.request.contextPath}/customer/cart';
+    // Disable button during request
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+    }
     
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'add';
-    form.appendChild(actionInput);
+    // AJAX POST to CartApiServlet
+    fetch('${pageContext.request.contextPath}/api/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'bookId=' + bookId + '&quantity=' + quantity
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Show success toast
+            showToast(data.message, 'success');
+            
+            // Update cart badge in header
+            if (typeof refreshMiniCart === 'function') {
+                refreshMiniCart();
+            }
+            if (typeof updateCartBadge === 'function') {
+                updateCartBadge();
+            }
+        } else {
+            showToast(data.error || 'Không thể thêm vào giỏ hàng', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Add to cart error:', err);
+        showToast('Đã xảy ra lỗi', 'error');
+    })
+    .finally(() => {
+        // Re-enable button
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm vào giỏ';
+        }
+    });
+  }
+
+  // Toast notification
+  function showToast(message, type) {
+    // Remove existing toast
+    const existingToast = document.querySelector('.cart-toast');
+    if (existingToast) existingToast.remove();
     
-    const bookInput = document.createElement('input');
-    bookInput.type = 'hidden';
-    bookInput.name = 'bookId';
-    bookInput.value = bookId;
-    form.appendChild(bookInput);
+    const toast = document.createElement('div');
+    toast.className = 'cart-toast ' + type;
+    toast.innerHTML = (type === 'success' ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + message;
+    toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 14px 20px; border-radius: 8px; z-index: 10000; color: white; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s ease;';
+    toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
     
-    const qtyInput = document.createElement('input');
-    qtyInput.type = 'hidden';
-    qtyInput.name = 'quantity';
-    qtyInput.value = quantity;
-    form.appendChild(qtyInput);
+    document.body.appendChild(toast);
     
-    document.body.appendChild(form);
-    form.submit();
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 
   function buyNow(bookId) {

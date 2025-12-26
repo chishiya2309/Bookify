@@ -171,7 +171,7 @@
     <div class="modal-overlay" onclick="closeAddressModal()"></div>
     <section class="modal-content">
         <header class="modal-header">
-            <h3><i class="fas fa-map-marker-alt"></i> Thêm địa chỉ mới</h3>
+            <h3 id="modalTitle"><i class="fas fa-map-marker-alt"></i> <span id="modalTitleText">Thêm địa chỉ mới</span></h3>
             <button type="button" class="modal-close" onclick="closeAddressModal()">
                 <i class="fas fa-times"></i>
             </button>
@@ -179,6 +179,7 @@
         
         <section class="modal-body">
             <form id="addAddressForm">
+                <input type="hidden" id="editAddressId" value="">
                 <fieldset class="form-row">
                     <label>Người nhận <span class="required">*</span></label>
                     <input type="text" id="newRecipientName" name="recipientName" 
@@ -256,6 +257,13 @@ function openAddressModal() {
 function closeAddressModal() {
     document.getElementById('addressModal').style.display = 'none';
     document.getElementById('addAddressForm').reset();
+    document.getElementById('editAddressId').value = '';
+    document.getElementById('modalTitleText').textContent = 'Thêm địa chỉ mới';
+    
+    // Remove edit location info if exists
+    const existingInfo = document.querySelector('.edit-location-info');
+    if (existingInfo) existingInfo.remove();
+    
     selectedProvinceName = '';
     selectedDistrictName = '';
     selectedWardName = '';
@@ -265,7 +273,7 @@ function closeAddressModal() {
 function loadProvinces() {
     const provinceSelect = document.getElementById('provinceSelect');
     
-    fetch(contextPath + '/api/address/provinces')
+    return fetch(contextPath + '/api/address/provinces')
         .then(res => res.json())
         .then(provinces => {
             provinceSelect.innerHTML = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
@@ -274,6 +282,7 @@ function loadProvinces() {
                 option.dataset.name = p.name;
                 provinceSelect.add(option);
             });
+            return provinces;
         })
         .catch(err => {
             console.error('Failed to load provinces:', err);
@@ -360,11 +369,17 @@ document.getElementById('wardSelect').addEventListener('change', function() {
     selectedWardName = selectedOption.dataset.name || '';
 });
 
-// Form submit
+// Form submit - handles both create and update
 document.getElementById('addAddressForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
+    const addressId = document.getElementById('editAddressId').value;
+    const isEdit = addressId && addressId !== '';
+    
     const formData = new FormData();
+    if (isEdit) {
+        formData.append('addressId', addressId);
+    }
     formData.append('recipientName', document.getElementById('newRecipientName').value);
     formData.append('phoneNumber', document.getElementById('newPhoneNumber').value);
     formData.append('street', document.getElementById('newStreet').value);
@@ -374,28 +389,128 @@ document.getElementById('addAddressForm').addEventListener('submit', function(e)
     formData.append('zipCode', '');
     formData.append('isDefault', document.getElementById('setDefaultCheckbox').checked);
     
-    fetch(contextPath + '/api/address/create', {
+    const endpoint = isEdit ? '/api/address/update' : '/api/address/create';
+    
+    fetch(contextPath + endpoint, {
         method: 'POST',
         body: new URLSearchParams(formData)
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('Địa chỉ đã được thêm thành công!');
+            alert(isEdit ? 'Địa chỉ đã được cập nhật!' : 'Địa chỉ đã được thêm thành công!');
             closeAddressModal();
-            // Reload addresses
-            if (typeof loadCustomerAddresses === 'function') {
-                loadCustomerAddresses();
-            } else {
-                location.reload();
-            }
+            location.reload();
         } else {
-            alert('Lỗi: ' + (data.error || 'Không thể thêm địa chỉ'));
+            alert('Lỗi: ' + (data.error || 'Không thể lưu địa chỉ'));
         }
     })
     .catch(err => {
-        console.error('Failed to create address:', err);
-        alert('Đã xảy ra lỗi khi thêm địa chỉ');
+        console.error('Failed to save address:', err);
+        alert('Đã xảy ra lỗi khi lưu địa chỉ');
     });
 });
+
+// Edit address - fetch data and open modal
+function editAddress(addressId) {
+    fetch(contextPath + '/api/address/get/' + addressId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Set modal to edit mode
+                document.getElementById('editAddressId').value = addressId;
+                document.getElementById('modalTitleText').textContent = 'Chỉnh sửa địa chỉ';
+                
+                // Populate form fields
+                document.getElementById('newRecipientName').value = data.recipientName || '';
+                document.getElementById('newPhoneNumber').value = data.phoneNumber || '';
+                document.getElementById('newStreet').value = data.street || '';
+                document.getElementById('setDefaultCheckbox').checked = data.isDefault || false;
+                
+                // Store names for edit mode (since we can't easily reload selects)
+                selectedProvinceName = data.province || '';
+                selectedDistrictName = data.district || '';
+                selectedWardName = data.ward || '';
+                
+                // Show modal
+                document.getElementById('addressModal').style.display = 'flex';
+                
+                // Load provinces and try to select correct values
+                loadProvinces().then(() => {
+                    // Add info message about location
+                    const infoMsg = document.createElement('div');
+                    infoMsg.className = 'edit-location-info';
+                    infoMsg.style.cssText = 'background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; color: #856404;';
+                    infoMsg.innerHTML = '<i class="fas fa-info-circle"></i> Địa chỉ hiện tại: <strong>' + data.ward + ', ' + data.district + ', ' + data.province + '</strong><br><small>Chọn lại tỉnh/thành phố nếu muốn thay đổi địa chỉ.</small>';
+                    
+                    const existingInfo = document.querySelector('.edit-location-info');
+                    if (existingInfo) existingInfo.remove();
+                    
+                    const formBody = document.querySelector('#addAddressForm');
+                    formBody.insertBefore(infoMsg, formBody.firstChild.nextSibling);
+                });
+            } else {
+                alert('Không thể tải thông tin địa chỉ');
+            }
+        })
+        .catch(err => {
+            console.error('Failed to fetch address:', err);
+            alert('Đã xảy ra lỗi');
+        });
+}
+
+// Delete address with confirmation and order check
+function deleteAddress(addressId) {
+    // First check if address can be deleted
+    fetch(contextPath + '/api/address/canDelete/' + addressId)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.canDelete) {
+                alert('❌ ' + (data.reason || 'Không thể xóa địa chỉ này'));
+                return;
+            }
+            
+            if (confirm('Bạn có chắc chắn muốn xóa địa chỉ này?')) {
+                // Use XMLHttpRequest for DELETE method
+                const xhr = new XMLHttpRequest();
+                xhr.open('DELETE', contextPath + '/api/address/delete/' + addressId, true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            alert('✅ Địa chỉ đã được xóa');
+                            location.reload();
+                        } else {
+                            alert('❌ ' + (response.error || 'Không thể xóa địa chỉ'));
+                        }
+                    }
+                };
+                xhr.send();
+            }
+        })
+        .catch(err => {
+            console.error('Failed to check delete:', err);
+            alert('Đã xảy ra lỗi');
+        });
+}
+
+// Set address as default
+function setDefaultAddress(addressId) {
+    fetch(contextPath + '/api/address/set-default/' + addressId, {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Đã đặt làm địa chỉ mặc định');
+            location.reload();
+        } else {
+            alert('❌ ' + (data.error || 'Không thể đặt làm địa chỉ mặc định'));
+        }
+    })
+    .catch(err => {
+        console.error('Failed to set default:', err);
+        alert('Đã xảy ra lỗi');
+    });
+}
 </script>

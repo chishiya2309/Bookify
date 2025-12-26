@@ -85,6 +85,11 @@ public class OrderConfirmationServlet extends HttpServlet {
             // Set attributes for JSP
             request.setAttribute("order", order);
             request.setAttribute("user", customer);
+            request.setAttribute("isGuest", false); // Customer is required for this page
+
+            // Load categories for header
+            com.bookstore.service.CustomerServices customerServices = new com.bookstore.service.CustomerServices();
+            request.setAttribute("listCategories", customerServices.listAllCategories());
 
             // If payment method is BANK_TRANSFER and not yet paid, add VietQR info
             if ("BANK_TRANSFER".equals(order.getPaymentMethod())

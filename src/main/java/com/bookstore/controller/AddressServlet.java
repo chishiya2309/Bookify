@@ -98,6 +98,22 @@ public class AddressServlet extends HttpServlet {
                     handleGetWards(pathParts[2], response);
                     break;
 
+                case "get":
+                    if (pathParts.length < 3) {
+                        sendError(response, 400, "Address ID required");
+                        return;
+                    }
+                    handleGetAddress(customer, Integer.parseInt(pathParts[2]), response);
+                    break;
+
+                case "canDelete":
+                    if (pathParts.length < 3) {
+                        sendError(response, 400, "Address ID required");
+                        return;
+                    }
+                    handleCanDelete(customer, Integer.parseInt(pathParts[2]), response);
+                    break;
+
                 default:
                     sendError(response, 404, "Endpoint not found");
             }
@@ -317,6 +333,14 @@ public class AddressServlet extends HttpServlet {
         }
 
         // Update fields
+        String recipientName = request.getParameter("recipientName");
+        if (recipientName != null)
+            address.setRecipientName(recipientName);
+
+        String phoneNumber = request.getParameter("phoneNumber");
+        if (phoneNumber != null)
+            address.setPhoneNumber(phoneNumber);
+
         String street = request.getParameter("street");
         if (street != null)
             address.setStreet(street);
@@ -336,6 +360,15 @@ public class AddressServlet extends HttpServlet {
         String zipCode = request.getParameter("zipCode");
         if (zipCode != null)
             address.setZipCode(zipCode);
+
+        String isDefaultParam = request.getParameter("isDefault");
+        if (isDefaultParam != null) {
+            boolean isDefault = Boolean.parseBoolean(isDefaultParam);
+            if (isDefault && !address.getIsDefault()) {
+                // Set as default and unset others
+                addressDAO.setDefaultAddress(addressId, customer.getUserId());
+            }
+        }
 
         // Save
         addressDAO.update(address);
@@ -357,6 +390,15 @@ public class AddressServlet extends HttpServlet {
         // Security: Check ownership
         if (address == null || !address.getCustomer().getUserId().equals(customer.getUserId())) {
             sendError(response, 403, "Forbidden");
+            return;
+        }
+
+        // Check if address is used in any order
+        if (addressDAO.isAddressUsedInOrder(addressId)) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("error", "Không thể xóa địa chỉ đã được sử dụng trong đơn hàng");
+            sendJsonResponse(response, result);
             return;
         }
 
@@ -387,6 +429,70 @@ public class AddressServlet extends HttpServlet {
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("message", "Đã đặt làm địa chỉ mặc định");
+
+        sendJsonResponse(response, result);
+    }
+
+    /**
+     * Get single address by ID
+     */
+    private void handleGetAddress(Customer customer, Integer addressId,
+            HttpServletResponse response) throws IOException {
+        if (customer == null) {
+            sendError(response, 401, "Unauthorized");
+            return;
+        }
+
+        Address address = addressDAO.findById(addressId);
+
+        // Security: Check ownership
+        if (address == null || !address.getCustomer().getUserId().equals(customer.getUserId())) {
+            sendError(response, 404, "Address not found");
+            return;
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("addressId", address.getAddressId());
+        result.put("recipientName", address.getRecipientName());
+        result.put("phoneNumber", address.getPhoneNumber());
+        result.put("street", address.getStreet());
+        result.put("ward", address.getWard());
+        result.put("district", address.getDistrict());
+        result.put("province", address.getProvince());
+        result.put("zipCode", address.getZipCode());
+        result.put("isDefault", address.getIsDefault());
+        result.put("canDelete", !addressDAO.isAddressUsedInOrder(addressId));
+
+        sendJsonResponse(response, result);
+    }
+
+    /**
+     * Check if address can be deleted
+     */
+    private void handleCanDelete(Customer customer, Integer addressId,
+            HttpServletResponse response) throws IOException {
+        if (customer == null) {
+            sendError(response, 401, "Unauthorized");
+            return;
+        }
+
+        Address address = addressDAO.findById(addressId);
+
+        // Security: Check ownership
+        if (address == null || !address.getCustomer().getUserId().equals(customer.getUserId())) {
+            sendError(response, 404, "Address not found");
+            return;
+        }
+
+        boolean canDelete = !addressDAO.isAddressUsedInOrder(addressId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("canDelete", canDelete);
+        if (!canDelete) {
+            result.put("reason", "Địa chỉ đã được sử dụng trong đơn hàng");
+        }
 
         sendJsonResponse(response, result);
     }

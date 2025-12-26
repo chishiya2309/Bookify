@@ -70,7 +70,7 @@
             font-weight: bold;
             margin: 0;
         }
-        .cart-badge {
+        .cart-page-badge {
             background: rgba(255,255,255,0.2);
             padding: 4px 12px;
             border-radius: 20px;
@@ -281,7 +281,7 @@
             body {
                 padding: 12px;
             }
-            .cart-badge {
+            .cart-page-badge {
                 font-size: 12px;
                 padding: 3px 10px;
             }
@@ -610,7 +610,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     Giỏ hàng của bạn
                     <c:if test="${not empty cart and not empty cart.items}">
-                        <span class="cart-badge">${cart.totalItems} sản phẩm</span>
+                        <span class="cart-page-badge">${cart.totalItems} sản phẩm</span>
                     </c:if>
                 </h1>
                 <c:if test="${not empty cart and not empty cart.items}">

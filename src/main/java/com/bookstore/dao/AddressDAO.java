@@ -159,4 +159,58 @@ public class AddressDAO {
             em.close();
         }
     }
+
+    /**
+     * Check if address is used in any order by matching addressId
+     * Since Order stores addressId, we can check directly
+     * 
+     * @param addressId The address ID to check
+     * @return true if address is used in any order
+     */
+    public boolean isAddressUsedInOrder(Integer addressId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(o) FROM Order o WHERE o.addressId = :addressId",
+                    Long.class);
+            query.setParameter("addressId", addressId);
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            // If Order doesn't have addressId field, fall back to checking by address
+            // fields
+            return isAddressUsedInOrderByFields(addressId, em);
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Fallback method: Check if address is used in any order by matching address
+     * fields
+     */
+    private boolean isAddressUsedInOrderByFields(Integer addressId, EntityManager em) {
+        try {
+            Address address = em.find(Address.class, addressId);
+            if (address == null) {
+                return false;
+            }
+
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(o) FROM Order o WHERE o.customer.userId = :customerId " +
+                            "AND o.shippingStreet = :street " +
+                            "AND o.shippingWard = :ward " +
+                            "AND o.shippingDistrict = :district " +
+                            "AND o.shippingProvince = :province",
+                    Long.class);
+            query.setParameter("customerId", address.getCustomer().getUserId());
+            query.setParameter("street", address.getStreet());
+            query.setParameter("ward", address.getWard());
+            query.setParameter("district", address.getDistrict());
+            query.setParameter("province", address.getProvince());
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            // If any error, assume address can be deleted
+            return false;
+        }
+    }
 }
