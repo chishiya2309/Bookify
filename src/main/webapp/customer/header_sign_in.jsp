@@ -44,13 +44,19 @@
     if (loginLink) {
         var currentPath = window.location.pathname + window.location.search;
         var contextPath = '${pageContext.request.contextPath}';
+        var redirectPath = currentPath;
+
+        // Đảm bảo redirectPath bao gồm contextPath khi cần, để tương thích với cấu hình không ở root context
+        if (contextPath && redirectPath.indexOf(contextPath) !== 0) {
+            redirectPath = contextPath + (redirectPath.charAt(0) === '/' ? '' : '/') + redirectPath;
+        }
         
         // Chỉ thêm redirect nếu không phải trang chủ hoặc trang login/register
-        if (currentPath !== contextPath + '/' && 
-            currentPath !== contextPath && 
-            currentPath.indexOf('/login') === -1 && 
-            currentPath.indexOf('/register') === -1) {
-            loginLink.href = contextPath + '/customer/login.jsp?redirect=' + encodeURIComponent(currentPath);
+        if (redirectPath !== contextPath + '/' && 
+            redirectPath !== contextPath && 
+            redirectPath.indexOf('/login') === -1 && 
+            redirectPath.indexOf('/register') === -1) {
+            loginLink.href = contextPath + '/customer/login.jsp?redirect=' + encodeURIComponent(redirectPath);
         }
     }
 })();
