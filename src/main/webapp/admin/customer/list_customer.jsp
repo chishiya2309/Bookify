@@ -63,6 +63,7 @@
                     </tr>
                 </c:if>
                 
+                <c:set var="dateFormatter" value='<%= java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy") %>' />
                 <c:forEach var="customer" items="${customerList}" varStatus="loop">
                     <tr>
                         <td>${(currentPage - 1) * 10 + loop.index + 1}</td>
@@ -71,8 +72,7 @@
                         <td style="text-align: left;">${customer.fullName}</td>
                         <td>${customer.phoneNumber}</td>
                         <td>
-                            <c:set var="formatter" value='<%= java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy") %>' />
-                            ${customer.registerDate.format(formatter)}
+                            ${customer.registerDate.format(dateFormatter)}
                         </td>
                         <td>
                             <a href="${pageContext.request.contextPath}/admin/customers?action=edit&id=${customer.userId}" 
