@@ -66,6 +66,16 @@ public class Order implements Serializable {
     @Column(name = "shipping_fee", precision = 10, scale = 2)
     private BigDecimal shippingFee = BigDecimal.ZERO;
 
+    // Voucher fields
+    @Column(name = "voucher_id")
+    private Integer voucherId;
+
+    @Column(name = "voucher_code", length = 50)
+    private String voucherCode;
+
+    @Column(name = "voucher_discount", precision = 10, scale = 2)
+    private BigDecimal voucherDiscount = BigDecimal.ZERO;
+
     @Size(max = 50, message = "Phương thức thanh toán tối đa 50 ký tự")
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
@@ -161,6 +171,30 @@ public class Order implements Serializable {
 
     public void setShippingFee(BigDecimal shippingFee) {
         this.shippingFee = shippingFee;
+    }
+
+    public Integer getVoucherId() {
+        return voucherId;
+    }
+
+    public void setVoucherId(Integer voucherId) {
+        this.voucherId = voucherId;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public BigDecimal getVoucherDiscount() {
+        return voucherDiscount;
+    }
+
+    public void setVoucherDiscount(BigDecimal voucherDiscount) {
+        this.voucherDiscount = voucherDiscount;
     }
 
     public String getPaymentMethod() {

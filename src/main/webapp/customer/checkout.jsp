@@ -831,6 +831,28 @@
                                 </button>
                             </div>
 
+                            <!-- Voucher Section -->
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    Mã giảm giá
+                                </div>
+                                
+                                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <input type="text" id="voucherInput" placeholder="Nhập mã giảm giá" 
+                                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                        <input type="hidden" name="voucherCode" id="voucherCodeHidden">
+                                    </div>
+                                    <button type="button" id="applyVoucherBtn" onclick="applyVoucher()"
+                                            style="padding: 12px 20px; background: #0d6efd; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                                        <i class="fas fa-check"></i> Áp dụng
+                                    </button>
+                                </div>
+                                
+                                <div id="voucherMessage" style="margin-top: 10px; font-size: 14px; display: none;"></div>
+                            </div>
+
                             <!-- Payment Section -->
                             <div class="form-section">
                                 <div class="form-section-title">
@@ -936,9 +958,18 @@
                                     </div>
                                 </c:if>
                                 
+                                <!-- Voucher Discount Row (hidden by default) -->
+                                <div id="voucherDiscountRow" class="summary-row" style="display: none; color: #dc3545;">
+                                    <span class="summary-label">
+                                        <i class="fas fa-tag"></i> Giảm giá
+                                        <span id="voucherCodeDisplay" style="font-weight: normal;"></span>
+                                    </span>
+                                    <span class="summary-value" id="voucherDiscountValue">-0₫</span>
+                                </div>
+                                
                                 <div class="summary-row total" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #eee;">
                                     <span class="summary-label" style="font-size: 16px;">Tổng cộng</span>
-                                    <span class="summary-value" style="font-size: 20px; color: #198754;">
+                                    <span class="summary-value" id="grandTotalDisplay" style="font-size: 20px; color: #198754;">
                                         <fmt:formatNumber value="${grandTotal}" pattern="#,###"/>₫
                                     </span>
                                 </div>
@@ -955,5 +986,121 @@
 
     <jsp:include page="/customer/footer_customer.jsp"/>
 
+    <!-- Voucher JavaScript -->
+    <script>
+        // Store original values
+        var originalSubtotal = ${subtotal != null ? subtotal : 0};
+        var originalShippingFee = ${shippingFee != null ? shippingFee : 0};
+        var currentDiscount = 0;
+        var currentVoucherCode = '';
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+        }
+        
+        function applyVoucher() {
+            var code = document.getElementById('voucherInput').value.trim();
+            var btn = document.getElementById('applyVoucherBtn');
+            var msgDiv = document.getElementById('voucherMessage');
+            
+            if (!code) {
+                showMessage('Vui lòng nhập mã giảm giá', false);
+                return;
+            }
+            
+            // Disable button during request
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+            
+            // AJAX request
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '${pageContext.request.contextPath}/api/voucher/validate', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Áp dụng';
+                    
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            
+                            if (response.valid) {
+                                // Success - apply discount
+                                currentDiscount = response.discount;
+                                currentVoucherCode = response.voucherCode;
+                                
+                                // Update hidden field
+                                document.getElementById('voucherCodeHidden').value = currentVoucherCode;
+                                
+                                // Show discount row
+                                document.getElementById('voucherDiscountRow').style.display = 'flex';
+                                document.getElementById('voucherCodeDisplay').textContent = ' (' + currentVoucherCode + ')';
+                                document.getElementById('voucherDiscountValue').textContent = '-' + formatCurrency(currentDiscount);
+                                
+                                // Update total
+                                var newTotal = response.newTotal || (originalSubtotal + originalShippingFee - currentDiscount);
+                                document.getElementById('grandTotalDisplay').textContent = formatCurrency(newTotal);
+                                
+                                // Disable input
+                                document.getElementById('voucherInput').disabled = true;
+                                document.getElementById('voucherInput').style.background = '#e9ecef';
+                                btn.innerHTML = '<i class="fas fa-times"></i> Hủy';
+                                btn.onclick = removeVoucher;
+                                btn.style.background = '#dc3545';
+                                
+                                showMessage(response.message, true);
+                            } else {
+                                showMessage(response.message, false);
+                            }
+                        } catch (e) {
+                            showMessage('Có lỗi xảy ra', false);
+                        }
+                    } else {
+                        showMessage('Không thể kết nối server', false);
+                    }
+                }
+            };
+            
+            xhr.send('code=' + encodeURIComponent(code) + 
+                     '&subtotal=' + originalSubtotal + 
+                     '&shippingFee=' + originalShippingFee);
+        }
+        
+        function removeVoucher() {
+            currentDiscount = 0;
+            currentVoucherCode = '';
+            
+            document.getElementById('voucherCodeHidden').value = '';
+            document.getElementById('voucherDiscountRow').style.display = 'none';
+            document.getElementById('grandTotalDisplay').textContent = formatCurrency(originalSubtotal + originalShippingFee);
+            
+            // Re-enable input
+            var input = document.getElementById('voucherInput');
+            input.disabled = false;
+            input.style.background = '';
+            input.value = '';
+            
+            var btn = document.getElementById('applyVoucherBtn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Áp dụng';
+            btn.onclick = applyVoucher;
+            btn.style.background = '#0d6efd';
+            
+            document.getElementById('voucherMessage').style.display = 'none';
+        }
+        
+        function showMessage(msg, isSuccess) {
+            var div = document.getElementById('voucherMessage');
+            div.style.display = 'block';
+            div.style.color = isSuccess ? '#198754' : '#dc3545';
+            div.style.background = isSuccess ? '#d1e7dd' : '#f8d7da';
+            div.style.padding = '10px';
+            div.style.borderRadius = '6px';
+            div.innerHTML = (isSuccess ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + msg;
+        }
+    </script>
+
 </body>
 </html>
+

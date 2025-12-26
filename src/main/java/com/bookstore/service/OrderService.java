@@ -2,6 +2,7 @@ package com.bookstore.service;
 
 import com.bookstore.dao.BookDAO;
 import com.bookstore.dao.OrderDAO;
+import com.bookstore.dao.VoucherDAO;
 import com.bookstore.config.ShippingConfig;
 import com.bookstore.data.DBUtil;
 import com.bookstore.model.*;
@@ -55,6 +56,31 @@ public class OrderService {
             Address shippingAddress,
             ShoppingCart cart,
             String paymentMethod) {
+        return createOrderFromCart(customer, shippingAddress, cart, paymentMethod, null);
+    }
+
+    /**
+     * Create an order from shopping cart with optional voucher
+     * 
+     * Uses PESSIMISTIC_WRITE lock to prevent race conditions when multiple
+     * users checkout the same items simultaneously. All stock validation and
+     * deduction happens within a single transaction.
+     * 
+     * @param customer        Customer placing the order
+     * @param shippingAddress Address for delivery
+     * @param cart            Shopping cart with items
+     * @param paymentMethod   Payment method selected
+     * @param voucherCode     Optional voucher code
+     * @return Created Order with OrderDetails
+     * @throws IllegalArgumentException if validation fails
+     * @throws IllegalStateException    if insufficient stock
+     */
+    public Order createOrderFromCart(
+            Customer customer,
+            Address shippingAddress,
+            ShoppingCart cart,
+            String paymentMethod,
+            String voucherCode) {
 
         // Basic validation (before starting transaction)
         validateOrderCreation(customer, shippingAddress, cart);
@@ -123,24 +149,57 @@ public class OrderService {
                 totalAmount = totalAmount.add(orderDetail.getSubTotal());
             }
 
-            // If any stock errors, rollback and throw exception
             if (!stockErrors.isEmpty()) {
                 tx.rollback();
                 throw new IllegalStateException("Lỗi kiểm tra tồn kho:\n• " + String.join("\n• ", stockErrors));
             }
 
-            // Calculate shipping fee based on province
+            // Tính phí vận chuyển dựa trên tỉnh thành
             BigDecimal subtotal = totalAmount;
             BigDecimal shippingFee = ShippingConfig.calculateShippingFee(
                     shippingAddress.getProvince(), subtotal);
-            BigDecimal grandTotal = subtotal.add(shippingFee);
+
+            // Áp dụng voucher nếu có
+            BigDecimal voucherDiscount = BigDecimal.ZERO;
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                VoucherDAO voucherDAO = new VoucherDAO();
+                VoucherService voucherService = new VoucherService();
+
+                VoucherService.ValidationResult vResult = voucherService.validateVoucher(
+                        voucherCode, subtotal, shippingFee, customer);
+
+                if (vResult.isValid()) {
+                    Voucher voucher = vResult.getVoucher();
+                    voucherDiscount = vResult.getDiscount();
+
+                    if (voucher.getDiscountType() == Voucher.DiscountType.FREE_SHIPPING) {
+                        shippingFee = BigDecimal.ZERO;
+                        voucherDiscount = BigDecimal.ZERO;
+                    }
+
+                    order.setVoucherId(voucher.getVoucherId());
+                    order.setVoucherCode(voucher.getCode());
+                    order.setVoucherDiscount(voucherDiscount);
+
+                    // Increment usage count
+                    voucherDAO.incrementUsage(voucher.getVoucherId());
+
+                    LOGGER.log(Level.INFO, "Voucher {0} applied. Discount: {1}",
+                            new Object[] { voucherCode, voucherDiscount });
+                } else {
+                    LOGGER.log(Level.WARNING, "Voucher {0} validation failed: {1}",
+                            new Object[] { voucherCode, vResult.getMessage() });
+                }
+            }
+
+            BigDecimal grandTotal = subtotal.add(shippingFee).subtract(voucherDiscount);
 
             order.setSubtotal(subtotal);
             order.setShippingFee(shippingFee);
             order.setTotalAmount(grandTotal);
 
-            LOGGER.log(Level.INFO, "Order pricing - Subtotal: {0}, Shipping: {1}, Total: {2}",
-                    new Object[] { subtotal, shippingFee, grandTotal });
+            LOGGER.log(Level.INFO, "Order pricing - Subtotal: {0}, Shipping: {1}, Voucher: -{2}, Total: {3}",
+                    new Object[] { subtotal, shippingFee, voucherDiscount, grandTotal });
 
             // Persist order (cascade saves OrderDetails)
             em.persist(order);
@@ -158,7 +217,6 @@ public class OrderService {
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Failed to send order confirmation email for order: " + order.getOrderId(),
                         e);
-                // Don't fail the order creation if email fails
             }
 
             return order;

@@ -32,9 +32,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * CheckoutServlet - Handle checkout process
- * GET: Display checkout page with cart and customer info
- * POST: Process order and payment
+ * CheckoutServlet - xử lý quá trình thanh toán
+ * GET: Hiển thị trang thanh toán với giỏ hàng và thông tin khách hàng
+ * POST: Xử lý đơn hàng và thanh toán
  */
 @WebServlet(name = "CheckoutServlet", urlPatterns = { "/customer/checkout" })
 public class CheckoutServlet extends HttpServlet {
@@ -56,13 +56,13 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     /**
-     * Handles the HTTP GET method - Display checkout page
+     * Hiển thị trang thanh toán
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check if admin - redirect to admin page
+        // Nếu là admin thì redirect về trang admin
         String token = JwtAuthHelper.extractJwtToken(request);
         if (token != null && JwtUtil.validateToken(token)) {
             String role = JwtUtil.extractRole(token);
@@ -75,26 +75,24 @@ public class CheckoutServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
 
-        // Restore customer from JWT if not in session
+        // Khôi phục khách hàng từ JWT nếu không có trong phiên
         if (customer == null) {
             customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
 
-        // If still no customer, redirect to login with redirect parameter
+        // Nếu không có khách hàng, redirect đến trang login với tham số redirect
         if (customer == null) {
-            // Save message to session
             session.setAttribute("checkoutMessage", "Vui lòng đăng nhập để tiếp tục thanh toán");
 
-            // Redirect to login with redirect parameter
             response.sendRedirect(request.getContextPath() + "/customer/login.jsp?redirect=" +
                     request.getContextPath() + "/customer/checkout");
             return;
         }
 
-        // Load cart
+        // Tải giỏ hàng
         ShoppingCart cart = loadCart(session, customer);
 
-        // Check if cart is empty
+        // Kiểm tra giỏ hàng có rỗng không
         if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
             request.setAttribute("cart", cart);
             request.setAttribute("isGuest", false);
@@ -102,41 +100,41 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
 
-        // Calculate cart totals
+        // Tính toán tổng tiền giỏ hàng
         cartService.calculateCartTotals(cart);
 
-        // Pre-validate stock (non-blocking warning for user)
+        // Kiểm tra tồn kho (không chặn, chỉ cảnh báo cho người dùng)
         List<String> stockWarnings = validateCartStock(cart);
         if (!stockWarnings.isEmpty()) {
             request.setAttribute("stockWarnings", stockWarnings);
         }
 
-        // Validate and update prices (detect price changes since item was added)
+        // Xác thực và cập nhật giá (phát hiện sự thay đổi giá kể từ khi mặt hàng được
+        // thêm vào)
         List<String> priceChanges = validateAndUpdateCartPrices(cart);
         if (!priceChanges.isEmpty()) {
             request.setAttribute("priceChanges", priceChanges);
         }
 
-        // Set cart and customer info to request
         request.setAttribute("cart", cart);
         request.setAttribute("isGuest", false);
         request.setAttribute("user", customer);
         request.setAttribute("userEmail", customer.getEmail());
 
-        // Load customer addresses
+        // Tải số địa chỉ của khách hàng
         com.bookstore.dao.AddressDAO addressDAO = new com.bookstore.dao.AddressDAO();
         java.util.List<com.bookstore.model.Address> addresses = addressDAO.findByCustomerId(customer.getUserId());
         request.setAttribute("customerAddresses", addresses);
 
-        // ========== SHIPPING FEE PREVIEW ==========
-        // Calculate shipping fee based on default address or first address
+        // ========== TÍNH TIỀN GIAO HÀNG ==========
+        // Tính phí giao hàng dựa trên địa chỉ mặc định hoặc địa chỉ đầu tiên
         BigDecimal subtotal = cart.getTotalAmount();
         BigDecimal shippingFee = BigDecimal.ZERO;
         String shippingRegion = "";
 
         Address defaultAddress = null;
         if (addresses != null && !addresses.isEmpty()) {
-            // Find default address or use first
+            // Tìm địa chỉ mặc định hoặc sử dụng địa chỉ đầu tiên
             defaultAddress = addresses.stream()
                     .filter(a -> Boolean.TRUE.equals(a.getIsDefault()))
                     .findFirst()
@@ -156,25 +154,22 @@ public class CheckoutServlet extends HttpServlet {
         request.setAttribute("grandTotal", grandTotal);
         request.setAttribute("freeShippingThreshold", ShippingConfig.FREE_SHIPPING_THRESHOLD);
         request.setAttribute("freeShippingNeeded", freeShippingNeeded);
-        // ========== END SHIPPING FEE PREVIEW ==========
+        // ========== TÍNH TIỀN GIAO HÀNG ==========
 
-        // Set categories for header
+        // Tải danh mục cho header
         request.setAttribute("listCategories", customerServices.listAllCategories());
 
-        // Display checkout message if exists
+        // Hiển thị thông báo thanh toán nếu có
         String checkoutMessage = (String) session.getAttribute("checkoutMessage");
         if (checkoutMessage != null) {
             request.setAttribute("message", checkoutMessage);
             session.removeAttribute("checkoutMessage");
         }
 
-        // Forward to checkout page
+        // Forward đến trang thanh toán
         request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP POST method - Process checkout
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -182,12 +177,11 @@ public class CheckoutServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
 
-        // Restore customer from JWT if not in session
         if (customer == null) {
             customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
 
-        // Guest users must login to checkout
+        // Khách hàng phải đăng nhập mới có thể thực hiện thanh toán
         if (customer == null) {
             session.setAttribute("checkoutMessage", "Vui lòng đăng nhập để tiếp tục thanh toán");
             response.sendRedirect(request.getContextPath() + "/customer/login?redirect=checkout");
@@ -195,7 +189,6 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         try {
-            // Load cart
             ShoppingCart cart = loadCart(session, customer);
 
             if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
@@ -204,7 +197,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Get selected address ID
+            // Lấy ID địa chỉ đã chọn
             String selectedAddressIdStr = request.getParameter("selectedAddressId");
             if (selectedAddressIdStr == null || selectedAddressIdStr.trim().isEmpty()) {
                 request.setAttribute("error", "Vui lòng chọn địa chỉ giao hàng");
@@ -214,7 +207,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Get payment method
+            // Lấy phương thức thanh toán
             String paymentMethodStr = request.getParameter("paymentMethod");
             if (paymentMethodStr == null || paymentMethodStr.trim().isEmpty()) {
                 request.setAttribute("error", "Vui lòng chọn phương thức thanh toán");
@@ -226,7 +219,7 @@ public class CheckoutServlet extends HttpServlet {
 
             Payment.PaymentMethod paymentMethod = Payment.PaymentMethod.valueOf(paymentMethodStr);
 
-            // Load selected address
+            // Lấy thông tin địa chỉ giao hàng
             Integer selectedAddressId = Integer.parseInt(selectedAddressIdStr);
             Address shippingAddress = addressDAO.findById(selectedAddressId);
 
@@ -238,7 +231,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Validate address belongs to customer (security check)
+            // Kiểm tra địa chỉ thuộc về khách hàng (kiểm tra an toàn)
             if (!shippingAddress.getCustomer().getUserId().equals(customer.getUserId())) {
                 request.setAttribute("error", "Địa chỉ không hợp lệ");
                 request.setAttribute("cart", cart);
@@ -247,18 +240,22 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Create order from cart using OrderService
+            // Lấy mã giảm giá nếu có
+            String voucherCode = request.getParameter("voucherCode");
+
+            // Tạo đơn hàng từ giỏ hàng
             Order order = orderService.createOrderFromCart(
                     customer,
                     shippingAddress,
                     cart,
-                    paymentMethodStr);
+                    paymentMethodStr,
+                    voucherCode);
 
-            // Create payment
+            // Tạo thanh toán
             String gateway = paymentMethod == Payment.PaymentMethod.SEPAY ? "Sepay" : null;
             Payment payment = paymentService.createPayment(order, paymentMethod, gateway);
 
-            // Process payment
+            // Thanh toán
             PaymentService.PaymentResult result = paymentService.processPayment(payment, new java.util.HashMap<>());
 
             if (result.isSuccess()) {
@@ -270,24 +267,24 @@ public class CheckoutServlet extends HttpServlet {
                 }
 
                 if (result.requiresRedirect()) {
-                    // Redirect to payment gateway
+                    // Redirect đến cổng thanh toán
                     response.sendRedirect(result.getRedirectUrl());
                 } else if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER) {
-                    // Bank transfer - redirect to QR payment page
-                    // Cart will be cleared after payment confirmed via webhook
+                    // Chuyển khoản ngân hàng - redirect đến trang thanh toán QRCode
+                    // Cart sẽ được xóa khi webhook xác nhận đã nhận tiền
                     session.setAttribute("orderConfirmation",
                             "Vui lòng quét mã QR để thanh toán đơn hàng #" + order.getOrderId());
                     response.sendRedirect(
                             request.getContextPath() + "/customer/bank-transfer-payment?orderId=" + order.getOrderId());
                 } else {
-                    // Payment completed (COD) - redirect to confirmation
+                    // Thanh toán thành công (COD) - redirect đến trang xác nhận
                     session.setAttribute("orderConfirmation",
                             "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderId());
                     response.sendRedirect(
                             request.getContextPath() + "/customer/order-confirmation?orderId=" + order.getOrderId());
                 }
             } else {
-                // Payment failed
+                // Thanh toán thất bại
                 request.setAttribute("error", "Thanh toán thất bại: " + result.getMessage());
                 request.setAttribute("cart", cart);
                 request.setAttribute("user", customer);
@@ -301,20 +298,17 @@ public class CheckoutServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Load cart from session or database
-     */
     private ShoppingCart loadCart(HttpSession session, Customer customer) {
         ShoppingCart cart;
 
         if (customer == null) {
-            // Guest user - load from session
+            // Khách hàng không đăng nhập - load từ session
             cart = (ShoppingCart) session.getAttribute(GUEST_CART_KEY);
             if (cart == null) {
                 cart = cartService.getOrCreateGuestCart();
             }
         } else {
-            // Logged in user - load from database
+            // Khách hàng đã đăng nhập - load từ database
             cart = cartService.getOrCreateCartForCustomer(customer);
         }
 
@@ -327,10 +321,11 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     /**
-     * Pre-validate cart stock before checkout (non-blocking check).
-     * Returns list of warning messages for items with insufficient stock.
-     * This is a soft check - actual enforcement happens in OrderService with
-     * locking.
+     * Kiểm tra số lượng sách trong kho trước khi thanh toán (kiểm tra không đồng
+     * bộ).
+     * Trả về danh sách thông báo cảnh báo cho các mục có số lượng sách không đủ.
+     * Đây là một kiểm tra mềm - thực thi thực sự xảy ra trong OrderService với
+     * khóa.
      */
     private List<String> validateCartStock(ShoppingCart cart) {
         List<String> warnings = new ArrayList<>();
@@ -345,7 +340,7 @@ public class CheckoutServlet extends HttpServlet {
             if (book == null)
                 continue;
 
-            // Get current stock from database
+            // Lấy số lượng sách trong kho từ database
             Book currentBook = bookDAO.findById(book.getBookId());
             if (currentBook == null) {
                 warnings.add("Sản phẩm \"" + book.getTitle() + "\" không còn tồn tại");
@@ -367,11 +362,13 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     /**
-     * Validate and update cart item prices to current database prices.
-     * Returns list of warnings if prices have changed since items were added.
+     * Kiểm tra và cập nhật giá của các mục trong giỏ hàng đến giá hiện tại trong
+     * database.
+     * Trả về danh sách thông báo nếu giá đã thay đổi kể từ khi các mục được thêm
+     * vào.
      * 
-     * @param cart Shopping cart to validate
-     * @return List of price change warnings (empty if no changes)
+     * @param cart Giỏ hàng cần kiểm tra
+     * @return Danh sách thông báo về thay đổi giá (trống nếu không có thay đổi)
      */
     private List<String> validateAndUpdateCartPrices(ShoppingCart cart) {
         List<String> priceChanges = new ArrayList<>();
@@ -389,7 +386,7 @@ public class CheckoutServlet extends HttpServlet {
             if (cartBook == null)
                 continue;
 
-            // Get current price from database
+            // Lấy giá hiện tại từ database
             Book currentBook = bookDAO.findById(cartBook.getBookId());
             if (currentBook == null)
                 continue;
@@ -400,7 +397,7 @@ public class CheckoutServlet extends HttpServlet {
             if (oldPrice == null || currentPrice == null)
                 continue;
 
-            // Check if price has changed
+            // Kiểm tra nếu giá đã thay đổi
             if (oldPrice.compareTo(currentPrice) != 0) {
                 java.math.BigDecimal priceDiff = currentPrice.subtract(oldPrice);
                 java.math.BigDecimal itemDiff = priceDiff.multiply(java.math.BigDecimal.valueOf(item.getQuantity()));
@@ -416,19 +413,18 @@ public class CheckoutServlet extends HttpServlet {
                         currencyFormat.format(oldPrice),
                         currencyFormat.format(currentPrice)));
 
-                // Update cart item with current price
+                // Cập nhật giá của mục trong giỏ hàng
                 cartBook.setPrice(currentPrice);
             }
         }
 
-        // Add total difference summary if there were changes
+        // Thêm tổng thay đổi nếu có thay đổi
         if (!priceChanges.isEmpty()) {
             String totalChangeType = totalDifference.compareTo(java.math.BigDecimal.ZERO) > 0 ? "tăng" : "giảm";
             priceChanges.add(String.format("📊 Tổng thay đổi: %s %s₫",
                     totalChangeType,
                     currencyFormat.format(totalDifference.abs())));
 
-            // Recalculate cart totals after price update
             cartService.calculateCartTotals(cart);
         }
 
