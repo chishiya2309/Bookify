@@ -190,7 +190,8 @@ public class CustomerServlet extends HttpServlet {
                 int id = Integer.parseInt(idParam);
                 Customer existingCustomer = customerServices.getCustomerById(id);
                 if (existingCustomer != null) {
-                    // Update with form values for fields that user is trying to change
+                    // Update form fields for display purposes only (entity is detached after retrieval)
+                    // This preserves registerDate and email while showing user's attempted input
                     existingCustomer.setFullName(fullName);
                     existingCustomer.setPhoneNumber(phoneNumber);
                     request.setAttribute("customer", existingCustomer);
@@ -227,7 +228,8 @@ public class CustomerServlet extends HttpServlet {
                 Integer id = Integer.parseInt(idParam);
                 Customer existingCustomer = customerServices.getCustomerById(id);
                 if (existingCustomer != null) {
-                    // Update with form values for fields that user is trying to change
+                    // Update form fields for display purposes only (entity is detached after retrieval)
+                    // This preserves registerDate and email while showing user's attempted input
                     existingCustomer.setFullName(fullName);
                     existingCustomer.setPhoneNumber(phoneNumber);
                     request.setAttribute("customer", existingCustomer);
