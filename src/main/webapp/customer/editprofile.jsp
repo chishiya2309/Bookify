@@ -41,7 +41,7 @@
                         <small>Email không thể thay đổi</small>
                         
                         <label for="fullName">Họ và tên</label>
-                        <input type="text" id="fullName" name="fullName" value="${customer.fullName}" required>
+                        <input type="text" id="fullName" name="fullName" value="<c:out value='${customer.fullName}'/>" required>
                         
                         <label for="phoneNumber">Số điện thoại</label>
                         <input type="tel" id="phoneNumber" name="phoneNumber" value="${customer.phoneNumber}" required pattern="^(\+84|0)[0-9]{9}$">
