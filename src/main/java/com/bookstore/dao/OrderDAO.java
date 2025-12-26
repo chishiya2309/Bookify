@@ -375,4 +375,39 @@ public class OrderDAO {
             em.close();
         }
     }
+
+    /**
+     * Find expired pending orders for automatic cancellation
+     * 
+     * @param paymentMethod Payment method (e.g., "BANK_TRANSFER")
+     * @param cutoffTime    Orders older than this time are considered expired
+     * @return List of expired orders with details loaded
+     */
+    public List<Order> findExpiredPendingOrders(String paymentMethod, java.time.LocalDateTime cutoffTime) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+
+        try {
+            String jpql = "SELECT DISTINCT o FROM Order o " +
+                    "LEFT JOIN FETCH o.orderDetails od " +
+                    "LEFT JOIN FETCH od.book " +
+                    "LEFT JOIN FETCH o.customer " +
+                    "WHERE o.paymentMethod = :paymentMethod " +
+                    "AND o.paymentStatus = :paymentStatus " +
+                    "AND o.orderStatus = :orderStatus " +
+                    "AND o.orderDate < :cutoffTime";
+
+            TypedQuery<Order> query = em.createQuery(jpql, Order.class);
+            query.setParameter("paymentMethod", paymentMethod);
+            query.setParameter("paymentStatus", PaymentStatus.UNPAID);
+            query.setParameter("orderStatus", OrderStatus.PENDING);
+            query.setParameter("cutoffTime", cutoffTime);
+
+            return query.getResultList();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error finding expired pending orders", e);
+            return List.of();
+        } finally {
+            em.close();
+        }
+    }
 }
