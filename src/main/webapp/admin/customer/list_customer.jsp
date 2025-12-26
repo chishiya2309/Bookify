@@ -72,7 +72,7 @@
                         <td style="text-align: left;">${customer.fullName}</td>
                         <td>${customer.phoneNumber}</td>
                         <td>
-                            ${customer.registerDate.format(dateFormatter)}
+                            ${customer.registerDate != null ? customer.registerDate.format(dateFormatter) : 'N/A'}
                         </td>
                         <td>
                             <a href="${pageContext.request.contextPath}/admin/customers?action=edit&id=${customer.userId}" 
