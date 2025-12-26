@@ -62,7 +62,8 @@
                 <section class="form-row">
                     <article class="form-group">
                         <label for="fullName">Họ và Tên <span class="required">*</span></label>
-                        <input type="text" id="fullName" name="fullName" value="${not empty fullName ? fullName : (not empty customer ? customer.fullName : '')}" placeholder="Nhập họ và tên" required>
+                        <c:set var="fullNameValue" value="${not empty fullName ? fullName : (not empty customer ? customer.fullName : '')}"/>
+                        <input type="text" id="fullName" name="fullName" value="<c:out value='${fullNameValue}'/>" placeholder="Nhập họ và tên" required>
                         <span class="error-text" id="fullNameError"></span>
                     </article>
                     <article class="form-group">
