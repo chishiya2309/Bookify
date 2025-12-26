@@ -1,13 +1,19 @@
 package com.bookstore.service;
 
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebFilter("/*")
 public class JwtFilter implements Filter {
@@ -137,26 +143,28 @@ public class JwtFilter implements Filter {
             // Token không hợp lệ hoặc không tồn tại
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             
-            // Lưu URL gốc để redirect sau khi đăng nhập
-            String originalUrl = httpRequest.getRequestURI();
-            String queryString = httpRequest.getQueryString();
-            if (queryString != null) {
-                originalUrl += "?" + queryString;
-            }
-            
-            // Validate redirect URL to prevent open redirect vulnerability
-            String contextPath = httpRequest.getContextPath();
-            String redirectParam = "";
-            if (isValidRedirectUrl(originalUrl, contextPath)) {
-                // Only include redirect parameter if URL is valid
-                String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
-                redirectParam = "?redirect=" + encodedUrl;
-            }
-            
-            // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin, còn lại về Customer Login
+            // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin (không cần redirect back)
+            // Customer thì lưu URL gốc để redirect sau khi đăng nhập
             if (path.startsWith("/admin")) {
-                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp" + redirectParam);
+                // Admin không cần redirect back - vào là phải đăng nhập luôn
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/admin/AdminLogin.jsp");
             } else {
+                // Customer cần redirect back về trang trước đó
+                String originalUrl = httpRequest.getRequestURI();
+                String queryString = httpRequest.getQueryString();
+                if (queryString != null) {
+                    originalUrl += "?" + queryString;
+                }
+                
+                // Validate redirect URL to prevent open redirect vulnerability
+                String contextPath = httpRequest.getContextPath();
+                String redirectParam = "";
+                if (isValidRedirectUrl(originalUrl, contextPath)) {
+                    // Only include redirect parameter if URL is valid
+                    String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
+                    redirectParam = "?redirect=" + encodedUrl;
+                }
+                
                 httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp" + redirectParam);
             }
         }
