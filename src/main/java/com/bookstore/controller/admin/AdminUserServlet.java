@@ -92,16 +92,11 @@ public class AdminUserServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         
-        // TODO: Re-enable authentication check after testing
         // Check admin authentication
-        // Admin currentAdmin = checkAdminAuth(request, response);
-        // if (currentAdmin == null) {
-        //     return; // Already redirected to login
-        // }
-        
-        // Temporary: create a dummy admin for testing
-        Admin currentAdmin = new Admin();
-        currentAdmin.setUserId(1);
+        Admin currentAdmin = checkAdminAuth(request, response);
+        if (currentAdmin == null) {
+            return; // Already redirected to login
+        }
         
         String action = request.getParameter("action");
         if (action == null || action.isEmpty()) {
