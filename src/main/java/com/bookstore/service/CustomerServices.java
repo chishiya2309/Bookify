@@ -180,57 +180,16 @@ public class CustomerServices {
     }
     
     /**
-     * Create a new customer with BCrypt-hashed password.
+     * Private helper method that validates inputs, creates, and saves a new customer.
      * 
      * @param email the customer email
      * @param password the plain text password (will be hashed)
      * @param fullName the customer's full name
      * @param phoneNumber the customer's phone number
+     * @return the created and saved customer
      * @throws ValidationException if validation fails
      */
-    public void createCustomer(String email, String password, String fullName, String phoneNumber) throws ValidationException {
-        // Validate email
-        String emailError = validateEmail(email);
-        if (emailError != null) {
-            throw new ValidationException(emailError);
-        }
-        
-        // Validate password
-        String passwordError = validatePassword(password);
-        if (passwordError != null) {
-            throw new ValidationException(passwordError);
-        }
-        
-        // Validate full name
-        String fullNameError = validateFullName(fullName);
-        if (fullNameError != null) {
-            throw new ValidationException(fullNameError);
-        }
-        
-        // Validate phone number
-        String phoneError = validatePhoneNumber(phoneNumber);
-        if (phoneError != null) {
-            throw new ValidationException(phoneError);
-        }
-        
-        // Check for duplicate email
-        if (customerDAO.existsByEmail(email.trim())) {
-            throw new ValidationException("Email đã được sử dụng");
-        }
-        
-        // Hash password with BCrypt
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        
-        // Create and save customer
-        Customer customer = new Customer(email.trim(), hashedPassword, fullName.trim(), phoneNumber.trim());
-        customer.setRegisterDate(LocalDateTime.now());
-        customerDAO.save(customer);
-    }
-    
-    /**
-     * Create a new customer with BCrypt-hashed password and addresses.
-     */
-    public Customer createCustomerWithAddresses(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+    private Customer validateAndCreateCustomer(String email, String password, String fullName, String phoneNumber) throws ValidationException {
         // Validate email
         String emailError = validateEmail(email);
         if (emailError != null) {
@@ -269,6 +228,26 @@ public class CustomerServices {
         customerDAO.save(customer);
         
         return customer;
+    }
+    
+    /**
+     * Create a new customer with BCrypt-hashed password.
+     * 
+     * @param email the customer email
+     * @param password the plain text password (will be hashed)
+     * @param fullName the customer's full name
+     * @param phoneNumber the customer's phone number
+     * @throws ValidationException if validation fails
+     */
+    public void createCustomer(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+        validateAndCreateCustomer(email, password, fullName, phoneNumber);
+    }
+    
+    /**
+     * Create a new customer with BCrypt-hashed password and addresses.
+     */
+    public Customer createCustomerWithAddresses(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+        return validateAndCreateCustomer(email, password, fullName, phoneNumber);
     }
     
     /**
