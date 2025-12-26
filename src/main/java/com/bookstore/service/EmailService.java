@@ -223,6 +223,40 @@ public class EmailService {
     }
 
     /**
+     * Send admin notification email for payment issues
+     * 
+     * @param subject Email subject
+     * @param message Notification message content
+     */
+    public void sendAdminNotification(String subject, String message) {
+        try {
+            String adminEmail = EmailConfig.getAdminEmail();
+
+            String html = "<!DOCTYPE html>" +
+                    "<html><head><meta charset='UTF-8'></head>" +
+                    "<body style='font-family: Arial, sans-serif; padding: 20px;'>" +
+                    "<div style='max-width: 600px; margin: 0 auto; background: #f9f9f9; border-radius: 8px; padding: 20px;'>"
+                    +
+                    "<h2 style='color: #d9534f; border-bottom: 2px solid #d9534f; padding-bottom: 10px;'>" +
+                    "⚠️ " + subject + "</h2>" +
+                    "<div style='background: white; padding: 15px; border-radius: 5px; margin: 15px 0;'>" +
+                    "<pre style='white-space: pre-wrap; font-family: inherit; margin: 0;'>" + message + "</pre>" +
+                    "</div>" +
+                    "<p style='color: #666; font-size: 12px; margin-top: 20px;'>" +
+                    "Đây là email tự động từ hệ thống Bookify. Vui lòng xử lý kịp thời.</p>" +
+                    "</div></body></html>";
+
+            sendEmail(adminEmail, "[ADMIN] " + subject, html);
+
+            LOGGER.log(Level.INFO, "Admin notification sent: {0}", subject);
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to send admin notification: " + subject, e);
+            // Don't throw - admin notifications should not break main flow
+        }
+    }
+
+    /**
      * Load email template from resources
      * 
      * @param templateName Template file name

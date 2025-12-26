@@ -17,6 +17,9 @@ public class EmailConfig {
     private static final String FROM_EMAIL = "lequanghung.work@gmail.com";
     private static final String FROM_NAME = "Bookify - Nhà sách trực tuyến";
 
+    // Admin email for payment issue notifications
+    private static final String ADMIN_EMAIL = "lequanghung.work@gmail.com";
+
     /**
      * Get SMTP username
      */
@@ -74,5 +77,9 @@ public class EmailConfig {
     public static boolean isConfigured() {
         return !SMTP_USERNAME.equals("YOUR_BREVO_EMAIL")
                 && !SMTP_PASSWORD.equals("YOUR_BREVO_SMTP_KEY");
+    }
+
+    public static String getAdminEmail() {
+        return ADMIN_EMAIL;
     }
 }

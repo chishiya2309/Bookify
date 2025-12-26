@@ -153,14 +153,71 @@ public class SepayWebhookServlet extends HttpServlet {
                 return;
             }
 
-            // Verify amount matches (allow some tolerance for transaction fees)
+            // ========== AMOUNT VALIDATION ==========
             long expectedAmount = order.getTotalAmount().longValue();
+            long amountDifference = amountIn - expectedAmount;
+
+            // Case 1: Partial payment (underpayment) - REJECT
             if (amountIn < expectedAmount) {
-                LOGGER.log(Level.WARNING, "Amount mismatch - Expected: {0}, Received: {1}",
-                        new Object[] { expectedAmount, amountIn });
-                sendErrorResponse(response, "Amount mismatch");
+                // Calculate shortage percentage
+                double shortagePercent = ((double) (expectedAmount - amountIn) / expectedAmount) * 100;
+
+                LOGGER.log(Level.WARNING,
+                        "PARTIAL PAYMENT REJECTED - Order: {0}, Expected: {1}, Received: {2}, Short: {3} ({4}%)",
+                        new Object[] { orderId, expectedAmount, amountIn, expectedAmount - amountIn,
+                                String.format("%.1f", shortagePercent) });
+
+                // Send notification email to admin about partial payment
+                try {
+                    String message = String.format(
+                            "Đơn hàng #%d nhận được thanh toán THIẾU:\n" +
+                                    "- Số tiền cần: %,d VND\n" +
+                                    "- Số tiền nhận: %,d VND\n" +
+                                    "- Thiếu: %,d VND (%.1f%%)\n" +
+                                    "- Khách hàng: %s\n\n" +
+                                    "Vui lòng liên hệ khách hàng để chuyển thêm hoặc xử lý thủ công.",
+                            orderId, expectedAmount, amountIn, expectedAmount - amountIn, shortagePercent,
+                            order.getCustomer().getEmail());
+                    emailService.sendAdminNotification("Thanh toán thiếu - Đơn hàng #" + orderId, message);
+                } catch (Exception emailEx) {
+                    LOGGER.log(Level.WARNING, "Failed to send partial payment notification", emailEx);
+                }
+
+                sendErrorResponse(response,
+                        "Insufficient payment amount. Expected: " + expectedAmount + ", Received: " + amountIn);
                 return;
             }
+
+            // Case 2: Overpayment - ACCEPT but log and notify for manual refund
+            if (amountIn > expectedAmount) {
+                LOGGER.log(Level.WARNING,
+                        "OVERPAYMENT RECEIVED - Order: {0}, Expected: {1}, Received: {2}, Excess: {3} VND",
+                        new Object[] { orderId, expectedAmount, amountIn, amountDifference });
+
+                // Send notification email to admin about overpayment for manual refund
+                try {
+                    String message = String.format(
+                            "Đơn hàng #%d nhận được thanh toán THỪA:\n" +
+                                    "- Số tiền cần: %,d VND\n" +
+                                    "- Số tiền nhận: %,d VND\n" +
+                                    "- Thừa: %,d VND\n" +
+                                    "- Khách hàng: %s\n\n" +
+                                    "Vui lòng xử lý hoàn tiền thủ công cho khách hàng.",
+                            orderId, expectedAmount, amountIn, amountDifference,
+                            order.getCustomer().getEmail());
+                    emailService.sendAdminNotification("Thanh toán thừa - Đơn hàng #" + orderId, message);
+                } catch (Exception emailEx) {
+                    LOGGER.log(Level.WARNING, "Failed to send overpayment notification", emailEx);
+                }
+
+                // Continue processing - order is still valid, just needs manual refund
+            }
+
+            // Case 3: Exact match - perfect!
+            if (amountIn == expectedAmount) {
+                LOGGER.log(Level.INFO, "Payment amount matches exactly: {0} VND", expectedAmount);
+            }
+            // ========== END AMOUNT VALIDATION ==========
 
             // Check if already paid
             if (order.getPaymentStatus() == Order.PaymentStatus.PAID) {
