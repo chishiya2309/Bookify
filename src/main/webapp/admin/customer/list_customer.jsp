@@ -71,8 +71,8 @@
                         <td style="text-align: left;">${customer.fullName}</td>
                         <td>${customer.phoneNumber}</td>
                         <td>
-                            <fmt:parseDate value="${customer.registerDate}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both"/>
-                            <fmt:formatDate value="${parsedDate}" pattern="dd/MM/yyyy"/>
+                            <c:set var="formatter" value='<%= java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy") %>' />
+                            ${customer.registerDate.format(formatter)}
                         </td>
                         <td>
                             <a href="${pageContext.request.contextPath}/admin/customers?action=edit&id=${customer.userId}" 
