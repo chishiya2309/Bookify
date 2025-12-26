@@ -68,7 +68,7 @@
                         <td>${(currentPage - 1) * 10 + loop.index + 1}</td>
                         <td>${customer.userId}</td>
                         <td style="text-align: left;">${customer.email}</td>
-                        <td style="text-align: left;">${customer.fullName}</td>
+                        <td style="text-align: left;"><c:out value="${customer.fullName}"/></td>
                         <td>${customer.phoneNumber}</td>
                         <td>
                             <fmt:parseDate value="${customer.registerDate}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both"/>
