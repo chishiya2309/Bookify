@@ -72,9 +72,18 @@ public class PaymentCallbackServlet extends HttpServlet {
                     }
                 }
 
-                // Redirect to success page
-                response.sendRedirect(request.getContextPath() +
-                        "/customer/order-confirmation?transaction_id=" + transactionId);
+                // Redirect to success page - use orderId (OrderConfirmationServlet expects
+                // orderId)
+                Order order = payment.getOrder();
+                Integer orderId = (order != null) ? order.getOrderId() : null;
+                if (orderId != null) {
+                    response.sendRedirect(request.getContextPath() +
+                            "/customer/order-confirmation?orderId=" + orderId);
+                } else {
+                    // Fallback with transaction_id if order not available
+                    response.sendRedirect(request.getContextPath() +
+                            "/customer/order-confirmation?transaction_id=" + transactionId);
+                }
             } else {
                 // Payment failed or cancelled
                 response.sendRedirect(request.getContextPath() +

@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -42,6 +43,11 @@ public class SepayWebhookServlet extends HttpServlet {
     private final OrderService orderService = new OrderService();
     private final EmailService emailService = new EmailService();
     private final ShoppingCartServices cartService = new ShoppingCartServices();
+
+    // Idempotency: Track webhooks being processed to prevent duplicates
+    // Key: referenceCode, Value: timestamp when processing started
+    private static final ConcurrentHashMap<String, Long> processingWebhooks = new ConcurrentHashMap<>();
+    private static final long PROCESSING_TIMEOUT_MS = 60000; // 60 seconds timeout
 
     /**
      * Handle POST webhook from Sepay
@@ -219,55 +225,78 @@ public class SepayWebhookServlet extends HttpServlet {
             }
             // ========== END AMOUNT VALIDATION ==========
 
-            // Check if already paid
-            if (order.getPaymentStatus() == Order.PaymentStatus.PAID) {
-                LOGGER.log(Level.INFO, "Order {0} already paid, skipping", orderId);
-                sendSuccessResponse(response, "Already processed");
-                return;
-            }
-
-            // Update order payment status
-            orderService.updatePaymentStatus(orderId, Order.PaymentStatus.PAID);
-            orderService.updateOrderStatus(orderId, Order.OrderStatus.PROCESSING);
-
-            LOGGER.log(Level.INFO, "Order {0} payment confirmed via Sepay", orderId);
-
-            // Clear customer cart after successful payment
-            try {
-                Customer customer = order.getCustomer();
-                if (customer != null) {
-                    ShoppingCart cart = cartService.getCartByCustomer(customer);
-                    if (cart != null && cart.getItems() != null && !cart.getItems().isEmpty()) {
-                        cartService.clearCart(cart);
-                        LOGGER.log(Level.INFO, "Cart cleared for customer {0} after payment confirmed",
-                                customer.getUserId());
-                    }
+            // ========== IDEMPOTENCY CHECK ==========
+            // Check if this webhook is already being processed or was processed
+            Long existingProcessing = processingWebhooks.putIfAbsent(referenceNumber, System.currentTimeMillis());
+            if (existingProcessing != null) {
+                // Check if it's a stale entry (older than timeout)
+                if (System.currentTimeMillis() - existingProcessing < PROCESSING_TIMEOUT_MS) {
+                    LOGGER.log(Level.INFO, "Duplicate webhook detected for reference: {0}, ignoring", referenceNumber);
+                    sendSuccessResponse(response, "Already processing");
+                    return;
+                } else {
+                    // Stale entry, update and continue processing
+                    processingWebhooks.put(referenceNumber, System.currentTimeMillis());
                 }
-            } catch (Exception cartEx) {
-                LOGGER.log(Level.WARNING, "Failed to clear cart after payment", cartEx);
-                // Don't fail webhook if cart clear fails
             }
 
-            // Send payment confirmation email
             try {
-                // Create payment record for email
-                Payment payment = new Payment();
-                payment.setOrder(order);
-                payment.setAmount(order.getTotalAmount());
-                payment.setMethod(Payment.PaymentMethod.BANK_TRANSFER);
-                payment.setStatus(Payment.PaymentStatus.COMPLETED);
-                payment.setTransactionId(referenceNumber);
-                payment.setPaymentDate(java.time.LocalDateTime.now());
+                // Check if already paid (database check)
+                if (order.getPaymentStatus() == Order.PaymentStatus.PAID) {
+                    LOGGER.log(Level.INFO, "Order {0} already paid, skipping", orderId);
+                    sendSuccessResponse(response, "Already processed");
+                    return;
+                }
 
-                emailService.sendPaymentConfirmation(order, payment);
-                LOGGER.log(Level.INFO, "Payment confirmation email sent for order: {0}", orderId);
-            } catch (Exception emailEx) {
-                LOGGER.log(Level.WARNING, "Failed to send payment confirmation email", emailEx);
-                // Don't fail the webhook if email fails
+                // Update order payment status
+                orderService.updatePaymentStatus(orderId, Order.PaymentStatus.PAID);
+                orderService.updateOrderStatus(orderId, Order.OrderStatus.PROCESSING);
+
+                LOGGER.log(Level.INFO, "Order {0} payment confirmed via Sepay", orderId);
+
+                // Clear customer cart after successful payment
+                try {
+                    Customer customer = order.getCustomer();
+                    if (customer != null) {
+                        ShoppingCart cart = cartService.getCartByCustomer(customer);
+                        if (cart != null && cart.getItems() != null && !cart.getItems().isEmpty()) {
+                            cartService.clearCart(cart);
+                            LOGGER.log(Level.INFO, "Cart cleared for customer {0} after payment confirmed",
+                                    customer.getUserId());
+                        }
+                    }
+                } catch (Exception cartEx) {
+                    LOGGER.log(Level.WARNING, "Failed to clear cart after payment", cartEx);
+                    // Don't fail webhook if cart clear fails
+                }
+
+                // Send payment confirmation email
+                try {
+                    // Create payment record for email
+                    Payment payment = new Payment();
+                    payment.setOrder(order);
+                    payment.setAmount(order.getTotalAmount());
+                    payment.setMethod(Payment.PaymentMethod.BANK_TRANSFER);
+                    payment.setStatus(Payment.PaymentStatus.COMPLETED);
+                    payment.setTransactionId(referenceNumber);
+                    payment.setPaymentDate(java.time.LocalDateTime.now());
+
+                    emailService.sendPaymentConfirmation(order, payment);
+                    LOGGER.log(Level.INFO, "Payment confirmation email sent for order: {0}", orderId);
+                } catch (Exception emailEx) {
+                    LOGGER.log(Level.WARNING, "Failed to send payment confirmation email", emailEx);
+                    // Don't fail the webhook if email fails
+                }
+
+                // Return success response to Sepay
+                sendSuccessResponse(response, "Payment processed successfully");
+
+            } finally {
+                // Cleanup: Remove from processing map after completion
+                if (referenceNumber != null) {
+                    processingWebhooks.remove(referenceNumber);
+                }
             }
-
-            // Return success response to Sepay
-            sendSuccessResponse(response, "Payment processed successfully");
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error processing Sepay webhook", e);
