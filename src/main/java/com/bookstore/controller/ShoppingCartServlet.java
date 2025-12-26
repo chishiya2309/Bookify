@@ -1,6 +1,7 @@
 package com.bookstore.controller;
 
 import com.bookstore.model.*;
+import com.bookstore.dao.BookDAO;
 import com.bookstore.service.ShoppingCartServices;
 import com.bookstore.service.ShoppingCartServices.MergeResult;
 import com.bookstore.service.CustomerServices;
@@ -279,6 +280,49 @@ public class ShoppingCartServlet extends HttpServlet {
         try {
             Integer bookId = Integer.parseInt(bookIdParam);
             Integer quantity = Integer.parseInt(quantityParam);
+
+            // ========== STOCK VALIDATION ==========
+            BookDAO bookDAO = new BookDAO();
+            Book book = bookDAO.findById(bookId);
+
+            if (book == null) {
+                throw new IllegalArgumentException("Sách không tồn tại");
+            }
+
+            if (!book.isActive()) {
+                throw new IllegalArgumentException("Sách '" + book.getTitle() + "' hiện không khả dụng");
+            }
+
+            // Check current stock
+            int currentStock = book.getQuantityInStock();
+            if (currentStock <= 0) {
+                throw new IllegalArgumentException("Sách '" + book.getTitle() + "' đã hết hàng");
+            }
+
+            // Check if requested quantity exceeds available stock
+            // Also consider items already in cart
+            int existingInCart = 0;
+            if (cart.getItems() != null) {
+                for (CartItem item : cart.getItems()) {
+                    if (item.getBook().getBookId().equals(bookId)) {
+                        existingInCart = item.getQuantity();
+                        break;
+                    }
+                }
+            }
+
+            int totalRequested = existingInCart + quantity;
+            if (totalRequested > currentStock) {
+                if (existingInCart > 0) {
+                    throw new IllegalArgumentException(
+                            String.format("Không đủ hàng. Bạn đã có %d trong giỏ, chỉ còn %d sản phẩm khả dụng",
+                                    existingInCart, currentStock));
+                } else {
+                    throw new IllegalArgumentException(
+                            String.format("Số lượng yêu cầu (%d) vượt quá tồn kho (%d)", quantity, currentStock));
+                }
+            }
+            // ========== END STOCK VALIDATION ==========
 
             cartService.addItemToCart(cart, bookId, quantity);
         } catch (NumberFormatException e) {
