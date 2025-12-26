@@ -736,6 +736,28 @@
         </div>
     </c:if>
 
+    <!-- Price Changes -->
+    <c:if test="${not empty priceChanges}">
+        <div style="max-width: 1000px; margin: 20px auto 0 auto;">
+            <div style="background: #cfe2ff; border-left: 4px solid #0d6efd; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-info-circle" style="color: #084298; font-size: 20px; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <strong style="color: #084298; font-size: 15px;">Thông báo thay đổi giá</strong>
+                        <ul style="font-size: 14px; color: #084298; margin: 8px 0 0 0; padding-left: 20px;">
+                            <c:forEach var="change" items="${priceChanges}">
+                                <li><c:out value="${change}"/></li>
+                            </c:forEach>
+                        </ul>
+                        <p style="font-size: 13px; color: #084298; margin: 12px 0 0 0;">
+                            <i class="fas fa-sync"></i> Giỏ hàng đã được cập nhật với giá mới nhất.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </c:if>
+
     <div class="checkout-container">
         <c:choose>
             <c:when test="${empty cart or empty cart.items}">

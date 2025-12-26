@@ -108,6 +108,12 @@ public class CheckoutServlet extends HttpServlet {
             request.setAttribute("stockWarnings", stockWarnings);
         }
 
+        // Validate and update prices (detect price changes since item was added)
+        List<String> priceChanges = validateAndUpdateCartPrices(cart);
+        if (!priceChanges.isEmpty()) {
+            request.setAttribute("priceChanges", priceChanges);
+        }
+
         // Set cart and customer info to request
         request.setAttribute("cart", cart);
         request.setAttribute("isGuest", false);
@@ -325,5 +331,74 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         return warnings;
+    }
+
+    /**
+     * Validate and update cart item prices to current database prices.
+     * Returns list of warnings if prices have changed since items were added.
+     * 
+     * @param cart Shopping cart to validate
+     * @return List of price change warnings (empty if no changes)
+     */
+    private List<String> validateAndUpdateCartPrices(ShoppingCart cart) {
+        List<String> priceChanges = new ArrayList<>();
+        BookDAO bookDAO = new BookDAO();
+        java.text.NumberFormat currencyFormat = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+
+        if (cart == null || cart.getItems() == null) {
+            return priceChanges;
+        }
+
+        java.math.BigDecimal totalDifference = java.math.BigDecimal.ZERO;
+
+        for (CartItem item : cart.getItems()) {
+            Book cartBook = item.getBook();
+            if (cartBook == null)
+                continue;
+
+            // Get current price from database
+            Book currentBook = bookDAO.findById(cartBook.getBookId());
+            if (currentBook == null)
+                continue;
+
+            java.math.BigDecimal oldPrice = cartBook.getPrice();
+            java.math.BigDecimal currentPrice = currentBook.getPrice();
+
+            if (oldPrice == null || currentPrice == null)
+                continue;
+
+            // Check if price has changed
+            if (oldPrice.compareTo(currentPrice) != 0) {
+                java.math.BigDecimal priceDiff = currentPrice.subtract(oldPrice);
+                java.math.BigDecimal itemDiff = priceDiff.multiply(java.math.BigDecimal.valueOf(item.getQuantity()));
+                totalDifference = totalDifference.add(itemDiff);
+
+                String changeType = priceDiff.compareTo(java.math.BigDecimal.ZERO) > 0 ? "tăng" : "giảm";
+                String diffFormatted = currencyFormat.format(priceDiff.abs()) + "₫";
+
+                priceChanges.add(String.format("Giá sản phẩm \"%s\" đã %s %s (từ %s₫ → %s₫)",
+                        cartBook.getTitle(),
+                        changeType,
+                        diffFormatted,
+                        currencyFormat.format(oldPrice),
+                        currencyFormat.format(currentPrice)));
+
+                // Update cart item with current price
+                cartBook.setPrice(currentPrice);
+            }
+        }
+
+        // Add total difference summary if there were changes
+        if (!priceChanges.isEmpty()) {
+            String totalChangeType = totalDifference.compareTo(java.math.BigDecimal.ZERO) > 0 ? "tăng" : "giảm";
+            priceChanges.add(String.format("📊 Tổng thay đổi: %s %s₫",
+                    totalChangeType,
+                    currencyFormat.format(totalDifference.abs())));
+
+            // Recalculate cart totals after price update
+            cartService.calculateCartTotals(cart);
+        }
+
+        return priceChanges;
     }
 }
