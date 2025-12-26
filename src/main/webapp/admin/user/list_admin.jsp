@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -28,7 +29,7 @@
         <nav class="toolbar" aria-label="Công cụ tìm kiếm và thêm mới">
             <form class="search-form" action="${pageContext.request.contextPath}/admin/user" method="get" role="search">
                 <input type="hidden" name="action" value="list">
-                <input type="text" name="search" placeholder="Tìm kiếm theo email hoặc tên..." value="${search}">
+                <input type="text" name="search" placeholder="Tìm kiếm theo email hoặc tên..." value="<c:out value='${search}'/>">
                 <button type="submit" class="btn btn-primary">Tìm kiếm</button>
                 <c:if test="${not empty search}">
                     <a href="${pageContext.request.contextPath}/admin/user?action=list" class="btn btn-secondary">Xóa bộ lọc</a>
@@ -53,7 +54,7 @@
                         <td colspan="4" class="empty-message">
                             <c:choose>
                                 <c:when test="${not empty search}">
-                                    Không tìm thấy admin nào với từ khóa "${search}"
+                                    Không tìm thấy admin nào với từ khóa "<c:out value='${search}'/>"
                                 </c:when>
                                 <c:otherwise>
                                     Chưa có admin nào trong hệ thống
@@ -66,13 +67,13 @@
                 <c:forEach var="admin" items="${adminList}">
                     <tr>
                         <td>${admin.userId}</td>
-                        <td style="text-align: left;">${admin.email}</td>
-                        <td style="text-align: left;">${admin.fullName}</td>
+                        <td style="text-align: left;"><c:out value="${admin.email}"/></td>
+                        <td style="text-align: left;"><c:out value="${admin.fullName}"/></td>
                         <td>
                             <a href="${pageContext.request.contextPath}/admin/user?action=edit&id=${admin.userId}" 
                                class="btn btn-primary btn-sm">Sửa</a>
                             <button type="button" class="btn btn-danger btn-sm"
-                                    onclick="confirmDelete(${admin.userId}, '${admin.email}')">Xóa</button>
+                                    onclick="confirmDelete(${admin.userId}, '<c:out value="${admin.email}" escapeXml="true"/>')">Xóa</button>
                         </td>
                     </tr>
                 </c:forEach>
@@ -81,12 +82,17 @@
         </section>
 
         <c:if test="${totalPages > 1}">
-            <c:set var="searchParam" value="${not empty search ? '&search='.concat(search) : ''}" />
             <nav class="pagination" aria-label="Phân trang">
                 <c:choose>
                     <c:when test="${hasPrevious}">
-                        <a href="${pageContext.request.contextPath}/admin/user?action=list&page=${currentPage - 1}${searchParam}" 
-                           class="btn btn-secondary btn-sm">« Trước</a>
+                        <c:url var="prevUrl" value="${pageContext.request.contextPath}/admin/user">
+                            <c:param name="action" value="list"/>
+                            <c:param name="page" value="${currentPage - 1}"/>
+                            <c:if test="${not empty search}">
+                                <c:param name="search" value="${search}"/>
+                            </c:if>
+                        </c:url>
+                        <a href="${prevUrl}" class="btn btn-secondary btn-sm">« Trước</a>
                     </c:when>
                     <c:otherwise>
                         <span class="btn btn-secondary btn-sm btn-disabled">« Trước</span>
@@ -100,8 +106,14 @@
                                 <span class="btn btn-primary btn-sm" aria-current="page">${pageNum}</span>
                             </c:when>
                             <c:otherwise>
-                                <a href="${pageContext.request.contextPath}/admin/user?action=list&page=${pageNum}${searchParam}" 
-                                   class="btn btn-secondary btn-sm">${pageNum}</a>
+                                <c:url var="pageUrl" value="${pageContext.request.contextPath}/admin/user">
+                                    <c:param name="action" value="list"/>
+                                    <c:param name="page" value="${pageNum}"/>
+                                    <c:if test="${not empty search}">
+                                        <c:param name="search" value="${search}"/>
+                                    </c:if>
+                                </c:url>
+                                <a href="${pageUrl}" class="btn btn-secondary btn-sm">${pageNum}</a>
                             </c:otherwise>
                         </c:choose>
                     </c:forEach>
@@ -109,8 +121,14 @@
                 
                 <c:choose>
                     <c:when test="${hasNext}">
-                        <a href="${pageContext.request.contextPath}/admin/user?action=list&page=${currentPage + 1}${searchParam}" 
-                           class="btn btn-secondary btn-sm">Sau »</a>
+                        <c:url var="nextUrl" value="${pageContext.request.contextPath}/admin/user">
+                            <c:param name="action" value="list"/>
+                            <c:param name="page" value="${currentPage + 1}"/>
+                            <c:if test="${not empty search}">
+                                <c:param name="search" value="${search}"/>
+                            </c:if>
+                        </c:url>
+                        <a href="${nextUrl}" class="btn btn-secondary btn-sm">Sau »</a>
                     </c:when>
                     <c:otherwise>
                         <span class="btn btn-secondary btn-sm btn-disabled">Sau »</span>
