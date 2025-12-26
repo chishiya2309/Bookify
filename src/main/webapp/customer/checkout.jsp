@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán - Bookify</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -694,6 +695,43 @@
                 <span style="font-size: 14px; font-weight: 500; color: #198754;">
                     <c:out value="${message}"/>
                 </span>
+            </div>
+        </div>
+    </c:if>
+
+    <!-- Error Display -->
+    <c:if test="${not empty error}">
+        <div style="max-width: 1000px; margin: 20px auto 0 auto;">
+            <div style="background: #f8d7da; border-left: 4px solid #dc3545; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 20px; margin-top: 2px;"></i>
+                    <div>
+                        <strong style="color: #dc3545; font-size: 15px;">Không thể đặt hàng</strong>
+                        <p style="font-size: 14px; color: #721c24; margin: 8px 0 0 0; white-space: pre-line;"><c:out value="${error}"/></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </c:if>
+
+    <!-- Stock Warnings -->
+    <c:if test="${not empty stockWarnings}">
+        <div style="max-width: 1000px; margin: 20px auto 0 auto;">
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #856404; font-size: 20px; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <strong style="color: #856404; font-size: 15px;">Cảnh báo tồn kho</strong>
+                        <ul style="font-size: 14px; color: #856404; margin: 8px 0 0 0; padding-left: 20px;">
+                            <c:forEach var="warning" items="${stockWarnings}">
+                                <li><c:out value="${warning}"/></li>
+                            </c:forEach>
+                        </ul>
+                        <p style="font-size: 13px; color: #856404; margin: 12px 0 0 0;">
+                            <i class="fas fa-info-circle"></i> Vui lòng quay lại giỏ hàng để điều chỉnh số lượng hoặc tiếp tục đặt hàng với số lượng còn lại.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </c:if>

@@ -197,6 +197,32 @@ public class EmailService {
     }
 
     /**
+     * Send order cancellation email
+     * 
+     * @param order  Cancelled order
+     * @param reason Cancellation reason
+     */
+    public void sendOrderCancellation(Order order, String reason) {
+        try {
+            String customerEmail = order.getCustomer().getEmail();
+            String customerName = order.getCustomer().getFullName();
+
+            String template = loadTemplate("order-cancellation.html");
+            String html = template
+                    .replace("{{customerName}}", customerName)
+                    .replace("{{orderId}}", order.getOrderId().toString())
+                    .replace("{{reason}}", reason != null ? reason : "Theo yêu cầu của khách hàng")
+                    .replace("{{cancelDate}}", java.time.LocalDateTime.now().format(DATE_FORMATTER))
+                    .replace("{{totalAmount}}", CURRENCY_FORMATTER.format(order.getTotalAmount()));
+
+            sendEmail(customerEmail, "Đơn hàng #" + order.getOrderId() + " đã bị huỷ", html);
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to send cancellation email for order: " + order.getOrderId(), e);
+        }
+    }
+
+    /**
      * Load email template from resources
      * 
      * @param templateName Template file name

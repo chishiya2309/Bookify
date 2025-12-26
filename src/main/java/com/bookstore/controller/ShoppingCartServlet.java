@@ -207,7 +207,13 @@ public class ShoppingCartServlet extends HttpServlet {
                 session.setAttribute(SUCCESS_MESSAGE_KEY, successMessage);
             }
 
-            response.sendRedirect("cart");
+            // Check for redirect parameter (for Buy Now functionality)
+            String redirect = request.getParameter("redirect");
+            if ("checkout".equals(redirect)) {
+                response.sendRedirect(request.getContextPath() + "/customer/checkout");
+            } else {
+                response.sendRedirect("cart");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

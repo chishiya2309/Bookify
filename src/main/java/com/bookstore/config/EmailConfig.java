@@ -4,27 +4,17 @@ import java.util.Properties;
 
 /**
  * EmailConfig - Configuration for Brevo (Sendinblue) SMTP
- * Free tier: 300 emails/day
- * 
- * Get your SMTP credentials from:
- * https://app.brevo.com/settings/keys/smtp
- */
+ **/
 public class EmailConfig {
 
     // Brevo SMTP Configuration (Port 587 with STARTTLS)
     private static final String SMTP_HOST = "smtp-relay.brevo.com";
-    private static final String SMTP_PORT = "587"; // Port 587 with STARTTLS
+    private static final String SMTP_PORT = "587";
 
-    // TODO: Replace with your Brevo SMTP credentials
-    // Get from: https://app.brevo.com/settings/keys/smtp
-    private static final String SMTP_USERNAME = "9d4aab001@smtp-brevo.com"; // Your Brevo login email
-    private static final String SMTP_PASSWORD = "xsmtpsib-2f26310a595e31fce16822c7836520b6bf7f0b523095efcb4f107fa5249ccf51-32OypTEmSKw5kYUa"; // SMTP
-                                                                                                                                              // key
-                                                                                                                                              // from
-                                                                                                                                              // Brevo
+    private static final String SMTP_USERNAME = "9d4aab001@smtp-brevo.com";
+    private static final String SMTP_PASSWORD = "xsmtpsib-2f26310a595e31fce16822c7836520b6bf7f0b523095efcb4f107fa5249ccf51-32OypTEmSKw5kYUa";
 
-    // Email settings - Use your verified Gmail as sender
-    private static final String FROM_EMAIL = "lequanghung.work@gmail.com"; // Same as Brevo login
+    private static final String FROM_EMAIL = "lequanghung.work@gmail.com";
     private static final String FROM_NAME = "Bookify - Nhà sách trực tuyến";
 
     /**
@@ -61,41 +51,26 @@ public class EmailConfig {
         props.put("mail.smtp.ssl.protocols", "TLSv1.2");
         props.put("mail.smtp.connectiontimeout", "15000");
         props.put("mail.smtp.timeout", "15000");
-        props.put("mail.debug", "true"); // Enable debug to see SMTP logs in console
+        props.put("mail.debug", "true");
         return props;
     }
 
-    /**
-     * Get from email address
-     */
     public static String getFromEmail() {
         return FROM_EMAIL;
     }
 
-    /**
-     * Get from name
-     */
     public static String getFromName() {
         return FROM_NAME;
     }
 
-    /**
-     * Get SMTP host
-     */
     public static String getSmtpHost() {
         return SMTP_HOST;
     }
 
-    /**
-     * Get SMTP port
-     */
     public static int getSmtpPort() {
         return Integer.parseInt(SMTP_PORT);
     }
 
-    /**
-     * Check if email is properly configured
-     */
     public static boolean isConfigured() {
         return !SMTP_USERNAME.equals("YOUR_BREVO_EMAIL")
                 && !SMTP_PASSWORD.equals("YOUR_BREVO_SMTP_KEY");

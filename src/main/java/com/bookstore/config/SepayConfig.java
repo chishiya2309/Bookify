@@ -1,15 +1,11 @@
 package com.bookstore.config;
 
 /**
- * Sepay Configuration - HARDCODED FOR TESTING
- * TODO: Move to environment variables for production!
- * 
  * Sepay Documentation: https://docs.sepay.vn/
  */
 public class SepayConfig {
 
     // ========== SEPAY API CONFIGURATION ==========
-
     /**
      * Sepay API Base URL
      */
@@ -17,24 +13,20 @@ public class SepayConfig {
 
     /**
      * API Token - Lấy từ Sepay Dashboard → API
-     * TODO: Replace with your actual Sepay API Token
      */
     private static final String API_TOKEN = "FDN2CAWWJGRZDHZIY75C8XROHB7EXAOEGQRXTSBJJIFFHBHIE4O3UG8QVK9KUQMI";
 
     /**
      * Account Number - Số tài khoản ngân hàng nhận tiền
-     * TODO: Replace with your bank account number
      */
-    private static final String ACCOUNT_NUMBER = "0347983243"; // MBBank account from screenshot
+    private static final String ACCOUNT_NUMBER = "0347983243";
 
     /**
      * Bank Code - Mã ngân hàng
-     * Common codes: VCB, TCB, MB, ACB, VTB, TPB, etc.
      */
     private static final String BANK_CODE = "MB"; // MBBank
 
     // ========== PAYMENT SETTINGS ==========
-
     /**
      * Payment timeout in minutes
      */
@@ -51,35 +43,28 @@ public class SepayConfig {
     public static final String TRANSFER_CONTENT_PREFIX = "BOOKIFY";
 
     // ========== SEPAY MERCHANT CONFIGURATION ==========
-
     /**
      * Merchant ID (Mã đơn vị) - Get from Sepay Dashboard -> Cổng thanh toán QR
-     * TODO: Replace with your actual Merchant ID
      */
     private static final String MERCHANT_ID = "SP-LIVE-LQ4B4233";
 
     /**
      * Secret Key - Get from Sepay Dashboard -> Cổng thanh toán QR
-     * TODO: Replace with your actual Secret Key
      */
     private static final String SECRET_KEY = "spsk_live_cysAJev94vsKPese3nF3gpigozDYirtJ";
 
     // ========== CALLBACK URLs ==========
-
     /**
      * Return URL - Where customer is redirected after payment
-     * For local testing with ngrok: https://abc123.ngrok.io/Bookify/payment/return
      */
     private static String returnUrl = "http://localhost:8080/Bookify/payment/return";
 
     /**
      * Notify URL - Webhook endpoint for Sepay notifications
-     * For local testing with ngrok: https://abc123.ngrok.io/Bookify/payment/notify
      */
     private static String notifyUrl = "http://localhost:8080/Bookify/payment/notify";
 
     // ========== GETTERS ==========
-
     public static String getApiToken() {
         return API_TOKEN;
     }

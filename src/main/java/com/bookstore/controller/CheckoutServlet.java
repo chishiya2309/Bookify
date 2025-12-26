@@ -1,14 +1,19 @@
 package com.bookstore.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.bookstore.data.DBUtil;
+import com.bookstore.dao.AddressDAO;
+import com.bookstore.dao.BookDAO;
 import com.bookstore.model.Address;
+import com.bookstore.model.Book;
+import com.bookstore.model.CartItem;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.model.Payment;
 import com.bookstore.model.ShoppingCart;
-import com.bookstore.dao.AddressDAO;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.JwtUtil;
@@ -96,6 +101,12 @@ public class CheckoutServlet extends HttpServlet {
 
         // Calculate cart totals
         cartService.calculateCartTotals(cart);
+
+        // Pre-validate stock (non-blocking warning for user)
+        List<String> stockWarnings = validateCartStock(cart);
+        if (!stockWarnings.isEmpty()) {
+            request.setAttribute("stockWarnings", stockWarnings);
+        }
 
         // Set cart and customer info to request
         request.setAttribute("cart", cart);
@@ -197,7 +208,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Create real order from cart using OrderService
+            // Create order from cart using OrderService
             Order order = orderService.createOrderFromCart(
                     customer,
                     shippingAddress,
@@ -270,5 +281,45 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Checkout Servlet - Handle checkout process";
+    }
+
+    /**
+     * Pre-validate cart stock before checkout (non-blocking check).
+     * Returns list of warning messages for items with insufficient stock.
+     * This is a soft check - actual enforcement happens in OrderService with
+     * locking.
+     */
+    private List<String> validateCartStock(ShoppingCart cart) {
+        List<String> warnings = new ArrayList<>();
+        BookDAO bookDAO = new BookDAO();
+
+        if (cart == null || cart.getItems() == null) {
+            return warnings;
+        }
+
+        for (CartItem item : cart.getItems()) {
+            Book book = item.getBook();
+            if (book == null)
+                continue;
+
+            // Get current stock from database
+            Book currentBook = bookDAO.findById(book.getBookId());
+            if (currentBook == null) {
+                warnings.add("Sản phẩm \"" + book.getTitle() + "\" không còn tồn tại");
+                continue;
+            }
+
+            int currentStock = currentBook.getQuantityInStock();
+            int requestedQty = item.getQuantity();
+
+            if (currentStock <= 0) {
+                warnings.add("Sản phẩm \"" + book.getTitle() + "\" đã hết hàng");
+            } else if (currentStock < requestedQty) {
+                warnings.add("Sản phẩm \"" + book.getTitle() + "\" chỉ còn "
+                        + currentStock + " sản phẩm (bạn yêu cầu: " + requestedQty + ")");
+            }
+        }
+
+        return warnings;
     }
 }
