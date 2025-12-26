@@ -150,9 +150,9 @@ public class OrderTimeoutScheduler implements ServletContextListener {
             }
         }
 
-        // Update order status
+        // Update order status - keep as UNPAID since payment was never completed
         order.setOrderStatus(Order.OrderStatus.CANCELLED);
-        order.setPaymentStatus(Order.PaymentStatus.FAILED);
+        // PaymentStatus stays UNPAID (no FAILED status exists)
         orderDAO.update(order);
 
         LOGGER.log(Level.INFO, "Order {0} cancelled due to payment timeout", order.getOrderId());
