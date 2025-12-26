@@ -80,10 +80,10 @@ public class CartItemDAO {
         try {
             em.getTransaction().begin();
             em.createQuery("DELETE FROM CartItem c WHERE c.cart.cartId = :cartId")
-              .setParameter("cartId", cartId)
-              .executeUpdate();
+                    .setParameter("cartId", cartId)
+                    .executeUpdate();
             em.getTransaction().commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             em.getTransaction().rollback();
             throw e;
         } finally {
