@@ -18,7 +18,7 @@
         </header>
         
         <c:if test="${not empty error}">
-            <aside class="alert-danger" role="alert">${error}</aside>
+            <aside class="alert alert-danger" role="alert">${error}</aside>
         </c:if>
         
         <form id="customerForm" method="post" action="${pageContext.request.contextPath}/admin/customers" onsubmit="return validateForm()">
