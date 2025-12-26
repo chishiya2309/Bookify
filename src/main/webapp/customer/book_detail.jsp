@@ -43,13 +43,14 @@
 </head>
 <body>
 
-  <%-- Header: Hiển thị theo trạng thái đăng nhập --%>
+
+  <%-- Header: Hiển thị theo trạng thái đăng nhập (kiểm tra session) --%>
   <c:choose>
-      <c:when test="${isGuest}">
-          <jsp:include page="/customer/header_sign_in.jsp"/>
+      <c:when test="${not empty sessionScope.customer or not empty sessionScope.userEmail}">
+          <jsp:include page="/customer/header_customer.jsp"/>
       </c:when>
       <c:otherwise>
-          <jsp:include page="/customer/header_customer.jsp"/>
+          <jsp:include page="/customer/header_sign_in.jsp"/>
       </c:otherwise>
   </c:choose>
 

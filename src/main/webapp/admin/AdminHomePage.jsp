@@ -40,7 +40,7 @@
             <c:forEach items="${listMostRecentSales}" var="order">
             <tr>
                 <td><a href="view_order?id=${order.orderId}">${order.orderId}</a></td>
-                <td>${order.customer.fullName}</td>
+                <td><c:out value="${order.customer.fullName}"/></td>
                 <td>
                     <c:choose>
                         <c:when test="${not empty order.orderDetails}">
@@ -81,7 +81,7 @@
                 <td>${review.book.title}</td>
                 <td>${review.rating}</td>
                 <td><a href="edit_review?id=${review.reviewId}">${review.headline}</a></td>
-                <td>${review.customer.fullName}</td>
+                <td><c:out value="${review.customer.fullName}"/></td>
                 <td>
                     ${review.reviewDate}
                 </td>
