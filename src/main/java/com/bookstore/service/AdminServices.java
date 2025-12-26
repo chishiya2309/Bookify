@@ -10,25 +10,25 @@ import com.bookstore.model.Admin;
 import com.bookstore.model.Order;
 import com.bookstore.model.Review;
 
-/**
- * Custom exception for validation errors.
- */
-class ValidationException extends Exception {
-    public ValidationException(String message) {
-        super(message);
-    }
-}
-
-/**
- * Custom exception for business logic errors.
- */
-class BusinessException extends Exception {
-    public BusinessException(String message) {
-        super(message);
-    }
-}
-
 public class AdminServices {
+
+    /**
+     * Custom exception for validation errors.
+     */
+    public static class ValidationException extends Exception {
+        public ValidationException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Custom exception for business logic errors.
+     */
+    public static class BusinessException extends Exception {
+        public BusinessException(String message) {
+            super(message);
+        }
+    }
     
     private final AdminDAO adminDAO;
     
