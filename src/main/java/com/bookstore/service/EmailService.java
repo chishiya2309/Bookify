@@ -121,16 +121,18 @@ public class EmailService {
 
             // Load and populate template
             String template = loadTemplate("order-confirmation.html");
-            
-            // Format shipping fee - show "Miễn phí" if shipping fee is 0, otherwise show the amount
+
+            // Format shipping fee - show "Miễn phí" if shipping fee is 0, otherwise show
+            // the amount
             String shippingFeeDisplay;
             if (order.getShippingFee() == null || order.getShippingFee().compareTo(BigDecimal.ZERO) == 0) {
                 shippingFeeDisplay = "Miễn phí";
             } else {
                 shippingFeeDisplay = CURRENCY_FORMATTER.format(order.getShippingFee()) + "₫";
             }
-            
-            // Get subtotal - use order.getSubtotal() if available, otherwise calculate from order details
+
+            // Get subtotal - use order.getSubtotal() if available, otherwise calculate from
+            // order details
             BigDecimal subtotal = order.getSubtotal();
             if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) == 0) {
                 // Calculate subtotal from order details if not set
@@ -138,7 +140,20 @@ public class EmailService {
                         .map(OrderDetail::getSubTotal)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
             }
-            
+
+            // Build voucher discount row if applicable
+            String voucherRow = "";
+            if (order.getVoucherDiscount() != null && order.getVoucherDiscount().compareTo(BigDecimal.ZERO) > 0) {
+                String voucherLabel = order.getVoucherCode() != null
+                        ? "Giảm giá (" + order.getVoucherCode() + "):"
+                        : "Giảm giá:";
+                voucherRow = "<tr>" +
+                        "<td style='color: #dc3545'>" + voucherLabel + "</td>" +
+                        "<td align='right' style='color: #dc3545; font-weight: bold'>-" +
+                        CURRENCY_FORMATTER.format(order.getVoucherDiscount()) + "₫</td>" +
+                        "</tr>";
+            }
+
             String html = template
                     .replace("{{customerName}}", customerName)
                     .replace("{{orderId}}", order.getOrderId().toString())
@@ -150,6 +165,7 @@ public class EmailService {
                     .replace("{{paymentMethod}}", formatPaymentMethod(order.getPaymentMethod()))
                     .replace("{{subtotal}}", CURRENCY_FORMATTER.format(subtotal) + "₫")
                     .replace("{{shipping}}", shippingFeeDisplay)
+                    .replace("{{voucherRow}}", voucherRow)
                     .replace("{{totalAmount}}", CURRENCY_FORMATTER.format(order.getTotalAmount()) + "₫");
 
             sendEmail(customerEmail, "Xác nhận đơn hàng #" + order.getOrderId(), html);

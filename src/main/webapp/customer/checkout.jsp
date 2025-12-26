@@ -758,50 +758,50 @@
         </div>
     </c:if>
 
-    <div class="checkout-container">
+    <main class="checkout-container">
         <c:choose>
             <c:when test="${empty cart or empty cart.items}">
-                <div class="empty-cart-msg">
+                <section class="empty-cart-msg">
                     <i class="fas fa-shopping-cart"></i>
                     <h2>Giỏ hàng của bạn đang trống</h2>
                     <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
                     <a href="${pageContext.request.contextPath}/" class="btn-place-order" style="display:inline-block; margin-top:20px; text-decoration:none;">
                         <i class="fas fa-shopping-bag"></i> Mua sắm ngay
                     </a>
-                </div>
+                </section>
             </c:when>
             <c:otherwise>
                 <!-- 2-Column Layout -->
                 <div class="checkout-grid">
                     <!-- LEFT COLUMN: Forms -->
-                    <div class="checkout-main">
+                    <section class="checkout-main">
                         <form action="checkout" method="POST" id="checkoutForm">
                             <!-- Address Section -->
-                            <div class="form-section">
-                                <div class="form-section-title">
+                            <section class="form-section">
+                                <header class="form-section-title">
                                     <i class="fas fa-map-marker-alt"></i>
                                     Địa chỉ giao hàng
-                                </div>
+                                </header>
                                 
                                 <div class="address-list">
                                     <c:choose>
                                         <c:when test="${not empty customerAddresses}">
                                             <c:forEach var="addr" items="${customerAddresses}">
-                                                <div class="address-card ${addr.isDefault ? 'default-address' : ''}">
+                                                <article class="address-card ${addr.isDefault ? 'default-address' : ''}">
                                                     <label class="address-radio-label">
                                                         <input type="radio" name="selectedAddressId" 
                                                                value="${addr.addressId}" 
                                                                ${addr.isDefault ? 'checked' : ''}
                                                                required>
                                                         <div class="address-content">
-                                                            <div class="address-header">
+                                                            <header class="address-header">
                                                                 <strong class="recipient-name">
                                                                     <c:out value="${addr.recipientName != null ? addr.recipientName : user.fullName}"/>
                                                                 </strong>
                                                                 <c:if test="${addr.isDefault}">
                                                                     <span class="default-badge">Mặc định</span>
                                                                 </c:if>
-                                                            </div>
+                                                            </header>
                                                             <div class="address-details">
                                                                 <p class="phone-number">
                                                                     <i class="fas fa-phone"></i>
@@ -814,7 +814,7 @@
                                                             </div>
                                                         </div>
                                                     </label>
-                                                </div>
+                                                </article>
                                             </c:forEach>
                                         </c:when>
                                         <c:otherwise>
@@ -829,14 +829,14 @@
                                 <button type="button" class="btn-add-address" onclick="openAddressModal()">
                                     <i class="fas fa-plus-circle"></i> Thêm địa chỉ mới
                                 </button>
-                            </div>
+                            </section>
 
                             <!-- Voucher Section -->
-                            <div class="form-section">
-                                <div class="form-section-title">
+                            <section class="form-section">
+                                <header class="form-section-title">
                                     <i class="fas fa-ticket-alt"></i>
                                     Mã giảm giá
-                                </div>
+                                </header>
                                 
                                 <div style="display: flex; gap: 10px; align-items: flex-start;">
                                     <div style="flex: 1;">
@@ -851,48 +851,48 @@
                                 </div>
                                 
                                 <div id="voucherMessage" style="margin-top: 10px; font-size: 14px; display: none;"></div>
-                            </div>
+                            </section>
 
                             <!-- Payment Section -->
-                            <div class="form-section">
-                                <div class="form-section-title">
+                            <section class="form-section">
+                                <header class="form-section-title">
                                     <i class="fas fa-credit-card"></i>
                                     Phương thức thanh toán
-                                </div>
+                                </header>
                                 
                                 <select name="paymentMethod" required>
                                     <option value="COD">Thanh toán khi nhận hàng (COD)</option>
                                     <option value="BANK_TRANSFER">Chuyển khoản ngân hàng (VietQR)</option>
                                 </select>
-                            </div>
+                            </section>
 
                             <!-- Action Buttons -->
-                            <div class="action-buttons">
+                            <footer class="action-buttons">
                                 <a href="${pageContext.request.contextPath}/" class="btn-continue-shopping">
                                     <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
                                 </a>
                                 <button type="submit" class="btn-place-order">
                                     <i class="fas fa-check-circle"></i> Đặt hàng
                                 </button>
-                            </div>
+                            </footer>
                         </form>
-                    </div>
+                    </section>
 
                     <!-- RIGHT COLUMN: Order Summary -->
-                    <div class="checkout-sidebar">
-                        <div class="order-summary-card">
-                            <div class="order-summary-title">
+                    <aside class="checkout-sidebar">
+                        <article class="order-summary-card">
+                            <header class="order-summary-title">
                                 <i class="fas fa-shopping-bag"></i>
                                 Đơn hàng của bạn
-                            </div>
+                            </header>
 
                             <!-- Order Items -->
-                            <div class="order-items-list">
+                            <section class="order-items-list">
                                 <c:forEach var="item" items="${cart.items}">
                                     <c:set var="book" value="${item.book}" />
                                     <c:set var="subtotal" value="${book.price * item.quantity}" />
                                     
-                                    <div class="order-item">
+                                    <article class="order-item">
                                         <img src="${not empty book.primaryImageUrl ? book.primaryImageUrl : pageContext.request.contextPath.concat('/images/no-image.jpg')}" 
                                              class="order-item-img"
                                              alt="${book.title}"
@@ -913,12 +913,12 @@
                                         <div class="order-item-price">
                                             <fmt:formatNumber value="${subtotal}" pattern="#,###"/>₫
                                         </div>
-                                    </div>
+                                    </article>
                                 </c:forEach>
-                            </div>
+                            </section>
 
                             <!-- Order Totals -->
-                            <div class="order-summary-totals">
+                            <footer class="order-summary-totals">
                                 <div class="summary-row">
                                     <span class="summary-label">Tạm tính</span>
                                     <span class="summary-value">
@@ -973,13 +973,13 @@
                                         <fmt:formatNumber value="${grandTotal}" pattern="#,###"/>₫
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            </footer>
+                        </article>
+                    </aside>
                 </div>
             </c:otherwise>
         </c:choose>
-    </div>
+    </main>
 
     <!-- Include Address Modal -->
     <jsp:include page="/customer/address-modal.jsp"/>

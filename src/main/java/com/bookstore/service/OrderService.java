@@ -36,20 +36,20 @@ public class OrderService {
     }
 
     /**
-     * Create an order from shopping cart
-     * This is the main method for checkout process
+     * Tạo một đơn hàng từ giỏ hàng
+     * Đây là phương thức chính cho quá trình thanh toán
      * 
-     * Uses PESSIMISTIC_WRITE lock to prevent race conditions when multiple
-     * users checkout the same items simultaneously. All stock validation and
-     * deduction happens within a single transaction.
+     * Sử dụng khóa PESSIMISTIC_WRITE để ngăn chặn các xung đột khi nhiều người
+     * cùng mua cùng một sản phẩm. Tất cả các kiểm tra tồn kho và trừ hàng
+     * xảy ra trong một giao dịch duy nhất.
      * 
-     * @param customer        Customer placing the order
-     * @param shippingAddress Address for delivery
-     * @param cart            Shopping cart with items
-     * @param paymentMethod   Payment method selected
-     * @return Created Order with OrderDetails
-     * @throws IllegalArgumentException if validation fails
-     * @throws IllegalStateException    if insufficient stock
+     * @param customer        Khách hàng đặt hàng
+     * @param shippingAddress Địa chỉ giao hàng
+     * @param cart            Giỏ hàng chứa các sản phẩm
+     * @param paymentMethod   Phương thức thanh toán
+     * @return Đơn hàng đã tạo với OrderDetails
+     * @throws IllegalArgumentException nếu thông tin không hợp lệ
+     * @throws IllegalStateException    nếu không đủ hàng
      */
     public Order createOrderFromCart(
             Customer customer,
@@ -60,20 +60,20 @@ public class OrderService {
     }
 
     /**
-     * Create an order from shopping cart with optional voucher
+     * Tạo một đơn hàng từ giỏ hàng với mã giảm giá tùy chọn
      * 
-     * Uses PESSIMISTIC_WRITE lock to prevent race conditions when multiple
-     * users checkout the same items simultaneously. All stock validation and
-     * deduction happens within a single transaction.
+     * Sử dụng khóa PESSIMISTIC_WRITE để ngăn chặn các xung đột khi nhiều người
+     * cùng mua cùng một sản phẩm. Tất cả các kiểm tra tồn kho và trừ hàng
+     * xảy ra trong một giao dịch duy nhất.
      * 
-     * @param customer        Customer placing the order
-     * @param shippingAddress Address for delivery
-     * @param cart            Shopping cart with items
-     * @param paymentMethod   Payment method selected
-     * @param voucherCode     Optional voucher code
-     * @return Created Order with OrderDetails
-     * @throws IllegalArgumentException if validation fails
-     * @throws IllegalStateException    if insufficient stock
+     * @param customer        Khách hàng đặt hàng
+     * @param shippingAddress Địa chỉ giao hàng
+     * @param cart            Giỏ hàng chứa các sản phẩm
+     * @param paymentMethod   Phương thức thanh toán
+     * @param voucherCode     Mã giảm giá tùy chọn
+     * @return Đơn hàng đã tạo với OrderDetails
+     * @throws IllegalArgumentException nếu thông tin không hợp lệ
+     * @throws IllegalStateException    nếu không đủ hàng
      */
     public Order createOrderFromCart(
             Customer customer,
@@ -82,7 +82,7 @@ public class OrderService {
             String paymentMethod,
             String voucherCode) {
 
-        // Basic validation (before starting transaction)
+        // Kiểm tra thông tin đơn hàng (trước khi bắt đầu giao dịch)
         validateOrderCreation(customer, shippingAddress, cart);
 
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
@@ -92,7 +92,7 @@ public class OrderService {
         try {
             tx.begin();
 
-            // Create Order entity
+            // Tạo đơn hàng
             order = new Order();
             order.setCustomer(customer);
             order.setShippingAddress(shippingAddress);
@@ -107,13 +107,12 @@ public class OrderService {
             BigDecimal totalAmount = BigDecimal.ZERO;
             List<String> stockErrors = new ArrayList<>();
 
-            // Process each cart item with pessimistic locking
+            // Xử lý mỗi mục trong giỏ hàng với khóa PESSIMISTIC_WRITE
             for (CartItem cartItem : cart.getItems()) {
                 Integer bookId = cartItem.getBook().getBookId();
                 Integer quantity = cartItem.getQuantity();
 
-                // Lock the book row for update - prevents other transactions from
-                // reading/modifying
+                // khóa hàng để cập nhật - ngăn chặn các giao dịch khác đọc/sửa đổi
                 Book lockedBook = em.find(Book.class, bookId, LockModeType.PESSIMISTIC_WRITE);
 
                 if (lockedBook == null) {
@@ -121,17 +120,17 @@ public class OrderService {
                     continue;
                 }
 
-                // Validate stock
+                // Kiểm tra tồn kho
                 if (lockedBook.getQuantityInStock() < quantity) {
                     stockErrors.add("Sản phẩm \"" + lockedBook.getTitle() + "\" chỉ còn "
                             + lockedBook.getQuantityInStock() + " sản phẩm (yêu cầu: " + quantity + ")");
                     continue;
                 }
 
-                // Deduct stock immediately (within same transaction)
+                // Trừ hàng ngay lập tức (trong cùng một giao dịch)
                 int newStock = lockedBook.getQuantityInStock() - quantity;
                 lockedBook.setQuantityInStock(newStock);
-                // No need to call persist/merge - entity is already managed
+                // Không cần gọi persist/merge - entity đã được quản lý
 
                 LOGGER.log(Level.INFO, "Deducted {0} units from book {1}. New stock: {2}",
                         new Object[] { quantity, bookId, newStock });
@@ -172,16 +171,18 @@ public class OrderService {
                     Voucher voucher = vResult.getVoucher();
                     voucherDiscount = vResult.getDiscount();
 
+                    // Với FREE_SHIPPING: giữ nguyên shippingFee gốc để hiển thị
+                    // Đặt voucherDiscount = shippingFee để tính tổng đúng
                     if (voucher.getDiscountType() == Voucher.DiscountType.FREE_SHIPPING) {
-                        shippingFee = BigDecimal.ZERO;
-                        voucherDiscount = BigDecimal.ZERO;
+                        voucherDiscount = shippingFee; // Giảm giá = phí vận chuyển
+                        // KHÔNG đặt shippingFee = 0 - giữ để hiển thị
                     }
 
                     order.setVoucherId(voucher.getVoucherId());
                     order.setVoucherCode(voucher.getCode());
                     order.setVoucherDiscount(voucherDiscount);
 
-                    // Increment usage count
+                    // Tăng số lần sử dụng
                     voucherDAO.incrementUsage(voucher.getVoucherId());
 
                     LOGGER.log(Level.INFO, "Voucher {0} applied. Discount: {1}",
@@ -192,25 +193,40 @@ public class OrderService {
                 }
             }
 
+            // Tổng = tạm tính + phí ship - giảm giá
+            // Với FREE_SHIPPING: tạm tính + 15000 - 15000 = tạm tính ✓
             BigDecimal grandTotal = subtotal.add(shippingFee).subtract(voucherDiscount);
 
             order.setSubtotal(subtotal);
-            order.setShippingFee(shippingFee);
+            order.setShippingFee(shippingFee); // Phí ship gốc để hiển thị
             order.setTotalAmount(grandTotal);
 
             LOGGER.log(Level.INFO, "Order pricing - Subtotal: {0}, Shipping: {1}, Voucher: -{2}, Total: {3}",
-                    new Object[] { subtotal, shippingFee, voucherDiscount, grandTotal });
+                    new Object[] { subtotal, shippingFee, order.getVoucherDiscount(), grandTotal });
 
-            // Persist order (cascade saves OrderDetails)
+            // Lưu đơn hàng (cascade saves OrderDetails)
             em.persist(order);
 
-            // Commit transaction - this releases all locks
+            // Commit giao dịch - giải phóng tất cả locks
             tx.commit();
+
+            // Ghi lại việc sử dụng voucher sau khi commit (đơn hàng phải tồn tại trong DB
+            // để tạo khóa ngoại)
+            if (order.getVoucherId() != null) {
+                VoucherDAO voucherDAO2 = new VoucherDAO();
+                Voucher voucher = voucherDAO2.findById(order.getVoucherId());
+                if (voucher != null) {
+                    VoucherUsage usage = new VoucherUsage(voucher, customer, order, order.getVoucherDiscount());
+                    voucherDAO2.recordUsage(usage);
+                    LOGGER.log(Level.INFO, "Recorded voucher usage for order {0}, discount: {1}",
+                            new Object[] { order.getOrderId(), order.getVoucherDiscount() });
+                }
+            }
 
             LOGGER.log(Level.INFO, "Order created successfully with locking. OrderId: {0}, Total: {1}",
                     new Object[] { order.getOrderId(), grandTotal });
 
-            // Send order confirmation email (outside transaction)
+            // Gửi email xác nhận đơn hàng (ngoài giao dịch)
             try {
                 emailService.sendOrderConfirmation(order);
                 LOGGER.log(Level.INFO, "Order confirmation email sent for order: {0}", order.getOrderId());
@@ -235,9 +251,6 @@ public class OrderService {
         }
     }
 
-    /**
-     * Validate order creation parameters
-     */
     private void validateOrderCreation(Customer customer, Address shippingAddress, ShoppingCart cart) {
         if (customer == null) {
             throw new IllegalArgumentException("Customer không được null");
@@ -251,12 +264,11 @@ public class OrderService {
             throw new IllegalArgumentException("Giỏ hàng trống, không thể tạo đơn hàng");
         }
 
-        // Validate address belongs to customer
         if (!shippingAddress.getCustomer().getUserId().equals(customer.getUserId())) {
             throw new IllegalArgumentException("Địa chỉ không thuộc về khách hàng này");
         }
 
-        // Validate cart has valid items
+        // Kiểm tra giỏ hàng có sản phẩm hợp lệ
         for (CartItem item : cart.getItems()) {
             if (item.getBook() == null) {
                 throw new IllegalArgumentException("Cart item không có sách");
@@ -270,9 +282,6 @@ public class OrderService {
         }
     }
 
-    /**
-     * Get order by ID
-     */
     public Order getOrderById(Integer orderId) {
         if (orderId == null) {
             throw new IllegalArgumentException("Order ID không được null");
@@ -280,9 +289,6 @@ public class OrderService {
         return orderDAO.findById(orderId);
     }
 
-    /**
-     * Get order by ID with details eagerly loaded
-     */
     public Order getOrderByIdWithDetails(Integer orderId) {
         if (orderId == null) {
             throw new IllegalArgumentException("Order ID không được null");
@@ -290,9 +296,6 @@ public class OrderService {
         return orderDAO.findByIdWithDetails(orderId);
     }
 
-    /**
-     * Get all orders for a customer
-     */
     public List<Order> getCustomerOrders(Integer customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID không được null");
@@ -300,9 +303,6 @@ public class OrderService {
         return orderDAO.findByCustomerId(customerId);
     }
 
-    /**
-     * Get customer orders with details
-     */
     public List<Order> getCustomerOrdersWithDetails(Integer customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID không được null");
@@ -310,9 +310,6 @@ public class OrderService {
         return orderDAO.findByCustomerIdWithDetails(customerId);
     }
 
-    /**
-     * Update order status
-     */
     public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
         if (orderId == null || newStatus == null) {
             throw new IllegalArgumentException("Order ID và status không được null");
@@ -330,9 +327,6 @@ public class OrderService {
                 new Object[] { orderId, newStatus });
     }
 
-    /**
-     * Update payment status
-     */
     public void updatePaymentStatus(Integer orderId, PaymentStatus newStatus) {
         if (orderId == null || newStatus == null) {
             throw new IllegalArgumentException("Order ID và payment status không được null");
@@ -400,13 +394,9 @@ public class OrderService {
             LOGGER.log(Level.INFO, "Cancellation email sent for order: {0}", orderId);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to send cancellation email for order: " + orderId, e);
-            // Don't fail the cancellation if email fails
         }
     }
 
-    /**
-     * Restore stock quantities when order is cancelled
-     */
     private void restoreStock(Order order) {
         BookDAO bookDAO = new BookDAO();
 
@@ -448,9 +438,6 @@ public class OrderService {
                 order.getOrderStatus() == OrderStatus.PROCESSING;
     }
 
-    /**
-     * Get customer order count
-     */
     public long getCustomerOrderCount(Integer customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID không được null");
@@ -458,9 +445,6 @@ public class OrderService {
         return orderDAO.countByCustomerId(customerId);
     }
 
-    /**
-     * Get total amount customer has spent (only paid orders)
-     */
     public BigDecimal getCustomerTotalSpent(Integer customerId) {
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID không được null");
@@ -468,9 +452,6 @@ public class OrderService {
         return orderDAO.getTotalRevenueByCustomer(customerId);
     }
 
-    /**
-     * Get orders by status
-     */
     public List<Order> getOrdersByStatus(OrderStatus status) {
         if (status == null) {
             throw new IllegalArgumentException("Status không được null");
@@ -478,9 +459,6 @@ public class OrderService {
         return orderDAO.findByStatus(status);
     }
 
-    /**
-     * Get orders by payment status
-     */
     public List<Order> getOrdersByPaymentStatus(PaymentStatus paymentStatus) {
         if (paymentStatus == null) {
             throw new IllegalArgumentException("Payment status không được null");

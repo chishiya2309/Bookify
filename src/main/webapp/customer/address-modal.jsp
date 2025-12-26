@@ -85,6 +85,10 @@
     
     .form-row {
         margin-bottom: 16px;
+        border: none;
+        padding: 0;
+        margin-left: 0;
+        margin-right: 0;
     }
     
     .form-row label {
@@ -165,71 +169,73 @@
 <!-- Address Selection Modal -->
 <div id="addressModal" class="modal" style="display: none;">
     <div class="modal-overlay" onclick="closeAddressModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
+    <section class="modal-content">
+        <header class="modal-header">
             <h3><i class="fas fa-map-marker-alt"></i> Thêm địa chỉ mới</h3>
             <button type="button" class="modal-close" onclick="closeAddressModal()">
                 <i class="fas fa-times"></i>
             </button>
-        </div>
+        </header>
         
-        <form id="addAddressForm" class="modal-body">
-            <div class="form-row">
-                <label>Người nhận <span class="required">*</span></label>
-                <input type="text" id="newRecipientName" name="recipientName" 
-                       placeholder="Họ và tên" required>
-            </div>
-            
-            <div class="form-row">
-                <label>Số điện thoại <span class="required">*</span></label>
-                <input type="tel" id="newPhoneNumber" name="phoneNumber" 
-                       placeholder="0123456789" required>
-            </div>
-            
-            <div class="form-row">
-                <label>Tỉnh/Thành phố <span class="required">*</span></label>
-                <select id="provinceSelect" name="provinceCode" required>
-                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <label>Quận/Huyện <span class="required">*</span></label>
-                <select id="districtSelect" name="districtCode" required disabled>
-                    <option value="">-- Chọn Quận/Huyện --</option>
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <label>Xã/Phường <span class="required">*</span></label>
-                <select id="wardSelect" name="wardCode" required disabled>
-                    <option value="">-- Chọn Xã/Phường --</option>
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <label>Địa chỉ cụ thể <span class="required">*</span></label>
-                <input type="text" id="newStreet" name="street" 
-                       placeholder="Số nhà, tên đường" required>
-            </div>
-            
-            <div class="form-row">
-                <label>
-                    <input type="checkbox" id="setDefaultCheckbox" name="isDefault">
-                    Đặt làm địa chỉ mặc định
-                </label>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeAddressModal()">
-                    Hủy
-                </button>
-                <button type="submit" class="btn-save">
-                    <i class="fas fa-save"></i> Lưu địa chỉ
-                </button>
-            </div>
-        </form>
-    </div>
+        <section class="modal-body">
+            <form id="addAddressForm">
+                <fieldset class="form-row">
+                    <label>Người nhận <span class="required">*</span></label>
+                    <input type="text" id="newRecipientName" name="recipientName" 
+                           placeholder="Họ và tên" required>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>Số điện thoại <span class="required">*</span></label>
+                    <input type="tel" id="newPhoneNumber" name="phoneNumber" 
+                           placeholder="0123456789" required>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>Tỉnh/Thành phố <span class="required">*</span></label>
+                    <select id="provinceSelect" name="provinceCode" required>
+                        <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                    </select>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>Quận/Huyện <span class="required">*</span></label>
+                    <select id="districtSelect" name="districtCode" required disabled>
+                        <option value="">-- Chọn Quận/Huyện --</option>
+                    </select>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>Xã/Phường <span class="required">*</span></label>
+                    <select id="wardSelect" name="wardCode" required disabled>
+                        <option value="">-- Chọn Xã/Phường --</option>
+                    </select>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>Địa chỉ cụ thể <span class="required">*</span></label>
+                    <input type="text" id="newStreet" name="street" 
+                           placeholder="Số nhà, tên đường" required>
+                </fieldset>
+                
+                <fieldset class="form-row">
+                    <label>
+                        <input type="checkbox" id="setDefaultCheckbox" name="isDefault">
+                        Đặt làm địa chỉ mặc định
+                    </label>
+                </fieldset>
+                
+                <footer class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeAddressModal()">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Lưu địa chỉ
+                    </button>
+                </footer>
+            </form>
+        </section>
+    </section>
 </div>
 
 <script>

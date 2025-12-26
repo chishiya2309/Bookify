@@ -84,6 +84,7 @@
         .order-info .order-id {
             font-size: 14px;
             color: var(--text-light);
+            display: block;
         }
 
         .order-info .order-amount {
@@ -91,6 +92,7 @@
             font-weight: 700;
             color: var(--color-primary);
             margin: 8px 0;
+            display: block;
         }
 
         /* QR Code Section */
@@ -102,6 +104,7 @@
         .qr-code-wrapper {
             position: relative;
             display: inline-block;
+            margin: 0;
         }
 
         .qr-code {
@@ -200,6 +203,7 @@
             align-items: center;
             padding: 10px 0;
             border-bottom: 1px solid #ffe082;
+            margin: 0;
         }
 
         .info-row:last-child {
@@ -209,6 +213,14 @@
         .info-label {
             font-size: 13px;
             color: #856404;
+        }
+
+        .info-row dt {
+            margin: 0;
+        }
+
+        .info-row dd {
+            margin: 0;
         }
 
         .info-value {
@@ -251,6 +263,7 @@
             font-size: 24px;
             font-weight: 700;
             color: var(--color-warning);
+            display: block;
         }
 
         .timer-label {
@@ -375,87 +388,87 @@
 </head>
 <body>
 
-    <div class="payment-container">
-        <div class="payment-header">
+    <main class="payment-container">
+        <header class="payment-header">
             <h1><i class="fas fa-qrcode"></i> Quét mã để thanh toán</h1>
             <p>Sử dụng ứng dụng ngân hàng để quét mã QR</p>
-        </div>
+        </header>
 
         <!-- Order Info -->
-        <div class="order-info">
-            <div class="order-id">Đơn hàng #${order.orderId}</div>
-            <div class="order-amount">
+        <section class="order-info">
+            <span class="order-id">Đơn hàng #${order.orderId}</span>
+            <span class="order-amount">
                 <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>₫
-            </div>
-        </div>
+            </span>
+        </section>
 
         <!-- QR Code -->
-        <div class="qr-section">
-            <div class="qr-code-wrapper">
+        <section class="qr-section">
+            <figure class="qr-code-wrapper">
                 <img src="${vietQRUrl}" alt="QR Code" class="qr-code" id="qrCode">
                 <div class="scan-line"></div>
-            </div>
+            </figure>
             <p class="waiting-text">
                 <i class="fas fa-clock"></i> Đang chờ thanh toán...
             </p>
-        </div>
+        </section>
 
         <!-- Bank Info -->
-        <div class="bank-info">
+        <aside class="bank-info">
             <h3><i class="fas fa-university"></i> Hoặc chuyển khoản thủ công</h3>
             
-            <div class="info-row">
-                <span class="info-label">Ngân hàng</span>
-                <span class="info-value">${bankName}</span>
-            </div>
+            <dl class="info-row">
+                <dt class="info-label">Ngân hàng</dt>
+                <dd class="info-value">${bankName}</dd>
+            </dl>
             
-            <div class="info-row">
-                <span class="info-label">Số tài khoản</span>
-                <span class="info-value">
+            <dl class="info-row">
+                <dt class="info-label">Số tài khoản</dt>
+                <dd class="info-value">
                     ${accountNumber}
                     <button class="copy-btn" onclick="copyToClipboard('${accountNumber}')">
                         <i class="fas fa-copy"></i>
                     </button>
-                </span>
-            </div>
+                </dd>
+            </dl>
             
-            <div class="info-row">
-                <span class="info-label">Nội dung CK</span>
-                <span class="info-value transfer-content">
+            <dl class="info-row">
+                <dt class="info-label">Nội dung CK</dt>
+                <dd class="info-value transfer-content">
                     ${transferContent}
                     <button class="copy-btn" onclick="copyToClipboard('${transferContent}')">
                         <i class="fas fa-copy"></i>
                     </button>
-                </span>
-            </div>
-        </div>
+                </dd>
+            </dl>
+        </aside>
 
         <!-- Timer -->
-        <div class="timer-section">
-            <div class="timer" id="timer">15:00</div>
-            <div class="timer-label">Thời gian còn lại</div>
-        </div>
+        <section class="timer-section">
+            <time class="timer" id="timer">15:00</time>
+            <span class="timer-label">Thời gian còn lại</span>
+        </section>
 
         <!-- Actions -->
-        <div class="actions">
+        <nav class="actions">
             <a href="${pageContext.request.contextPath}/customer/order-confirmation?orderId=${order.orderId}" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Hủy
             </a>
             <button class="btn btn-primary" onclick="checkPaymentStatus()">
                 <i class="fas fa-sync-alt"></i> Kiểm tra
             </button>
-        </div>
-    </div>
+        </nav>
+    </main>
 
     <!-- Success Overlay -->
     <div class="success-overlay" id="successOverlay">
-        <div class="success-content">
+        <section class="success-content">
             <div class="success-icon">
                 <i class="fas fa-check"></i>
             </div>
             <h2>Thanh toán thành công!</h2>
             <p>Đang chuyển hướng...</p>
-        </div>
+        </section>
     </div>
 
     <script>

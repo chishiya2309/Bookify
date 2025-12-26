@@ -219,4 +219,18 @@ public class Voucher implements Serializable {
                 ", discountValue=" + discountValue +
                 '}';
     }
+
+    // Alias methods for JSP/servlet compatibility
+    public boolean isActive() {
+        return isActive != null && isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
+
+    public boolean isCurrentlyValid() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.isAfter(startDate) && now.isBefore(endDate);
+    }
 }

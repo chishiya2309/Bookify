@@ -26,6 +26,7 @@
         <a href="${pageContext.request.contextPath}/admin/reviews.jsp">Reviews</a>
         <a href="${pageContext.request.contextPath}/admin/orders.jsp">Orders</a>
         <a href="${pageContext.request.contextPath}/admin/publishers">Publishers</a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers">Vouchers</a>
     </nav>
 
 </header>

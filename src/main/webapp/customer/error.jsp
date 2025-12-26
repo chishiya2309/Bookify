@@ -198,35 +198,35 @@
         </style>
     </head>
     <body>
-        <div class="error-container">
-            <div class="error-header">
+        <main class="error-container">
+            <header class="error-header">
                 <i class="fas fa-exclamation-triangle error-icon"></i>
                 <h1>Đã xảy ra lỗi</h1>
                 <p>Rất tiếc, có vấn đề xảy ra khi xử lý yêu cầu của bạn</p>
-            </div>
+            </header>
             
-            <div class="error-content">
+            <section class="error-content">
                 <c:if test="${not empty error}">
-                    <div class="error-message">
-                        <div class="error-message-title">
+                    <aside class="error-message">
+                        <header class="error-message-title">
                             <i class="fas fa-info-circle"></i>
                             <span>Chi tiết lỗi:</span>
-                        </div>
+                        </header>
                         <p class="error-message-text"><c:out value="${error}"/></p>
-                    </div>
+                    </aside>
                 </c:if>
 
                 <c:if test="${empty error}">
-                    <div class="error-message">
-                        <div class="error-message-title">
+                    <aside class="error-message">
+                        <header class="error-message-title">
                             <i class="fas fa-info-circle"></i>
                             <span>Thông báo:</span>
-                        </div>
+                        </header>
                         <p class="error-message-text">Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.</p>
-                    </div>
+                    </aside>
                 </c:if>
 
-                <div class="error-actions">
+                <nav class="error-actions">
                     <a href="javascript:history.back()" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i>
                         Quay lại
@@ -239,8 +239,8 @@
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
                     </a>
-                </div>
-            </div>
-        </div>
+                </nav>
+            </section>
+        </main>
     </body>
 </html>

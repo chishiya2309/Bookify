@@ -133,4 +133,52 @@ public class VoucherDAO {
             em.close();
         }
     }
+
+    public List<Voucher> findAll() {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String jpql = "SELECT v FROM Voucher v ORDER BY v.createdAt DESC";
+            return em.createQuery(jpql, Voucher.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public Voucher update(Voucher voucher) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            em.getTransaction().begin();
+            voucher = em.merge(voucher);
+            em.getTransaction().commit();
+            return voucher;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Error updating voucher", e);
+            throw new RuntimeException("Failed to update voucher", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    public void delete(Voucher voucher) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            em.getTransaction().begin();
+            Voucher managed = em.find(Voucher.class, voucher.getVoucherId());
+            if (managed != null) {
+                em.remove(managed);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Error deleting voucher", e);
+            throw new RuntimeException("Failed to delete voucher", e);
+        } finally {
+            em.close();
+        }
+    }
 }

@@ -634,24 +634,24 @@
         </c:otherwise>
     </c:choose>
 
-    <div class="confirmation-container">
+    <main class="confirmation-container">
         <c:choose>
             <c:when test="${not empty error}">
                 <!-- Error State -->
-                <div class="error-container">
+                <section class="error-container">
                     <i class="fas fa-exclamation-circle error-icon"></i>
                     <h1 class="error-title">Có lỗi xảy ra</h1>
                     <p class="error-message"><c:out value="${error}"/></p>
-                    <div class="action-buttons">
+                    <nav class="action-buttons">
                         <a href="${pageContext.request.contextPath}/" class="btn btn-primary">
                             <i class="fas fa-home"></i> Về trang chủ
                         </a>
-                    </div>
-                </div>
+                    </nav>
+                </section>
             </c:when>
             <c:otherwise>
                 <!-- Success Banner -->
-                <div class="success-banner">
+                <header class="success-banner">
                     <div class="success-icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
@@ -662,14 +662,14 @@
                     <div class="order-number">
                         Mã đơn hàng: #${order.orderId}
                     </div>
-                </div>
+                </header>
 
                 <!-- Order Status Timeline -->
-                <div class="info-card">
-                    <h2 class="card-title">
+                <section class="info-card">
+                    <header class="card-title">
                         <i class="fas fa-shipping-fast"></i>
                         Trạng thái đơn hàng
-                    </h2>
+                    </header>
                     
                     <div class="status-timeline">
                         <div class="status-step completed">
@@ -697,14 +697,14 @@
                             <div class="status-step-label">Đã giao</div>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Order Details -->
-                <div class="info-card">
-                    <h2 class="card-title">
+                <section class="info-card">
+                    <header class="card-title">
                         <i class="fas fa-info-circle"></i>
                         Thông tin đơn hàng
-                    </h2>
+                    </header>
                     
                     <div class="detail-grid">
                         <div class="detail-item">
@@ -762,15 +762,15 @@
                             </span>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- VietQR Payment Section (for BANK_TRANSFER) -->
                 <c:if test="${showPaymentQR}">
-                    <div class="info-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); border: 2px solid #ffc107;">
-                        <h2 class="card-title" style="color: #856404;">
+                    <section class="info-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); border: 2px solid #ffc107;">
+                        <header class="card-title" style="color: #856404;">
                             <i class="fas fa-qrcode"></i>
                             Quét mã để thanh toán
-                        </h2>
+                        </header>
                         
                         <div style="display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start;">
                             <!-- QR Code -->
@@ -832,17 +832,17 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </c:if>
 
                 <!-- Shipping Address -->
-                <div class="info-card">
-                    <h2 class="card-title">
+                <section class="info-card">
+                    <header class="card-title">
                         <i class="fas fa-map-marker-alt"></i>
                         Địa chỉ giao hàng
-                    </h2>
+                    </header>
                     
-                    <div class="shipping-info">
+                    <aside class="shipping-info">
                         <p>
                             <i class="fas fa-user"></i>
                             <strong>${order.recipientName}</strong>
@@ -856,18 +856,18 @@
                             ${order.shippingAddress.street}, ${order.shippingAddress.ward}, 
                             ${order.shippingAddress.district}, ${order.shippingAddress.province}
                         </p>
-                    </div>
-                </div>
+                    </aside>
+                </section>
 
                 <!-- Order Items -->
-                <div class="info-card">
-                    <h2 class="card-title">
+                <section class="info-card">
+                    <header class="card-title">
                         <i class="fas fa-shopping-bag"></i>
                         Sản phẩm đã đặt
-                    </h2>
+                    </header>
                     
                     <c:forEach var="detail" items="${order.orderDetails}">
-                        <div class="order-item">
+                        <article class="order-item">
                             <img src="${not empty detail.book.primaryImageUrl ? detail.book.primaryImageUrl : pageContext.request.contextPath.concat('/images/no-image.jpg')}" 
                                  class="item-image"
                                  alt="${detail.book.title}"
@@ -891,11 +891,11 @@
                                     <fmt:formatNumber value="${detail.subTotal}" pattern="#,###"/>₫
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     </c:forEach>
 
                     <!-- Order Totals -->
-                    <div class="order-totals">
+                    <footer class="order-totals">
                         <div class="total-row">
                             <span>Tạm tính</span>
                             <span>
@@ -927,15 +927,29 @@
                                 </c:choose>
                             </span>
                         </div>
+                        
+                        <!-- Voucher Discount Row -->
+                        <c:if test="${not empty order.voucherDiscount and order.voucherDiscount > 0}">
+                            <div class="total-row" style="color: #dc3545;">
+                                <span>
+                                    <i class="fas fa-tag"></i> Giảm giá
+                                    <c:if test="${not empty order.voucherCode}">
+                                        (${order.voucherCode})
+                                    </c:if>
+                                </span>
+                                <span style="font-weight: bold;">-<fmt:formatNumber value="${order.voucherDiscount}" pattern="#,###"/>₫</span>
+                            </div>
+                        </c:if>
+                        
                         <div class="total-row grand-total">
                             <span>Tổng cộng</span>
                             <span><fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>₫</span>
                         </div>
-                    </div>
-                </div>
+                    </footer>
+                </section>
 
                 <!-- Action Buttons -->
-                <div class="action-buttons">
+                <nav class="action-buttons">
                     <a href="${pageContext.request.contextPath}/" class="btn btn-secondary">
                         <i class="fas fa-home"></i> Về trang chủ
                     </a>
@@ -948,22 +962,22 @@
                             <i class="fas fa-times-circle"></i> Huỷ đơn hàng
                         </button>
                     </c:if>
-                </div>
+                </nav>
 
                 <%-- Cancel Order Modal --%>
                 <c:if test="${order.paymentMethod == 'COD' && (order.orderStatus == 'PENDING' || order.orderStatus == 'PROCESSING')}">
-                    <div id="cancelModal" class="modal-overlay">
-                        <div class="modal-content">
-                            <div class="modal-header">
+                    <dialog id="cancelModal" class="modal-overlay">
+                        <article class="modal-content">
+                            <header class="modal-header">
                                 <div class="modal-icon">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <h3 class="modal-title">Xác nhận huỷ đơn hàng</h3>
                                 <p class="modal-subtitle">Bạn có chắc chắn muốn huỷ đơn hàng #${order.orderId}?</p>
-                            </div>
+                            </header>
                             <form action="${pageContext.request.contextPath}/customer/cancel-order" method="post">
                                 <input type="hidden" name="orderId" value="${order.orderId}">
-                                <div class="modal-body">
+                                <section class="modal-body">
                                     <label for="cancelReason" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Lý do huỷ:</label>
                                     <select name="reason" id="cancelReason" class="reason-select" required>
                                         <option value="">-- Chọn lý do --</option>
@@ -974,22 +988,22 @@
                                         <option value="Thời gian giao hàng quá lâu">Thời gian giao hàng quá lâu</option>
                                         <option value="Lý do khác">Lý do khác</option>
                                     </select>
-                                </div>
-                                <div class="modal-footer">
+                                </section>
+                                <footer class="modal-footer">
                                     <button type="button" class="btn btn-secondary" onclick="hideCancelModal()">
                                         <i class="fas fa-arrow-left"></i> Quay lại
                                     </button>
                                     <button type="submit" class="btn btn-danger">
                                         <i class="fas fa-times"></i> Xác nhận huỷ
                                     </button>
-                                </div>
+                                </footer>
                             </form>
-                        </div>
-                    </div>
+                        </article>
+                    </dialog>
                 </c:if>
             </c:otherwise>
         </c:choose>
-    </div>
+    </main>
 
     <jsp:include page="/customer/footer_customer.jsp"/>
 

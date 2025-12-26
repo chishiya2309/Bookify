@@ -321,18 +321,18 @@
         </style>
     </head>
     <body>
-        <div class="error-container">
-            <div class="error-header">
+        <main class="error-container">
+            <header class="error-header">
                 <i class="fas fa-book error-icon icon-1"></i>
                 <i class="fas fa-search error-icon icon-2"></i>
                 <i class="fas fa-question error-icon icon-3"></i>
-                <div class="error-code">404</div>
+                <span class="error-code">404</span>
                 <h1>Trang không tìm thấy</h1>
                 <p>Oops! Trang bạn đang tìm kiếm không tồn tại</p>
-            </div>
+            </header>
             
-            <div class="error-content">
-                <div class="error-message">
+            <section class="error-content">
+                <article class="error-message">
                     <h2>
                         <i class="fas fa-map-signs"></i>
                         Có vẻ bạn đã lạc đường!
@@ -341,7 +341,7 @@
                         Trang bạn yêu cầu có thể đã bị xóa, đổi tên, hoặc tạm thời không khả dụng.
                     </p>
                     
-                    <div class="suggestions">
+                    <aside class="suggestions">
                         <h3>
                             <i class="fas fa-lightbulb"></i>
                             Gợi ý cho bạn:
@@ -352,10 +352,10 @@
                             <li><i class="fas fa-circle"></i> Sử dụng thanh tìm kiếm để tìm sách</li>
                             <li><i class="fas fa-circle"></i> Liên hệ hỗ trợ nếu cần giúp đỡ</li>
                         </ul>
-                    </div>
-                </div>
+                    </aside>
+                </article>
 
-                <div class="error-actions">
+                <nav class="error-actions">
                     <a href="javascript:history.back()" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i>
                         Quay lại
@@ -368,9 +368,9 @@
                         <i class="fas fa-book-open"></i>
                         Xem sách
                     </a>
-                </div>
+                </nav>
 
-                <div class="search-box">
+                <section class="search-box">
                     <p>Hoặc tìm kiếm sách bạn cần:</p>
                     <form action="${pageContext.request.contextPath}/customer/books" method="get" class="search-form">
                         <input type="text" name="search" placeholder="Nhập tên sách, tác giả..." class="search-input">
@@ -378,9 +378,9 @@
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
-                </div>
-            </div>
-        </div>
+                </section>
+            </section>
+        </main>
     </body>
 </html>
 
