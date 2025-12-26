@@ -1,35 +1,38 @@
 package com.bookstore.controller;
 
 import com.bookstore.model.Book;
+import com.bookstore.model.Customer;
 import com.bookstore.model.Review;
 import com.bookstore.service.BookServices;
+import com.bookstore.service.ReviewServices;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/view_book")  // ← ĐÃ SỬA: từ "/book_detail" thành "/view_book"
-public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên class
+@WebServlet("/view_book")
+public class BookDetailServlet extends HttpServlet {
 
     private final BookServices bookServices = new BookServices();
+    private final ReviewServices reviewServices = new ReviewServices();  // ← THÊM
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        // Set encoding UTF-8
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
 
+        // ==================== LOAD MORE REVIEWS (AJAX) ====================
         if ("loadMore".equals(action)) {
-            // ← ĐÃ SỬA: dùng "id" thay vì "bookId"
             String idParam = request.getParameter("id");
             String pageParam = request.getParameter("page");
 
@@ -42,12 +45,12 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
                 int bookId = Integer.parseInt(idParam);
                 int page = Integer.parseInt(pageParam);
 
-                List<Review> reviews = bookServices.getReviews(bookId, page);
+                List<Review> reviews = reviewServices.getReviewsByBook(bookId, page);  // ← DÙNG ReviewServices
 
                 response.setContentType("text/html; charset=UTF-8");
                 PrintWriter out = response.getWriter();
 
-                if (reviews != null) {
+                if (reviews != null && !reviews.isEmpty()) {
                     for (Review r : reviews) {
                         out.println("<div class=\"review-item\">");
                         out.println("<strong>" + escapeHtml(r.getCustomer().getFullName()) + "</strong> ");
@@ -67,16 +70,14 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
                         out.println("</div><hr>");
                     }
                 }
-            } catch (NumberFormatException e) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameters");
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error loading reviews");
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
             return;
         }
 
-        // ← ĐÃ SỬA: dùng "id" thay vì "bookId"
+        // ==================== HIỂN THỊ TRANG CHI TIẾT SÁCH ====================
         String idParam = request.getParameter("id");
         if (idParam == null || idParam.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing book id parameter");
@@ -88,32 +89,42 @@ public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên clas
             Book book = bookServices.getBookById(bookId);
 
             if (book == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Book not found with ID: " + bookId);
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            List<Review> reviews = bookServices.getReviews(bookId, 0);
-            long totalReviews = bookServices.getTotalReviews(bookId);
+            // Lấy review ban đầu (page 0, size 5)
+            List<Review> reviews = reviewServices.getReviewsByBook(bookId, 0);
+            long totalReviews = reviewServices.getTotalReviewsByBook(bookId);
             Double avgRating = bookServices.getAverageRating(bookId);
-            
-            // Đảm bảo avgRating không null
-            if (avgRating == null) {
-                avgRating = 0.0;
+            if (avgRating == null) avgRating = 0.0;
+
+            // ==================== LẤY THÔNG TIN CUSTOMER HIỆN TẠI ====================
+            HttpSession session = request.getSession();
+            Customer currentCustomer = (Customer) session.getAttribute("customer");
+
+            // Kiểm tra xem customer đã review sách này chưa (nếu đã login)
+            Review customerReview = null;
+            if (currentCustomer != null) {
+                customerReview = reviewServices.getCustomerReviewForBook(
+                        currentCustomer.getUserId(), bookId);
             }
 
+            // Đặt các attribute cho JSP
             request.setAttribute("book", book);
             request.setAttribute("avgRating", avgRating);
             request.setAttribute("reviews", reviews != null ? reviews : new java.util.ArrayList<>());
             request.setAttribute("totalReviews", totalReviews);
             request.setAttribute("loadedCount", reviews != null ? reviews.size() : 0);
 
-            // Forward đến book_detail.jsp
+            request.setAttribute("currentCustomer", currentCustomer);        // ← Để JSP biết có đang login không
+            request.setAttribute("customerReview", customerReview);          // ← Đã review chưa + nội dung nếu có
+
             request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
-        } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid book ID format");
+
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while loading book details: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
