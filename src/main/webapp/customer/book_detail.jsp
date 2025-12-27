@@ -45,6 +45,9 @@
 
     .reviews-section { margin-top: 60px; border-top: 2px solid #eee; padding-top: 30px; }
     .reviews-section h2 { margin-bottom: 25px; color: #333; }
+    .my-review-box { background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #2196f3; position: relative; }
+    .my-review-box .delete-btn { position: absolute; top: 10px; right: 10px; background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .my-review-box .delete-btn:hover { background: #d32f2f; }
     .review-item { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
     .review-item .rating { color: #f39c12; font-size: 20px; margin-left: 8px; }
     .review-item .date { color: #666; font-size: 14px; margin-left: 10px; }
@@ -52,20 +55,20 @@
 
     #load-more-btn { display: block; margin: 30px auto; padding: 12px 30px; background: #28a745; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 6px; }
     #load-more-btn:hover { background: #218838; }
+
+    .write-review-box { background:#f0f8ff; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #bee5eb; }
   </style>
 </head>
 <body>
 
-
-  <%-- Header: Hiển thị theo trạng thái đăng nhập (kiểm tra session) --%>
-  <c:choose>
-      <c:when test="${not empty sessionScope.customer or not empty sessionScope.userEmail}">
-          <jsp:include page="/customer/header_customer.jsp"/>
-      </c:when>
-      <c:otherwise>
-          <jsp:include page="/customer/header_sign_in.jsp"/>
-      </c:otherwise>
-  </c:choose>
+<c:choose>
+  <c:when test="${not empty sessionScope.customer or not empty sessionScope.userEmail}">
+    <jsp:include page="/customer/header_customer.jsp"/>
+  </c:when>
+  <c:otherwise>
+    <jsp:include page="/customer/header_sign_in.jsp"/>
+  </c:otherwise>
+</c:choose>
 
 <div class="container">
   <div class="book-detail">
@@ -88,21 +91,18 @@
 
     <div class="book-info">
       <h1>${book.title}</h1>
-
       <div class="meta-info">
         <strong>Tác giả:</strong>
         <c:forEach items="${book.authors}" var="author" varStatus="status">
           ${author.name}<c:if test="${!status.last}">, </c:if>
         </c:forEach>
       </div>
-
       <div class="meta-info"><strong>Thể loại:</strong> ${book.category.name}</div>
       <div class="meta-info"><strong>Nhà xuất bản:</strong> ${book.publisher.name}</div>
 
       <div class="average-rating">
         <c:set var="fullStars" value="${avgRating.intValue()}"/>
         <c:set var="hasHalfStar" value="${avgRating - fullStars >= 0.3}"/>
-
         <c:forEach begin="1" end="${fullStars}">★</c:forEach>
         <c:if test="${hasHalfStar}">½</c:if>
         (${avgRating} / 5) - ${totalReviews} đánh giá
@@ -143,16 +143,70 @@
     </div>
   </div>
 
+  <!-- PHẦN REVIEWS (giữ nguyên như trước) -->
   <div class="reviews-section">
-    <h2>Đánh giá của khách hàng (${totalReviews})</h2>
+    <h2>Đánh giá sản phẩm (${totalReviews})</h2>
 
+    <c:if test="${not empty currentCustomer && not empty customerReview}">
+      <div class="my-review-box">
+        <strong>Đánh giá của bạn</strong>
+        <button class="delete-btn" onclick="deleteMyReview(${customerReview.reviewId})">Xóa đánh giá</button>
+        <br><br>
+        <span class="rating">
+            <c:forEach begin="1" end="${customerReview.rating}">★</c:forEach>
+          </span>
+        <span class="date">(${customerReview.reviewDate})</span><br>
+        <c:if test="${not empty customerReview.headline}">
+          <h4 class="headline"><c:out value="${customerReview.headline}"/></h4>
+        </c:if>
+        <p><c:out value="${customerReview.comment}"/></p>
+      </div>
+    </c:if>
+
+    <c:if test="${not empty currentCustomer && empty customerReview}">
+      <div class="write-review-box">
+        <h3>Viết đánh giá của bạn</h3>
+        <form action="${pageContext.request.contextPath}/review" method="post">
+          <input type="hidden" name="action" value="create"/>
+          <input type="hidden" name="bookId" value="${book.bookId}"/>
+          <div style="margin:15px 0;">
+            <label><strong>Đánh giá:</strong></label><br>
+            <select name="rating" required style="font-size:18px; padding:8px;">
+              <option value="">-- Chọn số sao --</option>
+              <option value="5">5 ★ Tuyệt vời</option>
+              <option value="4">4 ★ Tốt</option>
+              <option value="3">3 ★ Trung bình</option>
+              <option value="2">2 ★ Tạm được</option>
+              <option value="1">1 ★ Kém</option>
+            </select>
+          </div>
+          <div style="margin:15px 0;">
+            <label><strong>Tiêu đề:</strong></label><br>
+            <input type="text" name="headline" maxlength="255" style="width:100%; padding:10px;" placeholder="Tóm tắt cảm nhận"/>
+          </div>
+          <div style="margin:15px 0;">
+            <label><strong>Nội dung:</strong></label><br>
+            <textarea name="comment" rows="6" maxlength="2000" required style="width:100%; padding:10px;" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+          </div>
+          <button type="submit" style="padding:12px 24px; background:#007bff; color:white; border:none; border-radius:6px;">Gửi đánh giá</button>
+        </form>
+      </div>
+    </c:if>
+
+    <c:if test="${empty currentCustomer}">
+      <p style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:30px;">
+        <a href="${pageContext.request.contextPath}/customer/login.jsp">Đăng nhập</a> để viết đánh giá.
+      </p>
+    </c:if>
+
+    <h3>Đánh giá từ khách hàng khác</h3>
     <div id="reviews-list">
       <c:forEach items="${reviews}" var="r">
         <div class="review-item">
           <strong><c:out value="${r.customer.fullName}"/></strong>
           <span class="rating">
-                            <c:forEach begin="1" end="${r.rating}">★</c:forEach>
-                        </span>
+              <c:forEach begin="1" end="${r.rating}">★</c:forEach>
+            </span>
           <span class="date">(${r.reviewDate})</span><br>
           <c:if test="${not empty r.headline}">
             <h4 class="headline"><c:out value="${r.headline}"/></h4>
@@ -162,7 +216,7 @@
       </c:forEach>
     </div>
 
-    <c:if test="${loadedCount < totalReviews}">
+    <c:if test="${loadedCount < totalReviews - (not empty customerReview ? 1 : 0)}">
       <button id="load-more-btn" data-page="1">Xem thêm đánh giá</button>
     </c:if>
   </div>
@@ -171,27 +225,88 @@
 <jsp:include page="/customer/footer_customer.jsp"></jsp:include>
 
 <script>
-  const btn = document.getElementById('load-more-btn');
-  if (btn) {
-    btn.addEventListener('click', function() {
-      let page = parseInt(this.getAttribute('data-page')) || 1;
+  function getQuantity() {
+    const qtyInput = document.getElementById('quantity');
+    let qty = parseInt(qtyInput.value) || 1;
+    const stock = ${book.quantityInStock};
 
-      // ← ĐÃ SỬA: dùng /view_book và id=
+    if (qty < 1) {
+      qty = 1;
+      qtyInput.value = 1;
+    }
+    if (qty > stock) {
+      qty = stock;
+      qtyInput.value = stock;
+      alert('Chỉ còn ' + stock + ' cuốn trong kho. Đã điều chỉnh số lượng về tối đa.');
+    }
+    return qty;
+  }
+
+  function addToCart(bookId, quantity, redirectAfter = false) {
+    const stock = ${book.quantityInStock};
+
+    if (quantity > stock) {
+      alert('Số lượng yêu cầu (' + quantity + ') vượt quá tồn kho (' + stock + ' cuốn). Vui lòng giảm số lượng.');
+      return;
+    }
+
+    fetch('${pageContext.request.contextPath}/customer/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=add&bookId=' + bookId + '&quantity=' + quantity
+    })
+            .then(response => {
+              if (!response.ok) throw new Error('Lỗi server');
+            })
+            .then(() => {
+              alert('Đã thêm "' + '${book.title}' + '" (x' + quantity + ') vào giỏ hàng thành công!');
+              if (redirectAfter) {
+                window.location.href = '${pageContext.request.contextPath}/customer/cart';
+              }
+            })
+            .catch(err => {
+              alert('Không thể thêm vào giỏ hàng: ' + err.message + '\n(Có thể sách đã hết hàng do người khác mua trước đó)');
+            });
+  }
+
+  function handleAddToCart(bookId) {
+    const quantity = getQuantity();
+    addToCart(bookId, quantity, false);
+  }
+
+  function handleBuyNow(bookId) {
+    const quantity = getQuantity();
+    addToCart(bookId, quantity, true);
+  }
+
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', function() {
+      let page = parseInt(this.getAttribute('data-page')) || 1;
       fetch('${pageContext.request.contextPath}/view_book?action=loadMore&id=${book.bookId}&page=' + page)
               .then(response => response.text())
               .then(html => {
-                document.getElementById('reviews-list').insertAdjacentHTML('beforeend', html);
-                page++;
-                this.setAttribute('data-page', page);
-
-                const loaded = document.querySelectorAll('#reviews-list .review-item').length;
-                if (loaded >= ${totalReviews}) {
+                if (html.trim()) {
+                  document.getElementById('reviews-list').insertAdjacentHTML('beforeend', html);
+                  page++;
+                  this.setAttribute('data-page', page);
+                } else {
                   this.style.display = 'none';
                 }
               });
     });
   }
 
+  function deleteMyReview(reviewId) {
+    if (confirm('Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không thể hoàn tác.')) {
+      fetch('${pageContext.request.contextPath}/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=delete&reviewId=' + reviewId
+      }).then(() => location.reload());
+    }
+  }
+  
   function addToCart(bookId) {
     const quantity = document.getElementById('quantity').value;
     const btn = event.target.closest('button');

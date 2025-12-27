@@ -223,6 +223,17 @@
             </div>
         </div>
 
+        <div class="form-row">
+            <label for="quantity">Quantity In Stock:</label>
+            <input id="quantity" type="number" name="quantity" required
+                   min="0"
+                   max="999999"
+                   step="1"
+                   value="0"
+                   placeholder="Enter quantity in stock"
+                   title="Quantity must be 0 or greater">
+        </div>
+
         <div class="form-row" style="align-items: start;">
             <label for="description">Description:</label>
             <textarea id="description" name="description" rows="5"

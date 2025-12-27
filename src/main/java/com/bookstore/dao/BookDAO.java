@@ -85,6 +85,74 @@ public class BookDAO {
         }
     }
 
+    // Get books with pagination - optimized for admin list page
+    public static List<Book> getAllBooksPaginated(int page, int size) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            // Step 1: Get paginated book IDs first
+            String countQuery = "SELECT b.bookId FROM Book b ORDER BY b.title ASC";
+            TypedQuery<Integer> idQuery = em.createQuery(countQuery, Integer.class);
+            idQuery.setFirstResult(page * size);
+            idQuery.setMaxResults(size);
+            List<Integer> bookIds = idQuery.getResultList();
+
+            if (bookIds.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            // Step 2: Fetch books with relationships in single query
+            String qString = "SELECT DISTINCT b FROM Book b " +
+                    "LEFT JOIN FETCH b.authors " +
+                    "LEFT JOIN FETCH b.category " +
+                    "LEFT JOIN FETCH b.publisher " +
+                    "WHERE b.bookId IN :bookIds " +
+                    "ORDER BY b.title ASC";
+            TypedQuery<Book> q = em.createQuery(qString, Book.class);
+            q.setParameter("bookIds", bookIds);
+            List<Book> books = q.getResultList();
+
+            // Step 3: Fetch ONLY primary images in a single batch query
+            String imgQuery = "SELECT img FROM BookImage img WHERE img.book.bookId IN :bookIds AND img.isPrimary = true";
+            TypedQuery<BookImage> imageQuery = em.createQuery(imgQuery, BookImage.class);
+            imageQuery.setParameter("bookIds", bookIds);
+            List<BookImage> primaryImages = imageQuery.getResultList();
+
+            // Group primary images by book ID
+            java.util.Map<Integer, List<BookImage>> imageMap = new java.util.HashMap<>();
+            for (BookImage img : primaryImages) {
+                imageMap.computeIfAbsent(img.getBook().getBookId(), k -> new ArrayList<>()).add(img);
+            }
+
+            // Assign primary images to books
+            for (Book book : books) {
+                book.setImages(imageMap.getOrDefault(book.getBookId(), new ArrayList<>()));
+            }
+
+            return books;
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to get paginated books");
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    // Count total books for pagination
+    public static long countAllBooks() {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String jpql = "SELECT COUNT(b) FROM Book b";
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
+
     // Get a book by ID with all relationships fetched (except images - fetch
     // separately)
     public static Book getBookById(Integer bookId) {

@@ -357,41 +357,69 @@ public class ShoppingCartServlet extends HttpServlet {
 
     /**
      * Update Cart - Cập nhật số lượng tất cả items trong giỏ hàng
-     * Đọc các parameter: quantity_[cartItemId] từ form
+     * Đọc các parameter: quantity_[cartItemId] (user cart) hoặc
+     * quantity_book_[bookId] (guest cart) từ form
      */
     private void updateCart(HttpServletRequest request, ShoppingCart cart) {
-        System.out.println("[UPDATE CART] Starting update for cart ID: " + cart.getCartId());
+        boolean isGuestCart = (cart.getCartId() == null);
+        System.out.println(
+                "[UPDATE CART] Starting update for cart ID: " + cart.getCartId() + " (isGuest: " + isGuestCart + ")");
 
         int updatedCount = 0;
         int removedCount = 0;
 
         // Tạo copy của list để tránh ConcurrentModificationException
         for (CartItem item : new ArrayList<>(cart.getItems())) {
-            String qtyParam = request.getParameter("quantity_" + item.getCartItemId());
+            String qtyParam;
+
+            if (isGuestCart) {
+                // Guest cart: dùng bookId làm key
+                qtyParam = request.getParameter("quantity_book_" + item.getBook().getBookId());
+            } else {
+                // User cart: dùng cartItemId làm key
+                qtyParam = request.getParameter("quantity_" + item.getCartItemId());
+            }
 
             if (qtyParam != null && !qtyParam.trim().isEmpty()) {
                 try {
                     int newQuantity = Integer.parseInt(qtyParam.trim());
                     int currentQuantity = item.getQuantity();
 
-                    System.out.println("[UPDATE CART] Item " + item.getCartItemId() +
+                    System.out.println("[UPDATE CART] Item " +
+                            (isGuestCart ? "Book:" + item.getBook().getBookId() : item.getCartItemId()) +
                             " (" + item.getBook().getTitle() + "): " +
                             currentQuantity + " → " + newQuantity);
 
                     if (newQuantity <= 0) {
                         // Xóa item nếu quantity <= 0
-                        cartService.removeItemFromCart(cart, item.getCartItemId());
+                        if (isGuestCart) {
+                            cartService.removeItemByBookId(cart, item.getBook().getBookId());
+                        } else {
+                            cartService.removeItemFromCart(cart, item.getCartItemId());
+                        }
                         removedCount++;
                         System.out.println("[UPDATE CART] Removed item: " + item.getBook().getTitle());
                     } else if (newQuantity != currentQuantity) {
                         // Chỉ update nếu quantity thực sự thay đổi
-                        cartService.updateItemQuantity(cart, item.getCartItemId(), newQuantity);
+                        if (isGuestCart) {
+                            // Guest cart: update trực tiếp trong memory
+                            item.setQuantity(newQuantity);
+                        } else {
+                            // User cart: persist vào DB
+                            cartService.updateItemQuantity(cart, item.getCartItemId(), newQuantity);
+                        }
                         updatedCount++;
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println("[UPDATE CART] Invalid quantity format for item " + item.getCartItemId());
+                    System.out.println("[UPDATE CART] Invalid quantity format for item " +
+                            (isGuestCart ? "Book:" + item.getBook().getBookId() : item.getCartItemId()));
                 }
             }
+        }
+
+        // Tính lại tổng cho guest cart
+        if (isGuestCart) {
+            cartService.calculateCartTotals(cart);
         }
 
         System.out.println("[UPDATE CART] Complete! Updated: " + updatedCount + ", Removed: " + removedCount);
@@ -399,16 +427,35 @@ public class ShoppingCartServlet extends HttpServlet {
 
     private void removeItem(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
         String itemIdParam = request.getParameter("itemId");
+        String bookIdParam = request.getParameter("bookId");
 
-        if (itemIdParam == null) {
-            throw new IllegalArgumentException("Missing required parameter: itemId");
-        }
+        // Guest cart: sử dụng bookId vì không có cartItemId từ DB
+        // Guest cart có thể xác định bằng: cartId = null HOẶC itemId = 0 (từ JSP)
+        boolean isGuestCart = (cart.getCartId() == null) ||
+                ("0".equals(itemIdParam));
 
-        try {
-            Integer itemId = Integer.parseInt(itemIdParam);
-            cartService.removeItemFromCart(cart, itemId);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+        if (isGuestCart) {
+            // Guest cart - xóa theo bookId
+            if (bookIdParam == null || bookIdParam.isEmpty() || "undefined".equals(bookIdParam)) {
+                throw new IllegalArgumentException("Missing required parameter: bookId for guest cart");
+            }
+            try {
+                Integer bookId = Integer.parseInt(bookIdParam);
+                cartService.removeItemByBookId(cart, bookId);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid bookId format: " + e.getMessage(), e);
+            }
+        } else {
+            // User cart - xóa theo cartItemId
+            if (itemIdParam == null || itemIdParam.isEmpty() || "undefined".equals(itemIdParam)) {
+                throw new IllegalArgumentException("Missing required parameter: itemId");
+            }
+            try {
+                Integer itemId = Integer.parseInt(itemIdParam);
+                cartService.removeItemFromCart(cart, itemId);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid itemId format: " + e.getMessage(), e);
+            }
         }
     }
 

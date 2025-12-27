@@ -70,8 +70,44 @@ public class BookServlet extends HttpServlet {
     }
 
     private void listBooks(HttpServletRequest request, HttpServletResponse response) {
-        List<Book> books = bookService.getAllBooks();
+        // Pagination parameters
+        int page = 0;
+        int size = 10; // Default 10 books per page
+
+        String pageParam = request.getParameter("page");
+        String sizeParam = request.getParameter("size");
+
+        if (pageParam != null && !pageParam.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageParam);
+                if (page < 0)
+                    page = 0;
+            } catch (NumberFormatException e) {
+                page = 0;
+            }
+        }
+
+        if (sizeParam != null && !sizeParam.isEmpty()) {
+            try {
+                size = Integer.parseInt(sizeParam);
+                if (size < 1)
+                    size = 10;
+                if (size > 100)
+                    size = 100; // Max 100 per page
+            } catch (NumberFormatException e) {
+                size = 10;
+            }
+        }
+
+        List<Book> books = bookService.getAllBooksPaginated(page, size);
+        long totalBooks = bookService.countAllBooks();
+        int totalPages = (int) Math.ceil((double) totalBooks / size);
+
         request.setAttribute("books", books);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", size);
+        request.setAttribute("totalBooks", totalBooks);
+        request.setAttribute("totalPages", totalPages);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) {
