@@ -70,6 +70,7 @@ public class CategoryServlet extends HttpServlet {
             } else {
                 // For any other action, list categories and show default page
                 listCategories(request);
+                url = "/admin/category/show.jsp";
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             request.setAttribute("errorMessage", e.getMessage());
