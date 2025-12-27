@@ -81,7 +81,7 @@ public class CategoryServlet extends HttpServlet {
                 Category category = categoryService.findById(id);
                 request.setAttribute("category", category);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("ID danh mục không hợp lệ: " + idStr);
+                throw new IllegalArgumentException("ID danh mục không hợp lệ");
             }
         }
     }
@@ -94,24 +94,30 @@ public class CategoryServlet extends HttpServlet {
 
     private void updateCategory(HttpServletRequest request) {
         String idStr = request.getParameter("id");
+        if (idStr == null || idStr.isEmpty()) {
+            throw new IllegalArgumentException("ID danh mục không được để trống");
+        }
         try {
             Integer id = Integer.parseInt(idStr);
             String name = request.getParameter("name");
             categoryService.update(id, name);
             request.setAttribute("message", "Cập nhật danh mục thành công");
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID danh mục không hợp lệ: " + idStr);
+            throw new IllegalArgumentException("ID danh mục không hợp lệ");
         }
     }
 
     private void deleteCategory(HttpServletRequest request) {
         String idStr = request.getParameter("id");
+        if (idStr == null || idStr.isEmpty()) {
+            throw new IllegalArgumentException("ID danh mục không được để trống");
+        }
         try {
             Integer id = Integer.parseInt(idStr);
             categoryService.delete(id);
             request.setAttribute("message", "Đã xóa danh mục");
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID danh mục không hợp lệ: " + idStr);
+            throw new IllegalArgumentException("ID danh mục không hợp lệ");
         }
     }
 
