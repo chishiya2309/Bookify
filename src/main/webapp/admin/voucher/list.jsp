@@ -617,13 +617,13 @@
         <c:if test="${not empty message}">
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                ${message}
+                <c:out value="${message}"/>
             </div>
         </c:if>
         <c:if test="${not empty errorMessage}">
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                ${errorMessage}
+                <c:out value="${errorMessage}"/>
             </div>
         </c:if>
 
@@ -667,10 +667,10 @@
                                     <td>
                                         <span class="voucher-code">
                                             <i class="fas fa-ticket-alt"></i>
-                                            ${voucher.code}
+                                            <c:out value="${voucher.code}"/>
                                         </span>
                                     </td>
-                                    <td>${voucher.description}</td>
+                                    <td><c:out value="${voucher.description}"/></td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${voucher.discountType == 'PERCENTAGE'}">

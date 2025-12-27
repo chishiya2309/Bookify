@@ -18,10 +18,10 @@
         </div>
 
         <c:if test="${not empty errorMessage}">
-            <div class="alert alert-danger">${errorMessage}</div>
+            <div class="alert alert-danger"><c:out value="${errorMessage}"/></div>
         </c:if>
         <c:if test="${not empty message}">
-            <div class="alert alert-success">${message}</div>
+            <div class="alert alert-success"><c:out value="${message}"/></div>
         </c:if>
 
         <table class="admin-table">
@@ -43,7 +43,7 @@
                 <tr>
                     <td>${loop.index + 1}</td>
                     <td>${category.categoryId}</td>
-                    <td>${category.name}</td>
+                    <td><c:out value="${category.name}"/></td>
                     <td class="actions">
                         <a href="${pageContext.request.contextPath}/admin/categories?action=showUpdate&id=${category.categoryId}">Edit</a>
                         |
