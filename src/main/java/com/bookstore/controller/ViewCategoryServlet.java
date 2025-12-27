@@ -18,8 +18,15 @@ import java.util.List;
 public class ViewCategoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    private BookServices bookServices = new BookServices();
-    private CustomerServices customerServices = new CustomerServices();
+    private BookServices bookServices;
+    private CustomerServices customerServices;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        this.bookServices = new BookServices();
+        this.customerServices = new CustomerServices();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
