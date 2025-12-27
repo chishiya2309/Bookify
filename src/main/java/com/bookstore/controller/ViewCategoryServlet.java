@@ -31,6 +31,8 @@ public class ViewCategoryServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
         
         // 1. Giữ trạng thái đăng nhập (để Header không bị lỗi)
         JwtAuthHelper.checkLoginStatus(request);
