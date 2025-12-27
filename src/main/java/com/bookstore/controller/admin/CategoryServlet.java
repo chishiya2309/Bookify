@@ -15,6 +15,7 @@ import java.util.List;
 public class CategoryServlet extends HttpServlet {
 
     private final CategoryService categoryService = new CategoryService();
+    private static final String INVALID_ID_ERROR = "ID danh mục không hợp lệ";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -80,7 +81,7 @@ public class CategoryServlet extends HttpServlet {
                 Category category = categoryService.findById(Integer.parseInt(idStr));
                 request.setAttribute("category", category);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("ID danh mục không hợp lệ");
+                throw new IllegalArgumentException(INVALID_ID_ERROR);
             }
         }
     }
@@ -98,7 +99,7 @@ public class CategoryServlet extends HttpServlet {
             categoryService.update(id, name);
             request.setAttribute("message", "Cập nhật danh mục thành công");
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID danh mục không hợp lệ");
+            throw new IllegalArgumentException(INVALID_ID_ERROR);
         }
     }
 
@@ -108,7 +109,7 @@ public class CategoryServlet extends HttpServlet {
             categoryService.delete(id);
             request.setAttribute("message", "Đã xóa danh mục");
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID danh mục không hợp lệ");
+            throw new IllegalArgumentException(INVALID_ID_ERROR);
         }
     }
 
