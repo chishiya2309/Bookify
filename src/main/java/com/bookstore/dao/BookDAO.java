@@ -21,6 +21,8 @@ import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.bookstore.service.ValidationUtil.isValidSearchKeyword;
+
 public class BookDAO {
     // Create a new book
     public static void createBook(Book book) {
@@ -250,13 +252,21 @@ public class BookDAO {
     public static List<Book> searchBooks(String keyword) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
+            // Validate keyword length and check for malicious patterns to prevent DoS attacks
+            if (!isValidSearchKeyword(keyword)) {
+                return new ArrayList<>();
+            }
+            
+            // Trim keyword to ensure consistency with validation
+            String trimmedKeyword = keyword.trim();
+            
             // 1. Tìm sách theo tiêu đề 
             String qString = "SELECT DISTINCT b FROM Book b " +
                              "LEFT JOIN FETCH b.authors a " +
                              "WHERE lower(b.title) LIKE :keyword";
 
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
-            q.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+            q.setParameter("keyword", "%" + trimmedKeyword.toLowerCase() + "%");
 
             List<Book> list = q.getResultList();
 
