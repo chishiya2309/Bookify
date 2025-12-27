@@ -224,7 +224,7 @@
                 <c:forEach items="${listCategories}" var="category" varStatus="status">
                     
                     <a href="${pageContext.request.contextPath}/view_category?id=${category.categoryId}">
-                        ${category.name}
+                        <c:out value="${category.name}"/>
                     </a>
                     
                     <c:if test="${!status.last}"> | </c:if>
