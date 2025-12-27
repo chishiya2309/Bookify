@@ -331,16 +331,17 @@ function loadMiniCartItems() {
                         
                         // Create and configure image
                         const img = document.createElement('img');
-                        const imgUrl = item.imageUrl.startsWith('/') ? headerContextPath + item.imageUrl : item.imageUrl;
+                        let imgUrl = item.imageUrl || '';
                         
-                        // Validate URL scheme to prevent javascript: URLs
-                        let validatedImgUrl = imgUrl;
-                        if (imgUrl && !imgUrl.match(/^(https?:)?\/\//i) && !imgUrl.startsWith('/')) {
-                            validatedImgUrl = headerContextPath + '/images/no-image.jpg';
+                        // Ensure imgUrl starts with / or http(s)://
+                        if (!imgUrl.startsWith('/') && !imgUrl.match(/^https?:\/\//i)) {
+                            imgUrl = headerContextPath + '/images/no-image.jpg';
+                        } else if (imgUrl.startsWith('/')) {
+                            imgUrl = headerContextPath + imgUrl;
                         }
                         
-                        img.setAttribute('src', validatedImgUrl);
-                        img.setAttribute('alt', item.title);
+                        img.setAttribute('src', imgUrl);
+                        img.setAttribute('alt', item.title || '');
                         img.onerror = function() {
                             this.src = headerContextPath + '/images/no-image.jpg';
                         };

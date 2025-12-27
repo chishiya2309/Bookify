@@ -298,15 +298,17 @@ function loadMiniCartItems() {
                         
                         // Create and configure image
                         var img = document.createElement('img');
-                        var imgUrl = item.imageUrl.startsWith('/') ? headerContextPath + item.imageUrl : item.imageUrl;
+                        var imgUrl = item.imageUrl || '';
                         
-                        // Validate URL scheme to prevent javascript: URLs
-                        if (imgUrl && !imgUrl.match(/^(https?:)?\/\//i) && !imgUrl.startsWith('/')) {
+                        // Ensure imgUrl starts with / or http(s)://
+                        if (!imgUrl.startsWith('/') && !imgUrl.match(/^https?:\/\//i)) {
                             imgUrl = headerContextPath + '/images/no-image.jpg';
+                        } else if (imgUrl.startsWith('/')) {
+                            imgUrl = headerContextPath + imgUrl;
                         }
                         
                         img.setAttribute('src', imgUrl);
-                        img.setAttribute('alt', item.title);
+                        img.setAttribute('alt', item.title || '');
                         img.onerror = function() {
                             this.src = headerContextPath + '/images/no-image.jpg';
                         };
