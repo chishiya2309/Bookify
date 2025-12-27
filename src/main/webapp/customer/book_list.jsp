@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${categoryName} - Bookify</title>
+    <title><c:out value="${categoryName}"/> - Bookify</title>
     
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
@@ -25,7 +25,7 @@
     <div class="container">
         
         <h2 class="category-title">
-            Danh mục: <span class="highlight">${categoryName}</span>
+            Danh mục: <span class="highlight"><c:out value="${categoryName}"/></span>
         </h2>
 
         <div class="book-section">
@@ -39,26 +39,26 @@
                                 <c:when test="${not empty book.primaryImageUrl}">
                                     <img class="book-img" 
                                          src="${book.primaryImageUrl}" 
-                                         alt="${book.title}" 
+                                         alt="<c:out value='${book.title}'/>" 
                                          onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/book_icon.png';" />
                                 </c:when>
                                 <c:otherwise>
                                     <img class="book-img" 
                                          src="${pageContext.request.contextPath}/images/book_icon.png" 
-                                         alt="${book.title}" />
+                                         alt="<c:out value='${book.title}'/>" />
                                 </c:otherwise>
                             </c:choose>
                         </a>
                         
                         <div class="book-title">
                             <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">
-                                ${book.title}
+                                <c:out value="${book.title}"/>
                             </a>
                         </div>
                         
                         <div class="book-author">
                             <c:forEach items="${book.authors}" var="author" varStatus="status">
-                                ${author.name}${!status.last ? ',' : ''}
+                                <c:out value="${author.name}"/>${!status.last ? ',' : ''}
                             </c:forEach>
                         </div>
                         
