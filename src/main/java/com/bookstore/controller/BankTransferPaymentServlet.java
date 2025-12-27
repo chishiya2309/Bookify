@@ -59,7 +59,7 @@ public class BankTransferPaymentServlet extends HttpServlet {
                 return;
             }
 
-            Integer orderId = Integer.parseInt(orderIdStr);
+            int orderId = Integer.parseInt(orderIdStr);
 
             // Load order
             Order order = orderService.getOrderByIdWithDetails(orderId);

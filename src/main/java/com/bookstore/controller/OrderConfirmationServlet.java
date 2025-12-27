@@ -62,7 +62,7 @@ public class OrderConfirmationServlet extends HttpServlet {
                 return;
             }
 
-            Integer orderId = Integer.parseInt(orderIdStr);
+            int orderId = Integer.parseInt(orderIdStr);
 
             // Load order with details
             Order order = orderService.getOrderByIdWithDetails(orderId);

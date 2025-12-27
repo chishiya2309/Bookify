@@ -52,7 +52,7 @@ public class CancelOrderServlet extends HttpServlet {
         }
 
         try {
-            Integer orderId = Integer.parseInt(orderIdStr);
+            int orderId = Integer.parseInt(orderIdStr);
 
             // Get order and verify ownership
             Order order = orderService.getOrderByIdWithDetails(orderId);
