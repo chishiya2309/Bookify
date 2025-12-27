@@ -94,8 +94,8 @@ public class VoucherAdminServlet extends HttpServlet {
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
-        if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
+        Integer id = safelyParseId(idStr);
+        if (id != null) {
             Voucher voucher = voucherDAO.findById(id);
             request.setAttribute("voucher", voucher);
         }
@@ -111,8 +111,8 @@ public class VoucherAdminServlet extends HttpServlet {
 
     private void updateVoucher(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
-        if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
+        Integer id = safelyParseId(idStr);
+        if (id != null) {
             Voucher voucher = voucherDAO.findById(id);
             if (voucher != null) {
                 readVoucherFields(voucher, request);
@@ -125,8 +125,8 @@ public class VoucherAdminServlet extends HttpServlet {
 
     private void deleteVoucher(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
-        if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
+        Integer id = safelyParseId(idStr);
+        if (id != null) {
             Voucher voucher = voucherDAO.findById(id);
             if (voucher != null) {
                 voucherDAO.delete(voucher);
@@ -138,8 +138,8 @@ public class VoucherAdminServlet extends HttpServlet {
 
     private void toggleStatus(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
-        if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
+        Integer id = safelyParseId(idStr);
+        if (id != null) {
             Voucher voucher = voucherDAO.findById(id);
             if (voucher != null) {
                 voucher.setActive(!voucher.isActive());
@@ -235,6 +235,23 @@ public class VoucherAdminServlet extends HttpServlet {
 
         String isActive = request.getParameter("isActive");
         voucher.setActive("on".equals(isActive) || "true".equals(isActive));
+    }
+
+    /**
+     * Safely parse ID parameter to prevent NumberFormatException.
+     * @param idStr the ID string from request parameter
+     * @return parsed Integer or null if invalid
+     */
+    private Integer safelyParseId(String idStr) {
+        if (idStr == null || idStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(idStr.trim());
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Invalid ID format: {0}", idStr);
+            return null;
+        }
     }
 
     @Override
