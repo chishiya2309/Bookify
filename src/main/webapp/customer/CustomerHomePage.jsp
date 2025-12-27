@@ -7,12 +7,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Bookify - Online Bookstore</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
-    <%-- Hiển thị header phù hợp với trạng thái đăng nhập --%>
+    <%-- Hiển thị header phù hợp với trạng thái đăng nhập (kiểm tra session) --%>
     <c:choose>
-        <c:when test="${isLoggedIn}">
+        <c:when test="${not empty sessionScope.customer or not empty sessionScope.userEmail}">
             <jsp:include page="/customer/header_customer.jsp"></jsp:include>
         </c:when>
         <c:otherwise>
