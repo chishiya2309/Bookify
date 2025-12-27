@@ -23,14 +23,14 @@
         <c:forEach items="${listCategory}" var="cat">
             <option value="${cat.categoryId}"
                     <c:if test="${cat.categoryId == book.category.categoryId}">selected</c:if>>
-                    ${cat.name}
+                    <c:out value="${cat.name}"/>
             </option>
         </c:forEach>
     </select>
     <br>
 
     <label>Title:</label>
-    <input type="text" name="title" value="${book.title}" required>
+    <input type="text" name="title" value="<c:out value='${book.title}'/>" required>
     <br>
 
     <label>Author:</label>
@@ -46,14 +46,14 @@
                 </c:forEach>
             </c:if>
             <option value="${allAuth.authorId}" ${isSelected}>
-                    ${allAuth.name}
+                    <c:out value="${allAuth.name}"/>
             </option>
         </c:forEach>
     </select>
     <br>
 
     <label>ISBN:</label>
-    <input type="text" name="isbn" value="${book.isbn}" required>
+    <input type="text" name="isbn" value="<c:out value='${book.isbn}'/>" required>
     <br>
 
     <label>Publish Date:</label>
@@ -76,7 +76,7 @@
     <br>
 
     <label>Description:</label>
-    <textarea name="description" rows="5" required>${book.description}</textarea>
+    <textarea name="description" rows="5" required><c:out value="${book.description}"/></textarea>
     <br>
 
     <div class="buttons">

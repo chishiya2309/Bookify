@@ -29,12 +29,14 @@ public class JwtFilter implements Filter {
             "/", // Root path
             "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
             "/customer/book_detail.jsp", // Trang chi tiết sách (không cần đăng nhập)
+            "/customer/search_result.jsp", // Trang kết quả tìm kiếm (không cần đăng nhập)
             "/customer/login.jsp",
             "/customer/register.jsp",
             "/customer/cart.jsp", // Giỏ hàng JSP (khách có thể xem)
             "/customer/cart", // Giỏ hàng Servlet (query database)
             "/css/auth-style.css",
-            "/admin/AdminLogin.jsp");
+            "/admin/AdminLogin.jsp",
+            "/view_category");
 
     // 2. Cập nhật đường dẫn cho Servlet (API) ko cần đăng nhập
     private static final List<String> EXCLUDED_SERVLETS = Arrays.asList(
@@ -44,6 +46,7 @@ public class JwtFilter implements Filter {
             "/auth/refresh",
             "/customer/cart", // Cart servlet cho guest
             "/view_book", // Xem chi tiết sách (không cần đăng nhập)
+            "/search_book", // Tìm kiếm sách (không cần đăng nhập)
             "/api/" // API endpoints (webhooks, payment status, etc.)
     );
 

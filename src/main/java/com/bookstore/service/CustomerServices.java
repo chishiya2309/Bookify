@@ -18,6 +18,7 @@ import jakarta.persistence.EntityManager;
 
 public class CustomerServices {
 
+    private final CategoryService categoryService = new CategoryService();
     private final CustomerDAO customerDAO;
     
     // Phone number pattern: starts with 0 or +84, followed by 9 digits
@@ -352,4 +353,8 @@ public class CustomerServices {
     public List<Book> listMostFavoredBooks() {
         return CustomerHomePageDAO.listMostFavoredBooks();
     }
-}
+
+    public List<Category> listCategories() {
+        // Delegate to listAllCategories() to avoid duplicate category-loading logic
+        return listAllCategories();
+}}

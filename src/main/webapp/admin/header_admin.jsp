@@ -6,7 +6,7 @@
 <header class="admin-header">
 
     <div class="admin-logo">
-        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp">
+        <a href="${pageContext.request.contextPath}/admin/">
             <h1>LOGO BOOK STORE</h1>
         </a>
     </div>
@@ -21,7 +21,7 @@
 
     <nav class="admin-menu">
         <a href="${pageContext.request.contextPath}/admin/users.jsp">Users</a>
-        <a href="${pageContext.request.contextPath}/admin/categories.jsp">Categories</a>
+        <a href="${pageContext.request.contextPath}/admin/categories">Categories</a>
         <a href="${pageContext.request.contextPath}/admin/books">Books</a>
         <a href="${pageContext.request.contextPath}/admin/customers">Customers</a>
         <a href="${pageContext.request.contextPath}/admin/reviews.jsp">Reviews</a>

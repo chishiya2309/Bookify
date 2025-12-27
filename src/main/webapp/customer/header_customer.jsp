@@ -1,13 +1,12 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 
 <div class="header-container">
 
-    <!-- TOP AREA -->
     <div class="header-top">
 
-        <!-- LOGO -->
         <div class="logo" style="display: flex; align-items: center; justify-content: center; padding: 8px 0;">
             <a href="${pageContext.request.contextPath}/" style="display: inline-block;">
                 <img src="https://res.cloudinary.com/dbqaczv3a/image/upload/v1765890230/Screenshot_2025-12-16_200154_yclv14.png"
@@ -16,14 +15,16 @@
             </a>
         </div>
 
-        <!-- SEARCH BAR -->
         <div class="search-bar">
-            <input type="text" placeholder="Tìm kiếm sách...">
-            <button>Tìm kiếm</button>
+            <form action="${pageContext.request.contextPath}/search_book" method="get">
+                <input type="text" name="keyword" placeholder="Tìm kiếm sách..." required />
+                <button type="submit">Tìm kiếm</button>
+            </form>
         </div>
 
-        <!-- USER MENU -->
         <div class="user-links">
+            <span>Xin chào, <strong><c:out value="${userName}" default="Khách"/></strong></span>
+            <span>|</span>
             <a href="${pageContext.request.contextPath}/customer/orders.jsp">Đơn hàng</a> |
             <a href="${pageContext.request.contextPath}/auth/logout">Đăng xuất</a> |
             
@@ -60,7 +61,7 @@
                         <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
                     </svg>
                 </span>
-                <c:out value="${userEmail}" default="Khách"/>
+                <c:out value="${userName}" default="Khách"/>
             </a>
         </div>
         <style>
@@ -256,21 +257,23 @@
         </style>
     </div>
 
-    <!-- BOTTOM CATEGORIES -->
     <div class="categories">
         <c:choose>
             <c:when test="${not empty listCategories}">
                 <c:forEach items="${listCategories}" var="category" varStatus="status">
-                    <a href="${pageContext.request.contextPath}/books?category=${category.categoryId}">${category.name}</a>
+                    
+                    <a href="${pageContext.request.contextPath}/view_category?id=${category.categoryId}">
+                        <c:out value="${category.name}"/>
+                    </a>
+                    
                     <c:if test="${!status.last}"> | </c:if>
                 </c:forEach>
             </c:when>
             <c:otherwise>
-                <a href="${pageContext.request.contextPath}/books">Tất cả sách</a>
+                <a href="${pageContext.request.contextPath}/">Trang chủ</a>
             </c:otherwise>
         </c:choose>
     </div>
-
 </div>
 
 <!-- Mini-Cart JavaScript -->

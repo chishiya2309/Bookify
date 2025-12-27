@@ -33,7 +33,7 @@
                     <label for="email">Email <span class="required">*</span></label>
                     <c:choose>
                         <c:when test="${isEdit}">
-                            <input type="email" id="email" name="email" value="${customer.email}" readonly>
+                            <input type="email" id="email" name="email" value="<c:out value='${customer.email}'/>" readonly>
                             <small class="help-text">Email không thể thay đổi</small>
                         </c:when>
                         <c:otherwise>

@@ -32,7 +32,7 @@
         <label>Author:</label>
         <select name="authorIds" id="authorSelect" multiple="multiple" style="width: 300px" required >
             <c:forEach items="${listAuthors}" var="author">
-                <option value="${author.authorId}">${author.name}</option>
+                <option value="${author.authorId}"><c:out value="${author.name}"/></option>
             </c:forEach>
         </select>
         <br><br>

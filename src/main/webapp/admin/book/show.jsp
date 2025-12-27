@@ -27,23 +27,23 @@
         <tr>
             <td>${status.index + 1}</td>
             <td>${book.bookId}</td>
-            <td>${book.title}</td>
+            <td><c:out value="${book.title}"/></td>
             <td>
                 <c:if test="${not empty book.authors}">
                     <c:forEach var="author" items="${book.authors}" varStatus="authorStatus">
-                        ${author.name}
+                        <c:out value="${author.name}"/>
                         <c:if test="${!authorStatus.last}">, </c:if>
                     </c:forEach>
                 </c:if>
             </td>
             <td>
                 <c:if test="${not empty book.category}">
-                    ${book.category.name}
+                    <c:out value="${book.category.name}"/>
                 </c:if>
             </td>
             <td>
                 <c:if test="${not empty book.price}">
-                    $${book.price}
+                    $<c:out value="${book.price}"/>
                 </c:if>
                 <c:if test="${empty book.price}">
                     N/A
@@ -51,7 +51,7 @@
             </td>
             <td>
                 <c:if test="${not empty book.lastUpdated}">
-                    ${book.lastUpdated}
+                    <c:out value="${book.lastUpdated}"/>
                 </c:if>
             </td>
             <td>
