@@ -287,19 +287,54 @@ function loadMiniCartItems() {
         .then(function(data) {
             if (data.success) {
                 if (data.items && data.items.length > 0) {
-                    var html = '';
+                    // Clear container
+                    itemsContainer.innerHTML = '';
+                    
+                    // Build DOM elements safely
                     data.items.forEach(function(item) {
+                        // Create main item container
+                        var itemDiv = document.createElement('div');
+                        itemDiv.className = 'mini-cart-item';
+                        
+                        // Create and configure image
+                        var img = document.createElement('img');
                         var imgUrl = item.imageUrl.startsWith('/') ? headerContextPath + item.imageUrl : item.imageUrl;
-                        html += '<div class="mini-cart-item">' +
-                                    '<img src="' + imgUrl + '" alt="' + item.title + '" onerror="this.src=\'' + headerContextPath + '/images/no-image.jpg\'">' +
-                                    '<div class="mini-cart-item-info">' +
-                                        '<div class="mini-cart-item-title">' + item.title + '</div>' +
-                                        '<div class="mini-cart-item-price">' + formatCartCurrency(item.price) + '</div>' +
-                                        '<div class="mini-cart-item-qty">Số lượng: ' + item.quantity + '</div>' +
-                                    '</div>' +
-                                '</div>';
+                        img.src = imgUrl;
+                        img.alt = item.title; // textContent not needed for alt attribute - browser handles it
+                        img.onerror = function() {
+                            this.src = headerContextPath + '/images/no-image.jpg';
+                        };
+                        
+                        // Create info container
+                        var infoDiv = document.createElement('div');
+                        infoDiv.className = 'mini-cart-item-info';
+                        
+                        // Create title
+                        var titleDiv = document.createElement('div');
+                        titleDiv.className = 'mini-cart-item-title';
+                        titleDiv.textContent = item.title; // Safe: textContent escapes HTML
+                        
+                        // Create price
+                        var priceDiv = document.createElement('div');
+                        priceDiv.className = 'mini-cart-item-price';
+                        priceDiv.textContent = formatCartCurrency(item.price);
+                        
+                        // Create quantity
+                        var qtyDiv = document.createElement('div');
+                        qtyDiv.className = 'mini-cart-item-qty';
+                        qtyDiv.textContent = 'Số lượng: ' + item.quantity;
+                        
+                        // Assemble the DOM tree
+                        infoDiv.appendChild(titleDiv);
+                        infoDiv.appendChild(priceDiv);
+                        infoDiv.appendChild(qtyDiv);
+                        
+                        itemDiv.appendChild(img);
+                        itemDiv.appendChild(infoDiv);
+                        
+                        itemsContainer.appendChild(itemDiv);
                     });
-                    itemsContainer.innerHTML = html;
+                    
                     document.getElementById('miniCartTotal').textContent = formatCartCurrency(data.subtotal);
                     footer.style.display = 'flex';
                 } else {
