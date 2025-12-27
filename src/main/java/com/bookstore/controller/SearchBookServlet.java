@@ -4,7 +4,6 @@ import com.bookstore.model.Book;
 import com.bookstore.service.BookServices;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper; // Import Helper của bạn
-import com.bookstore.service.CategoryService;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,14 +19,12 @@ public class SearchBookServlet extends HttpServlet {
     
     private BookServices bookServices;
     private CustomerServices customerServices;
-    private CategoryService categoryService;
 
     @Override
     public void init() throws ServletException {
         super.init();
         bookServices = new BookServices();
         customerServices = new CustomerServices();
-        categoryService = new CategoryService();
     }
 
     @Override
@@ -43,7 +40,7 @@ public class SearchBookServlet extends HttpServlet {
         JwtAuthHelper.checkLoginStatus(request);
         
         // --- 2. LẤY DANH MỤC SÁCH CHO HEADER ---
-        request.setAttribute("listCategories", categoryService.listAll());
+        request.setAttribute("listCategories", customerServices.listAllCategories());
 
         // --- 3. XỬ LÝ TÌM KIẾM ---
         String keyword = request.getParameter("keyword");
