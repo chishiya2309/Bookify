@@ -7,11 +7,25 @@
 <head>
   <meta charset="UTF-8">
   <title>${book.title} - Bookify</title>
+  <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
   <style>
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .book-detail { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 20px; }
     .book-image { flex: 1; min-width: 300px; }
     .book-image img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+    .no-image-detail {
+      width: 300px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+      color: #999;
+      font-size: 18px;
+      font-weight: 500;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
     .book-info { flex: 2; min-width: 300px; }
     .book-info h1 { font-size: 32px; margin-bottom: 15px; }
     .price { font-size: 28px; color: #b12704; font-weight: bold; margin: 20px 0; }
@@ -63,57 +77,68 @@
         <c:when test="${not empty book.images}">
           <c:forEach items="${book.images}" var="img" varStatus="status">
             <c:if test="${img.isPrimary || status.first}">
-              <img src="${img.url}" alt="${book.title}" />
+              <img src="${img.url}" alt="${book.title}"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="no-image-detail" style="display: none;">No Image Available</div>
             </c:if>
           </c:forEach>
         </c:when>
         <c:otherwise>
-          <img src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+          <div class="no-image-detail">No Image Available</div>
         </c:otherwise>
       </c:choose>
     </div>
 
     <div class="book-info">
       <h1>${book.title}</h1>
-
-      <div class="meta-info"><strong>Author(s):</strong>
+      <div class="meta-info">
+        <strong>Tác giả:</strong>
         <c:forEach items="${book.authors}" var="author" varStatus="status">
           ${author.name}<c:if test="${!status.last}">, </c:if>
         </c:forEach>
       </div>
-      <div class="meta-info"><strong>Category:</strong> ${book.category.name}</div>
-      <div class="meta-info"><strong>Publisher:</strong> ${book.publisher.name}</div>
+      <div class="meta-info"><strong>Thể loại:</strong> ${book.category.name}</div>
+      <div class="meta-info"><strong>Nhà xuất bản:</strong> ${book.publisher.name}</div>
 
       <div class="average-rating">
         <c:set var="fullStars" value="${avgRating.intValue()}"/>
         <c:set var="hasHalfStar" value="${avgRating - fullStars >= 0.3}"/>
         <c:forEach begin="1" end="${fullStars}">★</c:forEach>
         <c:if test="${hasHalfStar}">½</c:if>
-        (${avgRating} / 5) - ${totalReviews} reviews
+        (${avgRating} / 5) - ${totalReviews} đánh giá
       </div>
 
-      <div class="price"><fmt:formatNumber value="${book.price}" type="currency" currencySymbol="$"/></div>
+      <div class="price">
+        <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫
+      </div>
 
-      <!-- Giữ nguyên đơn giản như cũ -->
-      <div class="meta-info"><strong>In stock:</strong> ${book.quantityInStock} copies</div>
+      <div class="meta-info"><strong>Còn lại:</strong> ${book.quantityInStock} cuốn</div>
 
-      <div class="description"><strong>Description:</strong><br><c:out value="${book.description}"/></div>
+      <div class="description">
+        <strong>Mô tả:</strong><br>
+        <c:out value="${book.description}"/>
+      </div>
 
       <div class="quantity-section">
-        <label for="quantity"><strong>Quantity:</strong></label>
-        <input type="number" id="quantity" class="quantity-input" min="1" max="${book.quantityInStock}" value="1">
+        <label for="quantity"><strong>Số lượng:</strong></label>
+        <input type="number" id="quantity" class="quantity-input" min="1"
+               max="${book.quantityInStock}" value="1">
       </div>
 
       <div class="action-buttons">
-        <button class="add-to-cart-btn" onclick="handleAddToCart(${book.bookId})">Add to Cart</button>
-        <button class="buy-now-btn" onclick="handleBuyNow(${book.bookId})">Buy Now</button>
+        <button class="add-to-cart-btn" onclick="addToCart(${book.bookId})">
+          🛒 Thêm vào giỏ hàng
+        </button>
+        <button class="buy-now-btn" onclick="buyNow(${book.bookId})">
+          ⚡ Mua ngay
+        </button>
       </div>
 
       <div class="shipping-info">
-        <p>Free shipping on orders over $50</p>
-        <p>Cash on delivery (COD), credit card, bank transfer</p>
-        <p>7-day return if defective or incorrect</p>
-        <p>24/7 customer support</p>
+        <p>🚚 Miễn phí vận chuyển cho đơn hàng từ 300.000₫</p>
+        <p>💳 Thanh toán: COD, thẻ tín dụng, chuyển khoản</p>
+        <p>↩️ Đổi trả trong 7 ngày nếu lỗi hoặc sai sản phẩm</p>
+        <p>📞 Hỗ trợ khách hàng 24/7</p>
       </div>
     </div>
   </div>
@@ -280,6 +305,110 @@
         body: 'action=delete&reviewId=' + reviewId
       }).then(() => location.reload());
     }
+  }
+  
+  function addToCart(bookId) {
+    const quantity = document.getElementById('quantity').value;
+    const btn = event.target.closest('button');
+    
+    // Disable button during request
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+    }
+    
+    // AJAX POST to CartApiServlet
+    fetch('${pageContext.request.contextPath}/api/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'bookId=' + bookId + '&quantity=' + quantity
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Show success toast
+            showToast(data.message, 'success');
+            
+            // Update cart badge in header
+            if (typeof refreshMiniCart === 'function') {
+                refreshMiniCart();
+            }
+            if (typeof updateCartBadge === 'function') {
+                updateCartBadge();
+            }
+        } else {
+            showToast(data.error || 'Không thể thêm vào giỏ hàng', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Add to cart error:', err);
+        showToast('Đã xảy ra lỗi', 'error');
+    })
+    .finally(() => {
+        // Re-enable button
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-cart-plus"></i> Thêm vào giỏ';
+        }
+    });
+  }
+
+  // Toast notification
+  function showToast(message, type) {
+    // Remove existing toast
+    const existingToast = document.querySelector('.cart-toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'cart-toast ' + type;
+    toast.innerHTML = (type === 'success' ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + message;
+    toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 14px 20px; border-radius: 8px; z-index: 10000; color: white; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s ease;';
+    toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function buyNow(bookId) {
+    const quantity = document.getElementById('quantity').value;
+    
+    // Add to cart first, then redirect to checkout
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '${pageContext.request.contextPath}/customer/cart';
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'add';
+    form.appendChild(actionInput);
+    
+    const bookInput = document.createElement('input');
+    bookInput.type = 'hidden';
+    bookInput.name = 'bookId';
+    bookInput.value = bookId;
+    form.appendChild(bookInput);
+    
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'hidden';
+    qtyInput.name = 'quantity';
+    qtyInput.value = quantity;
+    form.appendChild(qtyInput);
+    
+    const redirectInput = document.createElement('input');
+    redirectInput.type = 'hidden';
+    redirectInput.name = 'redirect';
+    redirectInput.value = 'checkout';
+    form.appendChild(redirectInput);
+    
+    document.body.appendChild(form);
+    form.submit();
   }
 </script>
 

@@ -20,12 +20,11 @@ import java.util.List;
 public class BookDetailServlet extends HttpServlet {
 
     private final BookServices bookServices = new BookServices();
-    private final ReviewServices reviewServices = new ReviewServices();  // ← THÊM
+    private final ReviewServices reviewServices = new ReviewServices(); // ← THÊM
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
@@ -45,7 +44,7 @@ public class BookDetailServlet extends HttpServlet {
                 int bookId = Integer.parseInt(idParam);
                 int page = Integer.parseInt(pageParam);
 
-                List<Review> reviews = reviewServices.getReviewsByBook(bookId, page);  // ← DÙNG ReviewServices
+                List<Review> reviews = reviewServices.getReviewsByBook(bookId, page); // ← DÙNG ReviewServices
 
                 response.setContentType("text/html; charset=UTF-8");
                 PrintWriter out = response.getWriter();
@@ -97,7 +96,8 @@ public class BookDetailServlet extends HttpServlet {
             List<Review> reviews = reviewServices.getReviewsByBook(bookId, 0);
             long totalReviews = reviewServices.getTotalReviewsByBook(bookId);
             Double avgRating = bookServices.getAverageRating(bookId);
-            if (avgRating == null) avgRating = 0.0;
+            if (avgRating == null)
+                avgRating = 0.0;
 
             // ==================== LẤY THÔNG TIN CUSTOMER HIỆN TẠI ====================
             HttpSession session = request.getSession();
@@ -117,19 +117,33 @@ public class BookDetailServlet extends HttpServlet {
             request.setAttribute("totalReviews", totalReviews);
             request.setAttribute("loadedCount", reviews != null ? reviews.size() : 0);
 
-            request.setAttribute("currentCustomer", currentCustomer);        // ← Để JSP biết có đang login không
-            request.setAttribute("customerReview", customerReview);          // ← Đã review chưa + nội dung nếu có
+            request.setAttribute("currentCustomer", currentCustomer); // ← Để JSP biết có đang login không
+            request.setAttribute("customerReview", customerReview); // ← Đã review chưa + nội dung nếu có
 
+            // Restore customer from JWT for header display
+            com.bookstore.model.Customer customer = (com.bookstore.model.Customer) session.getAttribute("customer");
+            if (customer == null) {
+                customer = com.bookstore.service.JwtAuthHelper.restoreCustomerFromJwt(
+                        request, session, com.bookstore.data.DBUtil.getEmFactory());
+            }
+
+            // Load categories for header
+            com.bookstore.service.CustomerServices customerServices = new com.bookstore.service.CustomerServices();
+            request.setAttribute("listCategories", customerServices.listAllCategories());
+
+            // Forward đến book_detail.jsp
             request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "An error occurred while loading book details: " + e.getMessage());
         }
     }
 
     private String escapeHtml(String input) {
-        if (input == null) return "";
+        if (input == null)
+            return "";
         return input.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")

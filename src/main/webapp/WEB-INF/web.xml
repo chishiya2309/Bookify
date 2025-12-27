@@ -4,10 +4,6 @@
         <servlet-name>BookServlet</servlet-name>
         <servlet-class>com.bookstore.controller.admin.BookServlet</servlet-class>
     </servlet>
-    <servlet>
-        <servlet-name>RegisterServlet</servlet-name>
-        <servlet-class>com.bookstore.controller.RegisterServlet</servlet-class>
-    </servlet>
     <servlet-mapping>
         <servlet-name>BookServlet</servlet-name>
         <url-pattern>/BookServlet</url-pattern>
@@ -20,7 +16,7 @@
     <welcome-file-list>
         <welcome-file>customer/CustomerHomePage.jsp</welcome-file>
     </welcome-file-list>
-    
+
     <!-- Error Pages Configuration -->
     <error-page>
         <error-code>404</error-code>

@@ -5,3 +5,8 @@ nbproject/
 *.class 
 "target/" 
 .smarttomcat
+<<<<<<< HEAD
+=======
+note.txt
+docs/
+>>>>>>> main
