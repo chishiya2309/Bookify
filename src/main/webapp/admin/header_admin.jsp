@@ -1,12 +1,11 @@
-<%@ page pageEncoding="UTF-8" %>
-<%-- Header Admin - included file --%>
+<%@ page contentType="text/html; charset=UTF-8" %>
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 
 <header class="admin-header">
 
     <div class="admin-logo">
-        <a href="${pageContext.request.contextPath}/admin/">
+        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp">
             <h1>LOGO BOOK STORE</h1>
         </a>
     </div>
@@ -23,12 +22,10 @@
         <a href="${pageContext.request.contextPath}/admin/users.jsp">Users</a>
         <a href="${pageContext.request.contextPath}/admin/categories">Categories</a>
         <a href="${pageContext.request.contextPath}/admin/books">Books</a>
-        <a href="${pageContext.request.contextPath}/admin/customers">Customers</a>
+        <a href="${pageContext.request.contextPath}/admin/customers.jsp">Customers</a>
         <a href="${pageContext.request.contextPath}/admin/reviews.jsp">Reviews</a>
         <a href="${pageContext.request.contextPath}/admin/orders.jsp">Orders</a>
         <a href="${pageContext.request.contextPath}/admin/publishers">Publishers</a>
-        <a href="${pageContext.request.contextPath}/admin/vouchers">Vouchers</a>
-        <a href="${pageContext.request.contextPath}/admin/user">Admin</a>
     </nav>
 
 </header>

@@ -6,7 +6,6 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Lỗi - Bookify</title>
-        <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <style>
             :root {
@@ -198,35 +197,35 @@
         </style>
     </head>
     <body>
-        <main class="error-container">
-            <header class="error-header">
+        <div class="error-container">
+            <div class="error-header">
                 <i class="fas fa-exclamation-triangle error-icon"></i>
                 <h1>Đã xảy ra lỗi</h1>
                 <p>Rất tiếc, có vấn đề xảy ra khi xử lý yêu cầu của bạn</p>
-            </header>
+            </div>
             
-            <section class="error-content">
+            <div class="error-content">
                 <c:if test="${not empty error}">
-                    <aside class="error-message">
-                        <header class="error-message-title">
+                    <div class="error-message">
+                        <div class="error-message-title">
                             <i class="fas fa-info-circle"></i>
                             <span>Chi tiết lỗi:</span>
-                        </header>
+                        </div>
                         <p class="error-message-text"><c:out value="${error}"/></p>
-                    </aside>
+                    </div>
                 </c:if>
 
                 <c:if test="${empty error}">
-                    <aside class="error-message">
-                        <header class="error-message-title">
+                    <div class="error-message">
+                        <div class="error-message-title">
                             <i class="fas fa-info-circle"></i>
                             <span>Thông báo:</span>
-                        </header>
+                        </div>
                         <p class="error-message-text">Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.</p>
-                    </aside>
+                    </div>
                 </c:if>
 
-                <nav class="error-actions">
+                <div class="error-actions">
                     <a href="javascript:history.back()" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i>
                         Quay lại
@@ -239,8 +238,8 @@
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
                     </a>
-                </nav>
-            </section>
-        </main>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

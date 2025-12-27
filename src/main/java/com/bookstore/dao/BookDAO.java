@@ -22,8 +22,6 @@ import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.bookstore.service.ValidationUtil.isValidSearchKeyword;
-
 public class BookDAO {
     // Create a new book
     public static void createBook(Book book) {
@@ -264,69 +262,6 @@ public class BookDAO {
             );
             query.setParameter("bookId", bookId);
             return (Double) query.getSingleResult();
-        } finally {
-            em.close();
-        }
-    }
-    
-    public static List<Book> searchBooks(String keyword) {
-        EntityManager em = DBUtil.getEmFactory().createEntityManager();
-        try {
-            // Validate keyword length and check for malicious patterns to prevent DoS attacks
-            if (!isValidSearchKeyword(keyword)) {
-                return new ArrayList<>();
-            }
-            
-            // Trim keyword to ensure consistency with validation
-            String trimmedKeyword = keyword.trim();
-            
-            // 1. Tìm sách theo tiêu đề 
-            String qString = "SELECT DISTINCT b FROM Book b " +
-                             "LEFT JOIN FETCH b.authors a " +
-                             "WHERE lower(b.title) LIKE :keyword";
-
-            TypedQuery<Book> q = em.createQuery(qString, Book.class);
-            q.setParameter("keyword", "%" + trimmedKeyword.toLowerCase() + "%");
-
-            List<Book> list = q.getResultList();
-
-            // 2. KHẮC PHỤC LỖI LAZY LOADING CHO ẢNH
-            for (Book b : list) {
-                b.getImages().size(); 
-            }
-
-            return list;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        } finally {
-            em.close();
-        }
-    }
-
-    public static List<Book> listBooksByCategory(int categoryId) {
-        EntityManager em = DBUtil.getEmFactory().createEntityManager();
-        try {
-            // 1. Lấy sách + Tác giả (JOIN FETCH để tránh lỗi tác giả)
-            String qString = "SELECT b FROM Book b " +
-                             "LEFT JOIN FETCH b.authors " +
-                             "WHERE b.category.categoryId = :catId " +
-                             "ORDER BY b.publishDate DESC";
-
-            TypedQuery<Book> q = em.createQuery(qString, Book.class);
-            q.setParameter("catId", categoryId);
-
-            List<Book> list = q.getResultList();
-
-            // 2. KHẮC PHỤC LỖI ẢNH 
-            for (Book b : list) {
-                b.getImages().size(); // Kích hoạt tải ảnh
-            }
-
-            return list;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
         } finally {
             em.close();
         }

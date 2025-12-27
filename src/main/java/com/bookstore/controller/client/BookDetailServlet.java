@@ -13,15 +13,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@WebServlet("/view_book") // ← ĐÃ SỬA: từ "/book_detail" thành "/view_book"
-public class BookDetailServlet extends HttpServlet { // Giữ nguyên tên class
+@WebServlet("/view_book")  // ← ĐÃ SỬA: từ "/book_detail" thành "/view_book"
+public class BookDetailServlet extends HttpServlet {  // Giữ nguyên tên class
 
     private final BookServices bookServices = new BookServices();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        
         // Set encoding UTF-8
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -95,7 +95,7 @@ public class BookDetailServlet extends HttpServlet { // Giữ nguyên tên class
             List<Review> reviews = bookServices.getReviews(bookId, 0);
             long totalReviews = bookServices.getTotalReviews(bookId);
             Double avgRating = bookServices.getAverageRating(bookId);
-
+            
             // Đảm bảo avgRating không null
             if (avgRating == null) {
                 avgRating = 0.0;
@@ -107,32 +107,18 @@ public class BookDetailServlet extends HttpServlet { // Giữ nguyên tên class
             request.setAttribute("totalReviews", totalReviews);
             request.setAttribute("loadedCount", reviews != null ? reviews.size() : 0);
 
-            // Restore customer from JWT for header display
-            jakarta.servlet.http.HttpSession session = request.getSession();
-            com.bookstore.model.Customer customer = (com.bookstore.model.Customer) session.getAttribute("customer");
-            if (customer == null) {
-                customer = com.bookstore.service.JwtAuthHelper.restoreCustomerFromJwt(
-                        request, session, com.bookstore.data.DBUtil.getEmFactory());
-            }
-
-            // Load categories for header
-            com.bookstore.service.CustomerServices customerServices = new com.bookstore.service.CustomerServices();
-            request.setAttribute("listCategories", customerServices.listAllCategories());
-
             // Forward đến book_detail.jsp
             request.getRequestDispatcher("/customer/book_detail.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid book ID format");
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "An error occurred while loading book details: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while loading book details: " + e.getMessage());
         }
     }
 
     private String escapeHtml(String input) {
-        if (input == null)
-            return "";
+        if (input == null) return "";
         return input.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")

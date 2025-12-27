@@ -24,7 +24,6 @@
         </div>
     </c:if>
 
-<<<<<<< HEAD
     <c:if test="${empty book}">
         <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #c33;">
             <strong>Error:</strong> Book not found!
@@ -35,22 +34,6 @@
 
     <c:if test="${not empty book}">
     <form action="${pageContext.request.contextPath}/admin/books" method="post" enctype="multipart/form-data" class="form-card" novalidate>
-=======
-    <label>Category:</label>
-    <select name="categoryId" required>
-        <c:forEach items="${listCategory}" var="cat">
-            <option value="${cat.categoryId}"
-                    <c:if test="${cat.categoryId == book.category.categoryId}">selected</c:if>>
-                    <c:out value="${cat.name}"/>
-            </option>
-        </c:forEach>
-    </select>
-    <br>
-
-    <label>Title:</label>
-    <input type="text" name="title" value="<c:out value='${book.title}'/>" required>
-    <br>
->>>>>>> main
 
         <input type="hidden" name="action" value="update"/>
         <input type="hidden" name="bookId" value="${book.bookId}"/>

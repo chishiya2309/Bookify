@@ -51,12 +51,4 @@ public class BookServices {
     public Author findAuthorById(Integer id) {
         return BookDAO.findAuthorById(id);
     }
-    
-    public List<Book> searchBooks(String keyword) {
-        return BookDAO.searchBooks(keyword);
-    }
-
-    public List<Book> listBooksByCategory(int categoryId) {
-        return BookDAO.listBooksByCategory(categoryId);
-    }
 }
