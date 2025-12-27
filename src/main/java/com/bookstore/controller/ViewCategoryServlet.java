@@ -60,7 +60,13 @@ public class ViewCategoryServlet extends HttpServlet {
                     }
                 }
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                log("Invalid category id: " + categoryIdParam, e);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid category id.");
+                return;
+            } catch (Exception e) {
+                log("Error while loading category view", e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to load category at this time.");
+                return;
             }
         }
         
