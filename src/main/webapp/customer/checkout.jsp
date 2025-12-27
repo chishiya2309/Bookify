@@ -1007,7 +1007,7 @@
                                 <div class="summary-row">
                                     <span class="summary-label">Tạm tính</span>
                                     <span class="summary-value">
-                                        <fmt:formatNumber value="${subtotal}" pattern="#,###"/>₫
+                                        <fmt:formatNumber value="${cart.totalAmount}" pattern="#,###"/>₫
                                     </span>
                                 </div>
                                 <div class="summary-row">
@@ -1037,7 +1037,7 @@
                                             Mua thêm <strong style="color: #198754;"><fmt:formatNumber value="${freeShippingNeeded}" pattern="#,###"/>₫</strong> để được <strong style="color: #198754;">MIỄN PHÍ VẬN CHUYỂN</strong>
                                         </div>
                                         <div style="background: #e9ecef; border-radius: 4px; height: 6px; overflow: hidden;">
-                                            <c:set var="progress" value="${(subtotal / freeShippingThreshold) * 100}" />
+                                            <c:set var="progress" value="${(cart.totalAmount / freeShippingThreshold) * 100}" />
                                             <div style="background: linear-gradient(90deg, #28a745, #20c997); height: 100%; width: ${progress > 100 ? 100 : progress}%; border-radius: 4px;"></div>
                                         </div>
                                     </div>
