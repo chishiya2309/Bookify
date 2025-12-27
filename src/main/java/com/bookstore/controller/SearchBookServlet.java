@@ -38,6 +38,14 @@ public class SearchBookServlet extends HttpServlet {
         // --- 1. KIỂM TRA ĐĂNG NHẬP (Dùng JwtAuthHelper) ---
         // Hàm này sẽ tự động set các attribute: "isLoggedIn", "userEmail", "userRole"
         JwtAuthHelper.checkLoginStatus(request);
+
+        // Thiết lập userName cho header nếu người dùng đã đăng nhập
+        Object userEmailObj = request.getAttribute("userEmail");
+        if (userEmailObj != null) {
+            String userEmail = userEmailObj.toString();
+            // Ở mức tối thiểu, dùng email làm userName hiển thị
+            request.setAttribute("userName", userEmail);
+        }
         
         // --- 2. LẤY DANH MỤC SÁCH CHO HEADER ---
         request.setAttribute("listCategories", customerServices.listAllCategories());
