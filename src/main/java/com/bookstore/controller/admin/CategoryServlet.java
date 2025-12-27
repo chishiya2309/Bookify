@@ -62,6 +62,7 @@ public class CategoryServlet extends HttpServlet {
                 url = "/admin/category/update.jsp";
             } else if ("delete".equals(action)) {
                 listCategories(request);
+                url = "/admin/category/show.jsp";
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             request.setAttribute("errorMessage", e.getMessage());
