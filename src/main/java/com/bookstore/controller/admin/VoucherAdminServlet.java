@@ -95,9 +95,14 @@ public class VoucherAdminServlet extends HttpServlet {
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
-            Voucher voucher = voucherDAO.findById(id);
-            request.setAttribute("voucher", voucher);
+            try {
+                int id = Integer.parseInt(idStr);
+                Voucher voucher = voucherDAO.findById(id);
+                request.setAttribute("voucher", voucher);
+            } catch (NumberFormatException e) {
+                LOGGER.log(Level.WARNING, "Invalid voucher ID format: " + idStr, e);
+                request.setAttribute("errorMessage", "ID voucher không hợp lệ");
+            }
         }
     }
 
@@ -112,12 +117,17 @@ public class VoucherAdminServlet extends HttpServlet {
     private void updateVoucher(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
-            Voucher voucher = voucherDAO.findById(id);
-            if (voucher != null) {
-                readVoucherFields(voucher, request);
-                voucherDAO.update(voucher);
-                request.setAttribute("message", "Cập nhật voucher thành công!");
+            try {
+                int id = Integer.parseInt(idStr);
+                Voucher voucher = voucherDAO.findById(id);
+                if (voucher != null) {
+                    readVoucherFields(voucher, request);
+                    voucherDAO.update(voucher);
+                    request.setAttribute("message", "Cập nhật voucher thành công!");
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.log(Level.WARNING, "Invalid voucher ID format: " + idStr, e);
+                request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
         listVouchers(request, response);
@@ -126,11 +136,16 @@ public class VoucherAdminServlet extends HttpServlet {
     private void deleteVoucher(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
-            Voucher voucher = voucherDAO.findById(id);
-            if (voucher != null) {
-                voucherDAO.delete(voucher);
-                request.setAttribute("message", "Xóa voucher thành công!");
+            try {
+                int id = Integer.parseInt(idStr);
+                Voucher voucher = voucherDAO.findById(id);
+                if (voucher != null) {
+                    voucherDAO.delete(voucher);
+                    request.setAttribute("message", "Xóa voucher thành công!");
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.log(Level.WARNING, "Invalid voucher ID format: " + idStr, e);
+                request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
         listVouchers(request, response);
@@ -139,13 +154,18 @@ public class VoucherAdminServlet extends HttpServlet {
     private void toggleStatus(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
-            int id = Integer.parseInt(idStr);
-            Voucher voucher = voucherDAO.findById(id);
-            if (voucher != null) {
-                voucher.setActive(!voucher.isActive());
-                voucherDAO.update(voucher);
-                request.setAttribute("message",
-                        voucher.isActive() ? "Đã kích hoạt voucher!" : "Đã vô hiệu hóa voucher!");
+            try {
+                int id = Integer.parseInt(idStr);
+                Voucher voucher = voucherDAO.findById(id);
+                if (voucher != null) {
+                    voucher.setActive(!voucher.isActive());
+                    voucherDAO.update(voucher);
+                    request.setAttribute("message",
+                            voucher.isActive() ? "Đã kích hoạt voucher!" : "Đã vô hiệu hóa voucher!");
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.log(Level.WARNING, "Invalid voucher ID format: " + idStr, e);
+                request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
         listVouchers(request, response);
