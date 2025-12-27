@@ -299,8 +299,14 @@ function loadMiniCartItems() {
                         // Create and configure image
                         var img = document.createElement('img');
                         var imgUrl = item.imageUrl.startsWith('/') ? headerContextPath + item.imageUrl : item.imageUrl;
-                        img.src = imgUrl;
-                        img.alt = item.title; // textContent not needed for alt attribute - browser handles it
+                        
+                        // Validate URL scheme to prevent javascript: URLs
+                        if (imgUrl && !imgUrl.match(/^(https?:)?\/\//i) && !imgUrl.startsWith('/')) {
+                            imgUrl = headerContextPath + '/images/no-image.jpg';
+                        }
+                        
+                        img.setAttribute('src', imgUrl);
+                        img.setAttribute('alt', item.title);
                         img.onerror = function() {
                             this.src = headerContextPath + '/images/no-image.jpg';
                         };
