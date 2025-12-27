@@ -323,7 +323,13 @@ public class AddressServlet extends HttpServlet {
             return;
         }
 
-        Integer addressId = Integer.parseInt(addressIdParam);
+        Integer addressId;
+        try {
+            addressId = Integer.parseInt(addressIdParam);
+        } catch (NumberFormatException e) {
+            sendError(response, 400, "Invalid address ID");
+            return;
+        }
         Address address = addressDAO.findById(addressId);
 
         // Security: Check ownership
