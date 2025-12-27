@@ -99,8 +99,8 @@ public class VoucherAdminServlet extends HttpServlet {
         if (input == null) {
             return "null";
         }
-        // Remove newlines, carriage returns, and other control characters
-        return input.replaceAll("[\\r\\n\\t]", "_").replaceAll("[\\p{Cntrl}]", "");
+        // Remove newlines, carriage returns, tabs, and other control characters
+        return input.replaceAll("[\\p{Cntrl}]", "_");
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response) {
@@ -195,7 +195,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucher.setDiscountValue(new BigDecimal(discountValue));
             } catch (NumberFormatException e) {
                 Logger.getLogger(VoucherAdminServlet.class.getName())
-                        .log(Level.WARNING, "Invalid discountValue: " + discountValue, e);
+                        .log(Level.WARNING, "Invalid discountValue: " + sanitizeForLogging(discountValue), e);
                 voucher.setDiscountValue(null);
             }
         } else {
@@ -208,7 +208,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucher.setMaxDiscount(new BigDecimal(maxDiscount));
             } catch (NumberFormatException e) {
                 Logger.getLogger(VoucherAdminServlet.class.getName())
-                        .log(Level.WARNING, "Invalid maxDiscount: " + maxDiscount, e);
+                        .log(Level.WARNING, "Invalid maxDiscount: " + sanitizeForLogging(maxDiscount), e);
                 voucher.setMaxDiscount(null);
             }
         } else {
@@ -221,7 +221,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucher.setMinOrderAmount(new BigDecimal(minOrderAmount));
             } catch (NumberFormatException e) {
                 Logger.getLogger(VoucherAdminServlet.class.getName())
-                        .log(Level.WARNING, "Invalid minOrderAmount: " + minOrderAmount, e);
+                        .log(Level.WARNING, "Invalid minOrderAmount: " + sanitizeForLogging(minOrderAmount), e);
                 voucher.setMinOrderAmount(BigDecimal.ZERO);
             }
         } else {
@@ -234,7 +234,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucher.setMaxUses(Integer.parseInt(maxUses));
             } catch (NumberFormatException e) {
                 Logger.getLogger(VoucherAdminServlet.class.getName())
-                        .log(Level.WARNING, "Invalid maxUses: " + maxUses, e);
+                        .log(Level.WARNING, "Invalid maxUses: " + sanitizeForLogging(maxUses), e);
                 voucher.setMaxUses(null);
             }
         } else {
@@ -247,7 +247,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucher.setMaxUsesPerUser(Integer.parseInt(maxUsesPerUser));
             } catch (NumberFormatException e) {
                 Logger.getLogger(VoucherAdminServlet.class.getName())
-                        .log(Level.WARNING, "Invalid maxUsesPerUser: " + maxUsesPerUser, e);
+                        .log(Level.WARNING, "Invalid maxUsesPerUser: " + sanitizeForLogging(maxUsesPerUser), e);
                 voucher.setMaxUsesPerUser(1);
             }
         } else {
