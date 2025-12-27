@@ -98,6 +98,8 @@ public class VoucherAdminServlet extends HttpServlet {
         if (id != null) {
             Voucher voucher = voucherDAO.findById(id);
             request.setAttribute("voucher", voucher);
+        } else if (idStr != null) {
+            request.setAttribute("errorMessage", "ID không hợp lệ.");
         }
     }
 
@@ -119,6 +121,8 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucherDAO.update(voucher);
                 request.setAttribute("message", "Cập nhật voucher thành công!");
             }
+        } else if (idStr != null) {
+            request.setAttribute("errorMessage", "ID không hợp lệ.");
         }
         listVouchers(request, response);
     }
@@ -132,6 +136,8 @@ public class VoucherAdminServlet extends HttpServlet {
                 voucherDAO.delete(voucher);
                 request.setAttribute("message", "Xóa voucher thành công!");
             }
+        } else if (idStr != null) {
+            request.setAttribute("errorMessage", "ID không hợp lệ.");
         }
         listVouchers(request, response);
     }
@@ -147,6 +153,8 @@ public class VoucherAdminServlet extends HttpServlet {
                 request.setAttribute("message",
                         voucher.isActive() ? "Đã kích hoạt voucher!" : "Đã vô hiệu hóa voucher!");
             }
+        } else if (idStr != null) {
+            request.setAttribute("errorMessage", "ID không hợp lệ.");
         }
         listVouchers(request, response);
     }
@@ -249,7 +257,7 @@ public class VoucherAdminServlet extends HttpServlet {
         try {
             return Integer.valueOf(idStr.trim());
         } catch (NumberFormatException e) {
-            LOGGER.log(Level.WARNING, "Invalid ID format: {0}", idStr);
+            LOGGER.log(Level.WARNING, "Invalid ID format received");
             return null;
         }
     }
