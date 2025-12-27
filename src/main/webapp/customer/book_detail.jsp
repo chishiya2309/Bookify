@@ -13,6 +13,19 @@
     .book-detail { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 20px; }
     .book-image { flex: 1; min-width: 300px; }
     .book-image img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+    .no-image-detail {
+      width: 300px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+      color: #999;
+      font-size: 18px;
+      font-weight: 500;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
     .book-info { flex: 2; min-width: 300px; }
     .book-info h1 { font-size: 32px; margin-bottom: 15px; }
     .price { font-size: 28px; color: #b12704; font-weight: bold; margin: 20px 0; }
@@ -61,12 +74,14 @@
         <c:when test="${not empty book.images}">
           <c:forEach items="${book.images}" var="img" varStatus="status">
             <c:if test="${img.isPrimary || status.first}">
-              <img src="${img.url}" alt="${book.title}" />
+              <img src="${img.url}" alt="${book.title}"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="no-image-detail" style="display: none;">No Image Available</div>
             </c:if>
           </c:forEach>
         </c:when>
         <c:otherwise>
-          <img src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}" />
+          <div class="no-image-detail">No Image Available</div>
         </c:otherwise>
       </c:choose>
     </div>

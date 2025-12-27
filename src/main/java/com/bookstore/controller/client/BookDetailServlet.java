@@ -1,4 +1,4 @@
-package com.bookstore.controller;
+package com.bookstore.controller.client;
 
 import com.bookstore.model.Book;
 import com.bookstore.model.Review;

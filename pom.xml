@@ -102,7 +102,21 @@
             <artifactId>logback-classic</artifactId>
             <version>1.4.14</version>
         </dependency>
-        
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-taglib</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>2.2.4</version>
+        </dependency>
         <!-- Email Dependencies -->
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -115,7 +129,6 @@
             <version>2.1.0</version>
         </dependency>
     </dependencies>
-    
     <build>
         <plugins>
             <plugin>

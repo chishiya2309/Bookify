@@ -4,100 +4,71 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Category Management</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
 </head>
 <body>
-<jsp:include page="../header_admin.jsp"/>
+<jsp:include page="../header_admin.jsp" />
 
-<main class="admin-content">
-    <section class="page-main">
-        <div class="page-header">
-            <h2>Category Management</h2>
-            <a class="btn" href="${pageContext.request.contextPath}/admin/categories?action=showCreate">Create New Category</a>
-        </div>
+<div class="container">
+    <h2>Category Management</h2>
 
-        <c:if test="${not empty errorMessage}">
-            <div class="alert alert-danger"><c:out value="${errorMessage}"/></div>
-        </c:if>
-        <c:if test="${not empty message}">
-            <div class="alert alert-success"><c:out value="${message}"/></div>
-        </c:if>
+    <div class="actions-bar">
+        <a href="${pageContext.request.contextPath}/admin/categories?action=showCreate" class="btn-create">
+            + Create New Category
+        </a>
+    </div>
 
-        <table class="admin-table">
-            <thead>
+    <table>
+        <thead>
+        <tr>
+            <th>Index</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <c:if test="${empty listCategories}">
             <tr>
-                <th style="width:70px;">Index</th>
-                <th style="width:70px;">ID</th>
-                <th>Category Name</th>
-                <th style="width:200px;">Actions</th>
+                <td colspan="4" style="text-align: center;">No data available.</td>
             </tr>
-            </thead>
-            <tbody>
-            <c:if test="${empty categories}">
-                <tr>
-                    <td colspan="4" style="text-align:center;">No categories found.</td>
-                </tr>
-            </c:if>
-            <c:forEach var="category" items="${categories}" varStatus="loop">
-                <tr>
-                    <td>${loop.index + 1}</td>
-                    <td>${category.categoryId}</td>
-                    <td><c:out value="${category.name}"/></td>
-                    <td class="actions">
-                        <a href="${pageContext.request.contextPath}/admin/categories?action=showUpdate&id=${category.categoryId}">Edit</a>
-                        |
-                        <form id="deleteForm-${category.categoryId}" action="${pageContext.request.contextPath}/admin/categories" method="post" style="display:inline;">
-                            <input type="hidden" name="action" value="delete"/>
-                            <input type="hidden" name="id" value="${category.categoryId}"/>
-                            <button type="button" class="link-button" onclick="openDeleteModal('${category.categoryId}');">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            </c:forEach>
-            </tbody>
-        </table>
-    </section>
-</main>
+        </c:if>
 
-<div id="deleteModal" class="modal-backdrop" role="dialog" aria-hidden="true">
-    <div class="modal" role="document">
-        <div class="modal-body">
-            <p id="deleteModalText">Are you sure you want to delete the category with ID <span id="deleteId"></span>?</p>
-        </div>
-        <div class="modal-actions">
-            <button class="btn" type="button" onclick="closeDeleteModal();">Cancel</button>
-            <button class="btn" type="button" onclick="confirmDelete();">OK</button>
+        <c:forEach var="category" items="${listCategories}" varStatus="status">
+            <tr>
+                <td>${status.index + 1}</td>
+                <td>${category.categoryId}</td>
+                <td>${category.name}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="btn-action edit" href="${pageContext.request.contextPath}/admin/categories?action=showUpdate&id=${category.categoryId}">Edit</a>
+                        <a class="btn-action delete" href="${pageContext.request.contextPath}/admin/categories?action=delete&id=${category.categoryId}"
+                           data-id="${category.categoryId}">
+                            Delete
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
+
+    <div id="confirmModal" class="modal-backdrop">
+        <div class="modal-box">
+            <h3>Confirm Delete</h3>
+            <p id="confirmText">Are you sure?</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn cancel" id="btnCancel">Cancel</button>
+                <button type="button" class="modal-btn confirm" id="btnConfirm">Delete</button>
+            </div>
         </div>
     </div>
 </div>
-
-<script>
-    let pendingDeleteId = null;
-    function openDeleteModal(id) {
-        pendingDeleteId = id;
-        document.getElementById('deleteId').textContent = id;
-        const backdrop = document.getElementById('deleteModal');
-        backdrop.style.display = 'flex';
-        backdrop.setAttribute('aria-hidden', 'false');
-    }
-    function closeDeleteModal() {
-        pendingDeleteId = null;
-        const backdrop = document.getElementById('deleteModal');
-        backdrop.style.display = 'none';
-        backdrop.setAttribute('aria-hidden', 'true');
-    }
-    function confirmDelete() {
-        if (!pendingDeleteId) return closeDeleteModal();
-        const form = document.getElementById('deleteForm-' + pendingDeleteId);
-        if (form) form.submit();
-        else closeDeleteModal();
-    }
-    document.getElementById('deleteModal').addEventListener('click', function (e) {
-        if (e.target === this) closeDeleteModal();
-    });
-</script>
-
-<jsp:include page="../footer_admin.jsp"/>
+<jsp:include page="../footer_admin.jsp" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>const contextPath = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/js/script.js"></script>
 </body>
 </html>
