@@ -102,12 +102,28 @@ public class CancelOrderServlet extends HttpServlet {
             redirectWithError(request, response, null, "Mã đơn hàng không hợp lệ");
         } catch (IllegalStateException e) {
             // Order cannot be cancelled (status or payment method restrictions)
-            redirectWithError(request, response, Integer.parseInt(orderIdStr), e.getMessage());
+            redirectWithError(request, response, safelyParseOrderId(orderIdStr), e.getMessage());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error cancelling order", e);
             redirectWithError(request, response,
-                    orderIdStr != null ? Integer.parseInt(orderIdStr) : null,
+                    safelyParseOrderId(orderIdStr),
                     "Đã xảy ra lỗi khi huỷ đơn hàng. Vui lòng thử lại sau.");
+        }
+    }
+
+    /**
+     * Safely parse the orderId string to Integer without throwing NumberFormatException.
+     * Returns null if the input is null or not a valid integer.
+     */
+    private Integer safelyParseOrderId(String orderIdStr) {
+        if (orderIdStr == null) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(orderIdStr.trim());
+        } catch (NumberFormatException ex) {
+            LOGGER.log(Level.WARNING, "Invalid orderId format: {0}", orderIdStr);
+            return null;
         }
     }
 
