@@ -5,6 +5,7 @@ import com.bookstore.model.Book;
 import com.bookstore.model.Review;
 import com.bookstore.service.ReviewServices;
 import com.bookstore.service.BookServices;
+import com.bookstore.dao.ReviewDAO; // THÊM IMPORT NÀY
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -16,6 +17,7 @@ public class ReviewServlet extends HttpServlet {
 
     private final ReviewServices reviewServices = new ReviewServices();
     private final BookServices bookServices = new BookServices();
+    private final ReviewDAO reviewDAO = new ReviewDAO(); // THÊM ĐỂ KIỂM TRA
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -26,7 +28,6 @@ public class ReviewServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
 
-        // Kiểm tra đăng nhập
         if (customer == null) {
             response.sendRedirect(request.getContextPath() + "/customer/login.jsp");
             return;
@@ -34,24 +35,20 @@ public class ReviewServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        // ==================== TẠO REVIEW MỚI ====================
         if ("create".equals(action)) {
             handleCreateReview(request, response, session, customer);
             return;
         }
 
-        // ==================== XÓA REVIEW ====================
         if ("delete".equals(action)) {
             handleDeleteReview(request, response, session, customer);
             return;
         }
 
-        // Nếu action không hợp lệ
         session.setAttribute("error", "Thao tác không hợp lệ");
         response.sendRedirect(request.getContextPath() + "/view_book");
     }
 
-    // Xử lý tạo review
     private void handleCreateReview(HttpServletRequest request, HttpServletResponse response,
                                     HttpSession session, Customer customer) throws IOException {
 
@@ -70,10 +67,18 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
 
-        // Kiểm tra đã review chưa (unique constraint sẽ ngăn, nhưng kiểm tra trước cho UX tốt hơn)
+        // KIỂM TRA ĐÃ REVIEW CHƯA
         Review existingReview = reviewServices.getCustomerReviewForBook(customer.getUserId(), bookId);
         if (existingReview != null) {
             session.setAttribute("error", "Bạn đã đánh giá sách này rồi");
+            response.sendRedirect(request.getContextPath() + "/view_book?id=" + bookId);
+            return;
+        }
+
+        // === MỚI: KIỂM TRA ĐÃ MUA VÀ NHẬN HÀNG CHƯA ===
+        boolean hasPurchased = reviewDAO.hasPurchasedAndDelivered(customer.getUserId(), bookId);
+        if (!hasPurchased) {
+            session.setAttribute("error", "Bạn chỉ có thể đánh giá sách sau khi đơn hàng đã được giao thành công.");
             response.sendRedirect(request.getContextPath() + "/view_book?id=" + bookId);
             return;
         }
@@ -109,7 +114,7 @@ public class ReviewServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/view_book?id=" + bookId);
     }
 
-    // Xử lý xóa review
+    // handleDeleteReview giữ nguyên như cũ
     private void handleDeleteReview(HttpServletRequest request, HttpServletResponse response,
                                     HttpSession session, Customer customer) throws IOException {
 
@@ -123,7 +128,6 @@ public class ReviewServlet extends HttpServlet {
         try {
             int reviewId = Integer.parseInt(reviewIdParam);
 
-            // Lấy review từ DB để kiểm tra quyền sở hữu
             Review review = reviewServices.getReviewById(reviewId);
             if (review == null) {
                 session.setAttribute("error", "Đánh giá không tồn tại");
@@ -131,7 +135,6 @@ public class ReviewServlet extends HttpServlet {
                 return;
             }
 
-            // Bảo mật: chỉ cho phép xóa review của chính mình
             if (!review.getCustomer().getUserId().equals(customer.getUserId())) {
                 session.setAttribute("error", "Bạn không có quyền xóa đánh giá này");
                 response.sendRedirect(request.getContextPath() + "/view_book");

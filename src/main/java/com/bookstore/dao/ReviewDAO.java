@@ -338,4 +338,25 @@ public class ReviewDAO {
             em.close();
         }
     }
+    public boolean hasPurchasedAndDelivered(Integer customerId, Integer bookId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String jpql = """
+                SELECT COUNT(od) > 0 FROM OrderDetail od
+                JOIN od.order o
+                WHERE od.book.bookId = :bookId
+                  AND o.customer.userId = :customerId
+                  AND o.orderStatus = com.bookstore.model.Order.OrderStatus.DELIVERED
+                """;
+            TypedQuery<Boolean> query = em.createQuery(jpql, Boolean.class);
+            query.setParameter("bookId", bookId);
+            query.setParameter("customerId", customerId);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
