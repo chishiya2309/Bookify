@@ -251,10 +251,8 @@ public class VoucherAdminServlet extends HttpServlet {
         try {
             return Integer.parseInt(idStr);
         } catch (NumberFormatException e) {
-            // Sanitize the input before logging to prevent log injection
-            // Remove control characters, newlines, and ANSI escape sequences
-            String sanitizedId = idStr.replaceAll("[\r\n\t\u001B\\p{Cntrl}]", "");
-            LOGGER.log(Level.WARNING, "Invalid voucher ID format: " + sanitizedId, e);
+            // Log without user input to prevent any potential log injection
+            LOGGER.log(Level.WARNING, "Invalid voucher ID format received", e);
             request.setAttribute("errorMessage", INVALID_ID_ERROR_MESSAGE);
             return null;
         }
