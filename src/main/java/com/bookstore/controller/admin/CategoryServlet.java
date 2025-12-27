@@ -77,7 +77,7 @@ public class CategoryServlet extends HttpServlet {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             try {
-                int id = Integer.parseInt(idStr);
+                Integer id = Integer.parseInt(idStr);
                 Category category = categoryService.findById(id);
                 request.setAttribute("category", category);
             } catch (NumberFormatException e) {
