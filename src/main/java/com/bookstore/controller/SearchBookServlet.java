@@ -18,9 +18,17 @@ import java.util.List;
 public class SearchBookServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    private BookServices bookServices = new BookServices();
-    private CustomerServices customerServices = new CustomerServices();
-    private final CategoryService categoryService = new CategoryService();
+    private BookServices bookServices;
+    private CustomerServices customerServices;
+    private CategoryService categoryService;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        bookServices = new BookServices();
+        customerServices = new CustomerServices();
+        categoryService = new CategoryService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
