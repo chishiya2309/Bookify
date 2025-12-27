@@ -96,12 +96,16 @@ public class ValidationUtil {
      * @return true if keyword is valid (not null/empty, within length limit, and no malicious patterns), false otherwise
      */
     public static boolean isValidSearchKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
+        if (keyword == null) {
             return false;
         }
         
-        // Trim the keyword before checking length to prevent bypass with trailing spaces
+        // Trim once to avoid redundant string operations
         String trimmedKeyword = keyword.trim();
+        
+        if (trimmedKeyword.isEmpty()) {
+            return false;
+        }
         
         // Limit maximum length to prevent DoS attacks through extremely long strings
         if (trimmedKeyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
