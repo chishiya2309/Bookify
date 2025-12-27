@@ -2,6 +2,7 @@ package com.bookstore.controller;
 
 import com.bookstore.model.Book;
 import com.bookstore.model.Category; // Nhớ import model Category
+import com.bookstore.model.Customer;
 import com.bookstore.service.BookServices;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
@@ -36,6 +37,25 @@ public class ViewCategoryServlet extends HttpServlet {
         
         // 1. Giữ trạng thái đăng nhập (để Header không bị lỗi)
         JwtAuthHelper.checkLoginStatus(request);
+        
+        // Thiết lập userName cho header nếu người dùng đã đăng nhập
+        Object userEmailObj = request.getAttribute("userEmail");
+        if (userEmailObj != null) {
+            String userEmail = userEmailObj.toString();
+            try {
+                Customer customer = customerServices.getCustomerByEmail(userEmail);
+                if (customer != null && customer.getFullName() != null) {
+                    request.setAttribute("userName", customer.getFullName());
+                } else {
+                    // Fallback to email nếu không tìm thấy customer hoặc fullName null
+                    request.setAttribute("userName", userEmail);
+                }
+            } catch (Exception e) {
+                log("Failed to retrieve customer details for: " + userEmail, e);
+                // Fallback to email nếu có lỗi
+                request.setAttribute("userName", userEmail);
+            }
+        }
         
         // 2. Lấy danh sách Categories cho Menu Header
         List<Category> listCats = customerServices.listAllCategories();
