@@ -252,11 +252,15 @@ public class VoucherAdminServlet extends HttpServlet {
      * @return parsed Integer or null if invalid
      */
     private Integer safelyParseId(String idStr) {
-        if (idStr == null || idStr.trim().isEmpty()) {
+        if (idStr == null) {
+            return null;
+        }
+        String trimmedId = idStr.trim();
+        if (trimmedId.isEmpty()) {
             return null;
         }
         try {
-            return Integer.valueOf(idStr.trim());
+            return Integer.valueOf(trimmedId);
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Invalid ID format received");
             return null;
