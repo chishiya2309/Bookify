@@ -239,6 +239,9 @@ public class Order implements Serializable {
     }
 
     public void addOrderDetail(OrderDetail orderDetail) {
+        if (orderDetail == null) {
+            throw new IllegalArgumentException("OrderDetail không được null");
+        }
         this.orderDetails.add(orderDetail);
     }
 
