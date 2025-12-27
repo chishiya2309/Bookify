@@ -18,17 +18,17 @@
     </div>
 
     <c:if test="${not empty errorMessage}">
-        <div class="alert alert-danger" style="text-align: center; color: red;">${errorMessage}</div>
+        <div class="alert alert-danger" style="text-align: center; color: red;"><c:out value="${errorMessage}"/></div>
     </c:if>
 
     <c:if test="${not empty category}">
         <form action="${pageContext.request.contextPath}/admin/categories" method="post" class="form-card">
             <input type="hidden" name="action" value="update"/>
-            <input type="hidden" name="id" value="${category.categoryId}"/>
+            <input type="hidden" name="id" value="<c:out value='${category.categoryId}'/>"/>
 
             <div>
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="${category.name}" required maxlength="100"/>
+                <input type="text" id="name" name="name" value="<c:out value='${category.name}'/>" required maxlength="100"/>
             </div>
 
             <div class="form-actions">
