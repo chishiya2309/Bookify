@@ -20,7 +20,6 @@
     </div>
 
     <nav class="admin-menu">
-        <a href="${pageContext.request.contextPath}/admin/users.jsp">Users</a>
         <a href="${pageContext.request.contextPath}/admin/categories">Categories</a>
         <a href="${pageContext.request.contextPath}/admin/books">Books</a>
         <a href="${pageContext.request.contextPath}/admin/customers">Customers</a>

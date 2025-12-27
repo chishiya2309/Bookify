@@ -8,6 +8,128 @@
     <title>Create New Book - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
+    <style>
+        /* Multi-image upload styles */
+        .image-upload-section {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            cursor: pointer;
+        }
+        .image-upload-section:hover,
+        .image-upload-section.dragover {
+            border-color: #007bff;
+            background: #f0f7ff;
+        }
+        .image-upload-section input[type="file"] {
+            display: none;
+        }
+        .upload-placeholder {
+            color: #666;
+            padding: 30px 0;
+        }
+        .upload-placeholder i {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        .upload-placeholder p {
+            margin: 10px 0 5px;
+            font-size: 16px;
+        }
+        .upload-placeholder span {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* Image preview gallery */
+        .image-preview-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .image-preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .image-preview-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 28px;
+            height: 28px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 28px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .image-preview-item .remove-btn:hover {
+            background: #c82333;
+        }
+        .image-preview-item .primary-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .image-preview-item .set-primary-btn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .image-preview-item:hover .set-primary-btn {
+            opacity: 1;
+        }
+        .image-preview-item.is-primary .set-primary-btn {
+            display: none;
+        }
+        .image-info {
+            padding: 8px;
+            font-size: 11px;
+            color: #666;
+            background: #f8f9fa;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body>
 <jsp:include page="../header_admin.jsp" />
@@ -15,7 +137,7 @@
 <div class="container">
     <h2>Create New Book</h2>
 
-    <form action="${pageContext.request.contextPath}/admin/books" method="post" enctype="multipart/form-data" class="form-card" novalidate>
+    <form action="${pageContext.request.contextPath}/admin/books" method="post" enctype="multipart/form-data" class="form-card" novalidate id="bookForm">
 
         <input type="hidden" name="action" value="create"/>
 
@@ -24,6 +146,16 @@
             <select id="categoryId" name="categoryId" required>
                 <c:forEach items="${listCategory}" var="cat">
                     <option value="${cat.categoryId}">${cat.name}</option>
+                </c:forEach>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label for="publisherId">Publisher:</label>
+            <select id="publisherId" name="publisherId">
+                <option value="">-- Select Publisher --</option>
+                <c:forEach items="${listPublishers}" var="pub">
+                    <option value="${pub.publisherId}">${pub.name}</option>
                 </c:forEach>
             </select>
         </div>
@@ -58,28 +190,30 @@
         <div class="form-row">
             <label for="publishDate">Publish Date:</label>
             <input id="publishDate" type="date" name="publishDate" required
-                   max="${java.time.LocalDate.now()}"
                    title="Publish date cannot be in the future">
         </div>
 
-        <div class="form-row">
-            <label for="bookImage">Book Image:</label>
-            <input id="bookImage" type="file" name="bookImage"
-                   accept="image/jpeg,image/png,image/jpg,image/webp"
-                   onchange="showPreview(this);"
-                   required
-                   title="Only JPEG, PNG, JPG, WEBP images are allowed">
-        </div>
-
-        <div class="form-row" style="grid-template-columns: 160px 1fr;">
-            <label></label>
-            <img style="max-height: 250px; display: none" id="thumbnail" alt="Image Preview"/>
+        <div class="form-row" style="align-items: start;">
+            <label>Book Images:</label>
+            <div style="width: 100%;">
+                <div class="image-upload-section" id="dropZone">
+                    <input type="file" id="bookImages" name="bookImages" multiple
+                           accept="image/jpeg,image/png,image/jpg,image/webp">
+                    <div class="upload-placeholder">
+                        <div style="font-size: 48px; color: #ccc;">📷</div>
+                        <p><strong>Click to upload</strong> or drag and drop</p>
+                        <span>JPEG, PNG, JPG, WEBP (Max 5MB each)</span>
+                    </div>
+                </div>
+                <div class="image-preview-gallery" id="imagePreviewGallery"></div>
+                <input type="hidden" name="primaryImageIndex" id="primaryImageIndex" value="0">
+            </div>
         </div>
 
         <div class="form-row">
             <label for="price">Price:</label>
             <div class="input-prefix">
-                <span class="prefix">$</span>
+                <span class="prefix">VND</span>
                 <input id="price" type="number" name="price" required
                        min="0.01"
                        max="99999999.99"
@@ -111,5 +245,110 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>const contextPath = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/js/script.js"></script>
+<script>
+    // Multi-image upload handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('bookImages');
+    const gallery = document.getElementById('imagePreviewGallery');
+    const primaryIndexInput = document.getElementById('primaryImageIndex');
+    let selectedFiles = [];
+
+    // Click to open file dialog
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop handlers
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    // File input change
+    fileInput.addEventListener('change', () => {
+        handleFiles(fileInput.files);
+    });
+
+    function handleFiles(files) {
+        for (let file of files) {
+            if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                selectedFiles.push(file);
+            } else if (file.size > 5 * 1024 * 1024) {
+                alert('File "' + file.name + '" exceeds 5MB limit');
+            }
+        }
+        updateGallery();
+        updateFileInput();
+    }
+
+    function updateGallery() {
+        gallery.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                const isPrimary = index === parseInt(primaryIndexInput.value);
+                div.className = 'image-preview-item' + (isPrimary ? ' is-primary' : '');
+                
+                let html = '';
+                if (isPrimary) {
+                    html += '<span class="primary-badge">Primary</span>';
+                }
+                html += '<img src="' + e.target.result + '" alt="Preview">';
+                html += '<button type="button" class="remove-btn" onclick="removeImage(' + index + ')">&times;</button>';
+                html += '<button type="button" class="set-primary-btn" onclick="setPrimary(' + index + ')">Set as Primary</button>';
+                html += '<div class="image-info">' + file.name + '</div>';
+                div.innerHTML = html;
+                gallery.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeImage(index) {
+        selectedFiles.splice(index, 1);
+        // Update primary index if needed
+        if (parseInt(primaryIndexInput.value) >= selectedFiles.length) {
+            primaryIndexInput.value = Math.max(0, selectedFiles.length - 1);
+        } else if (parseInt(primaryIndexInput.value) > index) {
+            primaryIndexInput.value = parseInt(primaryIndexInput.value) - 1;
+        }
+        updateGallery();
+        updateFileInput();
+    }
+
+    function setPrimary(index) {
+        primaryIndexInput.value = index;
+        updateGallery();
+    }
+
+    function updateFileInput() {
+        // Create a new DataTransfer object to update file input
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+    }
+
+    // Form validation
+    document.getElementById('bookForm').addEventListener('submit', function(e) {
+        if (selectedFiles.length === 0) {
+            e.preventDefault();
+            alert('Please upload at least one book image');
+            return false;
+        }
+    });
+
+    // Set max date for publishDate to today
+    document.getElementById('publishDate').max = new Date().toISOString().split('T')[0];
+</script>
 </body>
 </html>
+

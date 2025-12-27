@@ -29,6 +29,7 @@
             <th>Title</th>
             <th>Author</th>
             <th>Category</th>
+            <th>Publisher</th>
             <th>Price</th>
             <th>Last Updated</th>
             <th>Actions</th>
@@ -37,7 +38,7 @@
         <tbody>
         <c:if test="${empty books}">
             <tr>
-                <td colspan="9" style="text-align: center;">No data available.</td>
+                <td colspan="10" style="text-align: center;">No data available.</td>
             </tr>
         </c:if>
 
@@ -71,8 +72,13 @@
                     </c:if>
                 </td>
                 <td>
+                    <c:if test="${not empty book.publisher}">
+                        ${book.publisher.name}
+                    </c:if>
+                </td>
+                <td>
                     <c:if test="${not empty book.price}">
-                        $${book.price}
+                        ${book.price} VND
                     </c:if>
                     <c:if test="${empty book.price}">
                         N/A

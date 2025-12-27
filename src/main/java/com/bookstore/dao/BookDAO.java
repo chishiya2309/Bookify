@@ -1,4 +1,5 @@
 package com.bookstore.dao;
+
 import com.bookstore.model.Book;
 import com.bookstore.data.DBUtil;
 import com.bookstore.model.Book;
@@ -21,7 +22,6 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import static com.bookstore.service.ValidationUtil.isValidSearchKeyword;
 
 public class BookDAO {
@@ -44,7 +44,7 @@ public class BookDAO {
             em.close();
         }
     }
-        
+
     public Book findById(Integer id) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -59,9 +59,10 @@ public class BookDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             String qString = "SELECT DISTINCT b FROM Book b " +
-                             "LEFT JOIN FETCH b.authors " +
-                             "LEFT JOIN FETCH b.category " +
-                             "ORDER BY b.title ASC";
+                    "LEFT JOIN FETCH b.authors " +
+                    "LEFT JOIN FETCH b.category " +
+                    "LEFT JOIN FETCH b.publisher " +
+                    "ORDER BY b.title ASC";
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             List<Book> books = q.getResultList();
 
@@ -84,7 +85,8 @@ public class BookDAO {
         }
     }
 
-    // Get a book by ID with all relationships fetched (except images - fetch separately)
+    // Get a book by ID with all relationships fetched (except images - fetch
+    // separately)
     public static Book getBookById(Integer bookId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -96,7 +98,7 @@ public class BookDAO {
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             q.setParameter("id", bookId);
             Book book = q.getSingleResult();
-            
+
             // Fetch images separately to avoid MultipleBagFetchException
             if (book != null) {
                 String imageQuery = "SELECT img FROM BookImage img WHERE img.book.bookId = :bookId ORDER BY img.isPrimary DESC, img.sortOrder ASC";
@@ -110,7 +112,7 @@ public class BookDAO {
                     book.setImages(new ArrayList<>());
                 }
             }
-            
+
             return book;
         } catch (NoResultException e) {
             return null;
@@ -160,6 +162,7 @@ public class BookDAO {
             em.close();
         }
     }
+
     public static List<Category> getAllCategories() {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -173,6 +176,7 @@ public class BookDAO {
             em.close();
         }
     }
+
     public static List<Author> getAllAuthors() {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -186,6 +190,7 @@ public class BookDAO {
             em.close();
         }
     }
+
     public static Category findCategoryById(Integer categoryId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -197,7 +202,8 @@ public class BookDAO {
             em.close();
         }
     }
-    public static  Author findAuthorById(Integer authorId) {
+
+    public static Author findAuthorById(Integer authorId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             return em.find(Author.class, authorId);
@@ -216,6 +222,7 @@ public class BookDAO {
         query.setParameter("bookId", bookId);
         return query.getSingleResult();
     }
+
     public long count() {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -260,30 +267,30 @@ public class BookDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             Query query = em.createQuery(
-                    "SELECT COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.book.bookId = :bookId"
-            );
+                    "SELECT COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.book.bookId = :bookId");
             query.setParameter("bookId", bookId);
             return (Double) query.getSingleResult();
         } finally {
             em.close();
         }
     }
-    
+
     public static List<Book> searchBooks(String keyword) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
-            // Validate keyword length and check for malicious patterns to prevent DoS attacks
+            // Validate keyword length and check for malicious patterns to prevent DoS
+            // attacks
             if (!isValidSearchKeyword(keyword)) {
                 return new ArrayList<>();
             }
-            
+
             // Trim keyword to ensure consistency with validation
             String trimmedKeyword = keyword.trim();
-            
-            // 1. Tìm sách theo tiêu đề 
+
+            // 1. Tìm sách theo tiêu đề
             String qString = "SELECT DISTINCT b FROM Book b " +
-                             "LEFT JOIN FETCH b.authors a " +
-                             "WHERE lower(b.title) LIKE :keyword";
+                    "LEFT JOIN FETCH b.authors a " +
+                    "WHERE lower(b.title) LIKE :keyword";
 
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             q.setParameter("keyword", "%" + trimmedKeyword.toLowerCase() + "%");
@@ -292,7 +299,7 @@ public class BookDAO {
 
             // 2. KHẮC PHỤC LỖI LAZY LOADING CHO ẢNH
             for (Book b : list) {
-                b.getImages().size(); 
+                b.getImages().size();
             }
 
             return list;
@@ -309,16 +316,16 @@ public class BookDAO {
         try {
             // 1. Lấy sách + Tác giả (JOIN FETCH để tránh lỗi tác giả)
             String qString = "SELECT b FROM Book b " +
-                             "LEFT JOIN FETCH b.authors " +
-                             "WHERE b.category.categoryId = :catId " +
-                             "ORDER BY b.publishDate DESC";
+                    "LEFT JOIN FETCH b.authors " +
+                    "WHERE b.category.categoryId = :catId " +
+                    "ORDER BY b.publishDate DESC";
 
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             q.setParameter("catId", categoryId);
 
             List<Book> list = q.getResultList();
 
-            // 2. KHẮC PHỤC LỖI ẢNH 
+            // 2. KHẮC PHỤC LỖI ẢNH
             for (Book b : list) {
                 b.getImages().size(); // Kích hoạt tải ảnh
             }

@@ -18,7 +18,7 @@ import java.util.List;
 @WebServlet("/view_category")
 public class ViewCategoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    
+
     private BookServices bookServices;
     private CustomerServices customerServices;
 
@@ -30,14 +30,14 @@ public class ViewCategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-        
+
         // 1. Giữ trạng thái đăng nhập (để Header không bị lỗi)
         JwtAuthHelper.checkLoginStatus(request);
-        
+
         // Thiết lập userName cho header nếu người dùng đã đăng nhập
         Object userEmailObj = request.getAttribute("userEmail");
         if (userEmailObj != null) {
@@ -56,7 +56,7 @@ public class ViewCategoryServlet extends HttpServlet {
                 request.setAttribute("userName", userEmail);
             }
         }
-        
+
         // 2. Lấy danh sách Categories cho Menu Header
         List<Category> listCats = customerServices.listAllCategories();
         request.setAttribute("listCategories", listCats);
@@ -68,7 +68,7 @@ public class ViewCategoryServlet extends HttpServlet {
         if (categoryIdParam != null) {
             try {
                 int categoryId = Integer.parseInt(categoryIdParam);
-                
+
                 // Lấy danh sách sách
                 List<Book> listBooks = bookServices.listBooksByCategory(categoryId);
                 request.setAttribute("listBooks", listBooks);
@@ -87,11 +87,12 @@ public class ViewCategoryServlet extends HttpServlet {
                 return;
             } catch (Exception e) {
                 log("Error while loading category view", e);
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to load category at this time.");
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Unable to load category at this time.");
                 return;
             }
         }
-        
+
         request.setAttribute("categoryName", categoryName);
 
         // 4. Chuyển sang file giao diện
