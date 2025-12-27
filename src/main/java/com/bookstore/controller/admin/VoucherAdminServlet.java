@@ -92,6 +92,17 @@ public class VoucherAdminServlet extends HttpServlet {
         request.setAttribute("vouchers", vouchers);
     }
 
+    /**
+     * Sanitize input for logging to prevent log injection attacks
+     */
+    private String sanitizeForLogging(String input) {
+        if (input == null) {
+            return "null";
+        }
+        // Remove newlines, carriage returns, and other control characters
+        return input.replaceAll("[\\r\\n\\t]", "_").replaceAll("[\\p{Cntrl}]", "");
+    }
+
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
@@ -100,7 +111,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 Voucher voucher = voucherDAO.findById(id);
                 request.setAttribute("voucher", voucher);
             } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + idStr, e);
+                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + sanitizeForLogging(idStr), e);
                 request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
@@ -126,7 +137,7 @@ public class VoucherAdminServlet extends HttpServlet {
                     request.setAttribute("message", "Cập nhật voucher thành công!");
                 }
             } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + idStr, e);
+                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + sanitizeForLogging(idStr), e);
                 request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
@@ -144,7 +155,7 @@ public class VoucherAdminServlet extends HttpServlet {
                     request.setAttribute("message", "Xóa voucher thành công!");
                 }
             } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + idStr, e);
+                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + sanitizeForLogging(idStr), e);
                 request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
@@ -164,7 +175,7 @@ public class VoucherAdminServlet extends HttpServlet {
                             voucher.isActive() ? "Đã kích hoạt voucher!" : "Đã vô hiệu hóa voucher!");
                 }
             } catch (NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + idStr, e);
+                LOGGER.log(Level.WARNING, "Invalid voucher ID: " + sanitizeForLogging(idStr), e);
                 request.setAttribute("errorMessage", "ID voucher không hợp lệ");
             }
         }
