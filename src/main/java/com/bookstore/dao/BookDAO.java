@@ -250,6 +250,16 @@ public class BookDAO {
     public static List<Book> searchBooks(String keyword) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
+            // Validate keyword to prevent DoS attacks through extremely long strings
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
+            
+            // Validate keyword length and check for malicious patterns
+            if (!com.bookstore.service.ValidationUtil.isValidSearchKeyword(keyword)) {
+                return new ArrayList<>();
+            }
+            
             // 1. Tìm sách theo tiêu đề 
             String qString = "SELECT DISTINCT b FROM Book b " +
                              "LEFT JOIN FETCH b.authors a " +

@@ -84,4 +84,28 @@ public class ValidationUtil {
     public static boolean isValidPasswordBasic(String password) {
         return password != null && password.length() >= 6;
     }
+    
+    /**
+     * Validates search keyword to prevent DoS attacks
+     * Limits keyword length and checks for malicious patterns
+     * @param keyword the search keyword to validate
+     * @return true if keyword is valid, false otherwise
+     */
+    public static boolean isValidSearchKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Limit maximum length to prevent DoS attacks through extremely long strings
+        if (keyword.length() > 200) {
+            return false;
+        }
+        
+        // Check for potential SQL injection patterns as defense-in-depth
+        if (containsSqlInjection(keyword)) {
+            return false;
+        }
+        
+        return true;
+    }
 }
