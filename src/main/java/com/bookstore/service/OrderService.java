@@ -144,7 +144,7 @@ public class OrderService {
                 orderDetail.setUnitPrice(unitPrice);
                 orderDetail.setSubTotal(unitPrice.multiply(BigDecimal.valueOf(quantity)));
 
-                order.getOrderDetails().add(orderDetail);
+                order.addOrderDetail(orderDetail);
                 totalAmount = totalAmount.add(orderDetail.getSubTotal());
             }
 

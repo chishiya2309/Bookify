@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -230,11 +231,18 @@ public class Order implements Serializable {
     }
 
     public List<OrderDetail> getOrderDetails() {
-        return orderDetails;
+        return Collections.unmodifiableList(orderDetails);
     }
 
     public void setOrderDetails(List<OrderDetail> orderDetails) {
         this.orderDetails = orderDetails;
+    }
+
+    public void addOrderDetail(OrderDetail orderDetail) {
+        if (orderDetail == null) {
+            throw new IllegalArgumentException("OrderDetail không được null");
+        }
+        this.orderDetails.add(orderDetail);
     }
 
     public Payment getPayment() {
