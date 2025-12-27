@@ -4,6 +4,9 @@ import java.util.regex.Pattern;
 
 public class ValidationUtil {
     
+    // Maximum length for search keywords to prevent DoS attacks
+    private static final int MAX_SEARCH_KEYWORD_LENGTH = 200;
+    
     // Email validation pattern (RFC 5322 simplified)
     // Ensures no consecutive dots and proper structure
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -88,8 +91,9 @@ public class ValidationUtil {
     /**
      * Validates search keyword to prevent DoS attacks
      * Limits keyword length and checks for malicious patterns
+     * Note: Empty or null keywords are considered invalid and should be handled by the caller
      * @param keyword the search keyword to validate
-     * @return true if keyword is valid, false otherwise
+     * @return true if keyword is valid (not null/empty, within length limit, and no malicious patterns), false otherwise
      */
     public static boolean isValidSearchKeyword(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
@@ -97,7 +101,7 @@ public class ValidationUtil {
         }
         
         // Limit maximum length to prevent DoS attacks through extremely long strings
-        if (keyword.length() > 200) {
+        if (keyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
             return false;
         }
         
