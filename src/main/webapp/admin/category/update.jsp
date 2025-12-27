@@ -18,7 +18,7 @@
     </div>
 
     <c:if test="${not empty errorMessage}">
-        <div class="alert alert-danger" style="text-align: center; color: red;">${errorMessage}</div>
+        <div class="alert alert-danger" style="text-align: center; color: red;"><c:out value="${errorMessage}"/></div>
     </c:if>
 
     <c:if test="${not empty category}">
@@ -28,7 +28,7 @@
 
             <div>
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="${category.name}" required maxlength="100"/>
+                <input type="text" id="name" name="name" value="<c:out value='${category.name}'/>" required maxlength="100"/>
             </div>
 
             <div class="form-actions">
