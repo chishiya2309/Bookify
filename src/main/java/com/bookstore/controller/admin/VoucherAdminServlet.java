@@ -25,6 +25,7 @@ public class VoucherAdminServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(VoucherAdminServlet.class.getName());
     private final VoucherDAO voucherDAO = new VoucherDAO();
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final String ERROR_INVALID_ID = "ID không hợp lệ.";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -99,7 +100,7 @@ public class VoucherAdminServlet extends HttpServlet {
             Voucher voucher = voucherDAO.findById(id);
             request.setAttribute("voucher", voucher);
         } else if (idStr != null) {
-            request.setAttribute("errorMessage", "ID không hợp lệ.");
+            request.setAttribute("errorMessage", ERROR_INVALID_ID);
         }
     }
 
@@ -122,7 +123,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 request.setAttribute("message", "Cập nhật voucher thành công!");
             }
         } else if (idStr != null) {
-            request.setAttribute("errorMessage", "ID không hợp lệ.");
+            request.setAttribute("errorMessage", ERROR_INVALID_ID);
         }
         listVouchers(request, response);
     }
@@ -137,7 +138,7 @@ public class VoucherAdminServlet extends HttpServlet {
                 request.setAttribute("message", "Xóa voucher thành công!");
             }
         } else if (idStr != null) {
-            request.setAttribute("errorMessage", "ID không hợp lệ.");
+            request.setAttribute("errorMessage", ERROR_INVALID_ID);
         }
         listVouchers(request, response);
     }
@@ -154,7 +155,7 @@ public class VoucherAdminServlet extends HttpServlet {
                         voucher.isActive() ? "Đã kích hoạt voucher!" : "Đã vô hiệu hóa voucher!");
             }
         } else if (idStr != null) {
-            request.setAttribute("errorMessage", "ID không hợp lệ.");
+            request.setAttribute("errorMessage", ERROR_INVALID_ID);
         }
         listVouchers(request, response);
     }
