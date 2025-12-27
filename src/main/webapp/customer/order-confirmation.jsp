@@ -724,7 +724,7 @@
                                     <c:when test="${order.orderStatus == 'SHIPPED'}">Đang giao hàng</c:when>
                                     <c:when test="${order.orderStatus == 'DELIVERED'}">Đã giao hàng</c:when>
                                     <c:when test="${order.orderStatus == 'CANCELLED'}">Đã hủy</c:when>
-                                    <c:otherwise>${order.orderStatus}</c:otherwise>
+                                    <c:otherwise><c:out value="${order.orderStatus}"/></c:otherwise>
                                 </c:choose>
                             </span>
                         </div>
@@ -739,7 +739,7 @@
                                     </c:when>
                                     <c:otherwise>
                                         <span class="payment-badge online">
-                                            <i class="fas fa-credit-card"></i> ${order.paymentMethod}
+                                            <i class="fas fa-credit-card"></i> <c:out value="${order.paymentMethod}"/>
                                         </span>
                                     </c:otherwise>
                                 </c:choose>
@@ -756,7 +756,7 @@
                                         <span class="status-badge unpaid">Chưa thanh toán</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="status-badge pending">${order.paymentStatus}</span>
+                                        <span class="status-badge pending"><c:out value="${order.paymentStatus}"/></span>
                                     </c:otherwise>
                                 </c:choose>
                             </span>
@@ -845,16 +845,16 @@
                     <aside class="shipping-info">
                         <p>
                             <i class="fas fa-user"></i>
-                            <strong>${order.recipientName}</strong>
+                            <strong><c:out value="${order.recipientName}"/></strong>
                         </p>
                         <p>
                             <i class="fas fa-phone"></i>
-                            ${order.shippingAddress.phoneNumber}
+                            <c:out value="${order.shippingAddress.phoneNumber}"/>
                         </p>
                         <p>
                             <i class="fas fa-map-marked-alt"></i>
-                            ${order.shippingAddress.street}, ${order.shippingAddress.ward}, 
-                            ${order.shippingAddress.district}, ${order.shippingAddress.province}
+                            <c:out value="${order.shippingAddress.street}"/>, <c:out value="${order.shippingAddress.ward}"/>, 
+                            <c:out value="${order.shippingAddress.district}"/>, <c:out value="${order.shippingAddress.province}"/>
                         </p>
                     </aside>
                 </section>
@@ -870,14 +870,14 @@
                         <article class="order-item">
                             <img src="${not empty detail.book.primaryImageUrl ? detail.book.primaryImageUrl : pageContext.request.contextPath.concat('/images/no-image.jpg')}" 
                                  class="item-image"
-                                 alt="${detail.book.title}"
+                                 alt="<c:out value='${detail.book.title}'/>"
                                  onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/no-image.jpg';">
                             
                             <div class="item-details">
-                                <div class="item-title">${detail.book.title}</div>
+                                <div class="item-title"><c:out value="${detail.book.title}"/></div>
                                 <div class="item-author">
                                     <c:forEach var="author" items="${detail.book.authors}" varStatus="status">
-                                        ${author.name}${!status.last ? ', ' : ''}
+                                        <c:out value="${author.name}"/>${!status.last ? ', ' : ''}
                                     </c:forEach>
                                 </div>
                                 <div class="item-quantity">Số lượng: ${detail.quantity}</div>
@@ -934,7 +934,7 @@
                                 <span>
                                     <i class="fas fa-tag"></i> Giảm giá
                                     <c:if test="${not empty order.voucherCode}">
-                                        (${order.voucherCode})
+                                        (<c:out value="${order.voucherCode}"/>)
                                     </c:if>
                                 </span>
                                 <span style="font-weight: bold;">-<fmt:formatNumber value="${order.voucherDiscount}" pattern="#,###"/>₫</span>
