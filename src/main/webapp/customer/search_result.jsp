@@ -76,14 +76,14 @@
                             <c:choose>
                                 <%-- Trường hợp 1: Có đường dẫn ảnh --%>
                                 <c:when test="${not empty book.primaryImageUrl}">
-                                    <img src="${book.primaryImageUrl}" alt="${book.title}"
+                                    <img src="${book.primaryImageUrl}" alt="<c:out value='${book.title}'/>"
                                          style="width: 120px; height: 180px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;"
                                          onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/book_icon.png';" />
                                 </c:when>
                                 
                                 <%-- Trường hợp 2: Không có ảnh -> Dùng ảnh mặc định --%>
                                 <c:otherwise>
-                                    <img src="${pageContext.request.contextPath}/images/book_icon.png" alt="${book.title}"
+                                    <img src="${pageContext.request.contextPath}/images/book_icon.png" alt="<c:out value='${book.title}'/>"
                                          style="width: 120px; height: 180px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
                                 </c:otherwise>
                             </c:choose>
@@ -92,7 +92,7 @@
 
                     <div class="search-item-info">
                         <div class="item-title">
-                            <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}">${book.title}</a>
+                            <a href="${pageContext.request.contextPath}/view_book?id=${book.bookId}"><c:out value="${book.title}"/></a>
                         </div>
                         
                         <div class="item-rating">★★★★☆</div> 
