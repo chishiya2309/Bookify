@@ -70,17 +70,21 @@ public class PaymentCallbackServlet extends HttpServlet {
                     } catch (Exception emailEx) {
                         LOGGER.log(Level.WARNING, "Failed to send payment confirmation email", emailEx);
                     }
-                }
 
-                // Redirect to success page - use orderId (OrderConfirmationServlet expects
-                // orderId)
-                Order order = payment.getOrder();
-                Integer orderId = (order != null) ? order.getOrderId() : null;
-                if (orderId != null) {
-                    response.sendRedirect(request.getContextPath() +
-                            "/customer/order-confirmation?orderId=" + orderId);
+                    // Redirect to success page - use orderId (OrderConfirmationServlet expects
+                    // orderId)
+                    Order order = payment.getOrder();
+                    Integer orderId = (order != null) ? order.getOrderId() : null;
+                    if (orderId != null) {
+                        response.sendRedirect(request.getContextPath() +
+                                "/customer/order-confirmation?orderId=" + orderId);
+                    } else {
+                        // Fallback with transaction_id if order not available
+                        response.sendRedirect(request.getContextPath() +
+                                "/customer/order-confirmation?transaction_id=" + transactionId);
+                    }
                 } else {
-                    // Fallback with transaction_id if order not available
+                    // Payment not found after verification; fallback using transaction_id
                     response.sendRedirect(request.getContextPath() +
                             "/customer/order-confirmation?transaction_id=" + transactionId);
                 }
