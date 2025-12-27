@@ -14,7 +14,7 @@
         <h2 style="text-align:center;">Create New Category</h2>
 
         <c:if test="${not empty errorMessage}">
-            <div class="alert alert-danger">${errorMessage}</div>
+            <div class="alert alert-danger"><c:out value="${errorMessage}"/></div>
         </c:if>
 
         <form action="${pageContext.request.contextPath}/admin/categories" method="post" class="form-card">

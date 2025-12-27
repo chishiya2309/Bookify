@@ -17,19 +17,19 @@
     <input type="hidden" name="id" value="${publisher.publisherId}"/>
 
     <label>Full Name:</label>
-    <input type="text" name="name" value="${publisher.name}" required style="width: 300px;">
+    <input type="text" name="name" value="<c:out value='${publisher.name}'/>" required style="width: 300px;">
     <br>
 
     <label>Contact Email:</label>
-    <input type="email" name="contactEmail" value="${publisher.contactEmail}" required style="width: 300px;">
+    <input type="email" name="contactEmail" value="<c:out value='${publisher.contactEmail}'/>" required style="width: 300px;">
     <br>
 
     <label>Address:</label>
-    <input type="text" name="address" value="${publisher.address}" style="width: 300px;">
+    <input type="text" name="address" value="<c:out value='${publisher.address}'/>" style="width: 300px;">
     <br>
 
     <label>Website:</label>
-    <input type="text" name="website" value="${publisher.website}" style="width: 300px;">
+    <input type="text" name="website" value="<c:out value='${publisher.website}'/>" style="width: 300px;">
     <br>
 
     <div class="buttons">

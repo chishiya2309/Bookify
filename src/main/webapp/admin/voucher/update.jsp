@@ -540,7 +540,7 @@
             <div class="page-title">
                 <h1>
                     Chỉnh sửa Voucher
-                    <span class="voucher-code-badge">${voucher.code}</span>
+                    <span class="voucher-code-badge"><c:out value="${voucher.code}"/></span>
                 </h1>
                 <p>Cập nhật thông tin mã giảm giá</p>
             </div>
@@ -605,7 +605,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Mã voucher</label>
-                                <input type="text" class="form-input" value="${voucher.code}" 
+                                <input type="text" class="form-input" value="<c:out value='${voucher.code}'/>" 
                                        disabled style="text-transform: uppercase; font-weight: 700;">
                                 <div class="form-hint">
                                     <i class="fas fa-lock"></i>
@@ -615,7 +615,7 @@
                             <div class="form-group">
                                 <label class="form-label">Mô tả</label>
                                 <input type="text" name="description" class="form-input" 
-                                       value="${voucher.description}">
+                                       value="<c:out value='${voucher.description}'/>">
                             </div>
                         </div>
                     </fieldset>

@@ -68,9 +68,9 @@
                     <tr>
                         <td>${(currentPage - 1) * 10 + loop.index + 1}</td>
                         <td>${customer.userId}</td>
-                        <td style="text-align: left;">${customer.email}</td>
+                        <td style="text-align: left;"><c:out value="${customer.email}"/></td>
                         <td style="text-align: left;"><c:out value="${customer.fullName}"/></td>
-                        <td>${customer.phoneNumber}</td>
+                        <td><c:out value="${customer.phoneNumber}"/></td>
                         <td>
                             ${customer.registerDate != null ? customer.registerDate.format(dateFormatter) : 'N/A'}
                         </td>

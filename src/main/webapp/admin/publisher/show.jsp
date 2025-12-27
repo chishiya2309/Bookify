@@ -31,10 +31,10 @@
     <c:forEach var="publisher" items="${listPublishers}">
         <tr>
             <td>${publisher.publisherId}</td>
-            <td>${publisher.name}</td>
-            <td>${publisher.contactEmail}</td>
-            <td>${publisher.address}</td>
-            <td>${publisher.website}</td>
+            <td><c:out value="${publisher.name}"/></td>
+            <td><c:out value="${publisher.contactEmail}"/></td>
+            <td><c:out value="${publisher.address}"/></td>
+            <td><c:out value="${publisher.website}"/></td>
             <td>
                 <a href="${pageContext.request.contextPath}/admin/publishers?action=showUpdate&id=${publisher.publisherId}">Edit</a>
                 <br>
