@@ -17,30 +17,12 @@
 
         <div class="search-bar">
             <form action="${pageContext.request.contextPath}/search_book" method="get">
-                <input type="text" name="keyword" placeholder="Tìm kiếm sách..." required />
-                <button type="submit">Tìm kiếm</button>
+                <input type="text" name="keyword" class="search-input" placeholder="Tìm kiếm sách..." required />
+                <button type="submit" class="search-btn">Tìm kiếm</button>
             </form>
         </div>
 
-        <div class="user-links">
-            <a href="${pageContext.request.contextPath}/customer/login.jsp">Đăng nhập</a>
-            <span>|</span>
-            <a href="${pageContext.request.contextPath}/customer/register.jsp">Đăng ký</a>
-            <span>|</span>
-            <a href="${pageContext.request.contextPath}/customer/cart">Giỏ hàng</a>
-        </div>
-        
-    </div>
-
-<<<<<<< HEAD
-    <div class="categories">
-=======
-    <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Tìm kiếm sách..." />
-        <button class="search-btn">Tìm kiếm</button>
-    </div>
-
-    <div class="auth-links">
+        <div class="auth-links">
         <a href="${pageContext.request.contextPath}/customer/login.jsp" id="loginLink">Đăng nhập</a> |
         <a href="${pageContext.request.contextPath}/customer/register.jsp">Đăng ký</a> |
         
@@ -237,7 +219,6 @@
     </style>
 
     <div class="category-bar">
->>>>>>> main
         <c:choose>
             <c:when test="${not empty listCategories}">
                 <c:forEach items="${listCategories}" var="category" varStatus="status">

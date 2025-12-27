@@ -7,7 +7,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sửa Voucher - Admin Bookify</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -27,6 +26,84 @@
             --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
             --border-radius: 12px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Admin Header Styles (Internal) */
+        .admin-header {
+            text-align: center;
+            padding: 30px 0 20px 0;
+            background-color: var(--bg-white);
+            border-bottom: 1px solid #dee2e6;
+        }
+        .admin-logo h1 {
+            margin: 0;
+            font-size: 24px;
+            font-style: italic;
+            font-weight: bold;
+            color: var(--color-primary);
+            text-transform: uppercase;
+        }
+        .admin-logo a {
+            text-decoration: none;
+        }
+        .admin-welcome {
+            font-size: 16px;
+            margin: 15px 0 25px 0;
+            color: var(--text-main);
+        }
+        .admin-welcome .email {
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+        .logout-btn {
+            margin-left: 15px;
+            text-decoration: underline;
+            color: var(--color-secondary);
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: var(--color-error);
+        }
+        .admin-menu {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding-bottom: 10px;
+        }
+        .admin-menu a {
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .admin-menu a:hover {
+            color: var(--color-primary);
+        }
+
+        /* Footer Admin Styles */
+        .footer-container,
+        .site-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px 0;
+            width: 100%;
+            background-color: var(--bg-white);
+            border-top: 1px solid var(--color-secondary);
+            color: var(--text-light);
+        }
+
+        /* Reset fieldset to remove default borders */
+        fieldset.form-section {
+            border: none;
+            padding: 0;
+            margin: 0 0 32px 0;
+        }
+        fieldset.form-section:last-child {
+            margin-bottom: 0;
+        }
+        legend.form-section-title {
+            width: 100%;
+            padding: 0;
         }
 
         * {
@@ -181,14 +258,26 @@
             margin-top: 2px;
         }
 
-        /* Form Card */
+        /* Form Card - Override external CSS */
         .form-card {
-            background: var(--bg-white);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease 0.3s forwards;
+            background: var(--bg-white) !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow-md) !important;
+            overflow: hidden !important;
+            animation: fadeInUp 0.5s ease 0.3s forwards !important;
             opacity: 0;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            text-align: left !important;
+        }
+        .form-card label {
+            display: block !important;
+            width: auto !important;
+        }
+        .form-card input[type="text"] {
+            width: 100% !important;
         }
 
         .form-card-header {
@@ -313,89 +402,96 @@
             font-size: 10px;
         }
 
-        /* Toggle Switch */
+        /* Toggle Switch - Override external CSS */
         .form-switch {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 16px !important;
+            padding: 16px 20px !important;
+            background: #f8f9fa !important;
+            border-radius: 10px !important;
         }
 
         .switch {
-            position: relative;
-            width: 52px;
-            height: 28px;
+            position: relative !important;
+            width: 52px !important;
+            min-width: 52px !important;
+            height: 28px !important;
+            flex-shrink: 0 !important;
+            display: inline-block !important;
         }
 
         .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
         }
 
         .switch-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #dee2e6;
-            border-radius: 28px;
-            transition: var(--transition);
+            position: absolute !important;
+            cursor: pointer !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: #dee2e6 !important;
+            border-radius: 28px !important;
+            transition: var(--transition) !important;
         }
 
         .switch-slider::before {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            left: 3px;
-            bottom: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: var(--transition);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            content: '' !important;
+            position: absolute !important;
+            width: 22px !important;
+            height: 22px !important;
+            left: 3px !important;
+            bottom: 3px !important;
+            background: white !important;
+            border-radius: 50% !important;
+            transition: var(--transition) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
         }
 
         .switch input:checked + .switch-slider {
-            background: var(--color-success);
+            background: var(--color-success) !important;
         }
 
         .switch input:checked + .switch-slider::before {
-            transform: translateX(24px);
+            transform: translateX(24px) !important;
         }
 
         .switch-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-main);
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            color: var(--text-main) !important;
         }
 
-        /* Form Actions */
+        /* Form Actions - Override external CSS */
         .form-actions {
-            display: flex;
-            gap: 16px;
-            padding: 24px 32px;
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
+            display: flex !important;
+            gap: 16px !important;
+            padding: 24px 32px !important;
+            background: #f8f9fa !important;
+            border-top: 1px solid #e9ecef !important;
+            margin-top: 0 !important;
+            text-align: left !important;
         }
 
         .btn {
-            padding: 14px 28px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: var(--transition);
-            font-family: inherit;
+            padding: 14px 28px !important;
+            border-radius: 10px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            border: none !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            transition: var(--transition) !important;
+            font-family: inherit !important;
+            background: transparent;
         }
 
         .btn-warning {

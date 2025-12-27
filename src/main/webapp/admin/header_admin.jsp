@@ -6,7 +6,7 @@
 <header class="admin-header">
 
     <div class="admin-logo">
-        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp">
+        <a href="${pageContext.request.contextPath}/admin/">
             <h1>LOGO BOOK STORE</h1>
         </a>
     </div>

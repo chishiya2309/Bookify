@@ -7,8 +7,8 @@
 
     <div class="header-top">
 
-        <div class="logo">
-            <a href="${pageContext.request.contextPath}/">
+        <div class="logo" style="display: flex; align-items: center; justify-content: center; padding: 8px 0;">
+            <a href="${pageContext.request.contextPath}/" style="display: inline-block;">
                 <img src="https://res.cloudinary.com/dbqaczv3a/image/upload/v1765890230/Screenshot_2025-12-16_200154_yclv14.png"
                      alt="Bookify"
                      style="height: 64px; object-fit: contain; display: block;">
