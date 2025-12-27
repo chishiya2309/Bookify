@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page pageEncoding="UTF-8" %>
 <%-- Header Admin - included file --%>
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
@@ -27,6 +27,7 @@
         <a href="${pageContext.request.contextPath}/admin/reviews.jsp">Reviews</a>
         <a href="${pageContext.request.contextPath}/admin/orders.jsp">Orders</a>
         <a href="${pageContext.request.contextPath}/admin/publishers">Publishers</a>
+        <a href="${pageContext.request.contextPath}/admin/vouchers">Vouchers</a>
         <a href="${pageContext.request.contextPath}/admin/user">Admin</a>
     </nav>
 

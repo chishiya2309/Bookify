@@ -17,34 +17,34 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebFilter("/*")
 public class JwtFilter implements Filter {
-    
+
     // Compiled regex patterns for redirect URL validation (for efficiency)
     private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+]*:.*");
     private static final Pattern BACKSLASH_AT_PATTERN = Pattern.compile("^/[\\\\@].*");
     private static final Pattern DOMAIN_PATTERN = Pattern.compile("^/[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(?:/.*)?$");
-    
+
     // 1. Cập nhật đường dẫn cho chạy ko cần đăng nhập
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-        "",
-        "/",                             // Root path
-        "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
-        "/customer/book_detail.jsp",     // Trang chi tiết sách (không cần đăng nhập)
-        "/customer/login.jsp",           
-        "/customer/register.jsp",
-        "/customer/cart.jsp",            // Giỏ hàng JSP (khách có thể xem)
-        "/customer/cart",                // Giỏ hàng Servlet (query database)
-        "/css/auth-style.css",
-        "/admin/AdminLogin.jsp"
-    );
-    
+            "",
+            "/", // Root path
+            "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
+            "/customer/book_detail.jsp", // Trang chi tiết sách (không cần đăng nhập)
+            "/customer/login.jsp",
+            "/customer/register.jsp",
+            "/customer/cart.jsp", // Giỏ hàng JSP (khách có thể xem)
+            "/customer/cart", // Giỏ hàng Servlet (query database)
+            "/css/auth-style.css",
+            "/admin/AdminLogin.jsp");
+
     // 2. Cập nhật đường dẫn cho Servlet (API) ko cần đăng nhập
     private static final List<String> EXCLUDED_SERVLETS = Arrays.asList(
-        "/auth/login",     
-        "/auth/register", 
-        "/auth/logout",    
-        "/auth/refresh",
-        "/customer/cart",                // Cart servlet cho guest
-        "/view_book"                     // Xem chi tiết sách (không cần đăng nhập)
+            "/auth/login",
+            "/auth/register",
+            "/auth/logout",
+            "/auth/refresh",
+            "/customer/cart", // Cart servlet cho guest
+            "/view_book", // Xem chi tiết sách (không cần đăng nhập)
+            "/api/" // API endpoints (webhooks, payment status, etc.)
     );
 
     @Override
@@ -54,25 +54,25 @@ public class JwtFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
+
         String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
-        
+
         // Bỏ qua các static resources
-        if (path.startsWith("/css/") || path.startsWith("/js/") || 
-            path.startsWith("/images/") || path.startsWith("/resources/")) {
+        if (path.startsWith("/css/") || path.startsWith("/js/") ||
+                path.startsWith("/images/") || path.startsWith("/resources/")) {
             chain.doFilter(request, response);
             return;
         }
-        
+
         // Bỏ qua các URL không cần xác thực (kiểm tra TRƯỚC khi kiểm tra token)
         // Đảm bảo path "/" luôn được phép truy cập để hiển thị CustomerHomePage
         if (shouldExclude(path)) {
             // Lấy token để kiểm tra nếu là ADMIN thì redirect
             String token = extractToken(httpRequest);
-            
+
             // Kiểm tra nếu là ADMIN cố vào trang customer hoặc trang chủ
             if (token != null && JwtUtil.validateToken(token)) {
                 String role = JwtUtil.extractRole(token);
@@ -82,14 +82,14 @@ public class JwtFilter implements Filter {
                     return;
                 }
             }
-            
+
             chain.doFilter(request, response);
             return;
         }
-        
+
         // Lấy token từ header hoặc cookie
         String token = extractToken(httpRequest);
-        
+
         if (token != null && JwtUtil.validateToken(token)) {
             // Token hợp lệ, lấy username và role và set vào request
             String username = JwtUtil.extractUsername(token);
@@ -122,7 +122,7 @@ public class JwtFilter implements Filter {
                 chain.doFilter(request, response);
             } else {
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                
+
                 // Redirect về trang phù hợp với role của user
                 if (isAdmin) {
                     // Admin cố vào trang customer -> về dashboard admin
@@ -142,8 +142,9 @@ public class JwtFilter implements Filter {
         } else {
             // Token không hợp lệ hoặc không tồn tại
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            
-            // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin (không cần redirect back)
+
+            // Phân chia luồng: Nếu đang vào Admin thì về AdminLogin (không cần redirect
+            // back)
             // Customer thì lưu URL gốc để redirect sau khi đăng nhập
             if (path.startsWith("/admin")) {
                 // Admin không cần redirect back - vào là phải đăng nhập luôn
@@ -155,7 +156,7 @@ public class JwtFilter implements Filter {
                 if (queryString != null) {
                     originalUrl += "?" + queryString;
                 }
-                
+
                 // Validate redirect URL to prevent open redirect vulnerability
                 String contextPath = httpRequest.getContextPath();
                 String redirectParam = "";
@@ -164,41 +165,41 @@ public class JwtFilter implements Filter {
                     String encodedUrl = java.net.URLEncoder.encode(originalUrl, "UTF-8");
                     redirectParam = "?redirect=" + encodedUrl;
                 }
-                
+
                 httpResponse.sendRedirect(httpRequest.getContextPath() + "/customer/login.jsp" + redirectParam);
             }
         }
     }
-    
+
     private boolean shouldExclude(String path) {
         // Kiểm tra exact match
         if (EXCLUDED_PATHS.contains(path) || EXCLUDED_SERVLETS.contains(path)) {
             return true;
         }
-        
+
         // Kiểm tra prefix match (chỉ với excluded paths có chiều dài > 1)
         for (String excluded : EXCLUDED_PATHS) {
             if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
-        
+
         for (String excluded : EXCLUDED_SERVLETS) {
             if (excluded.length() > 1 && path.startsWith(excluded)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     private String extractToken(HttpServletRequest request) {
         // Ưu tiên lấy từ Authorization header
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        
+
         // Nếu không có, lấy từ cookie
         jakarta.servlet.http.Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -208,10 +209,10 @@ public class JwtFilter implements Filter {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Validates that a redirect URL is a safe internal path.
      * Prevents open redirect vulnerabilities by ensuring the URL:
@@ -219,7 +220,7 @@ public class JwtFilter implements Filter {
      * - Does not contain a protocol scheme at the beginning
      * - Starts with the application context path or is root
      * 
-     * @param url The URL to validate
+     * @param url         The URL to validate
      * @param contextPath The application context path
      * @return true if the URL is a valid internal redirect, false otherwise
      */
@@ -227,27 +228,28 @@ public class JwtFilter implements Filter {
         if (url == null || url.isEmpty()) {
             return false;
         }
-        
+
         // Must be a relative URL (starts with / but not //)
         if (!url.startsWith("/") || url.startsWith("//")) {
             return false;
         }
-        
-        // Must not contain protocol scheme at the beginning (http://, https://, javascript:, etc.)
+
+        // Must not contain protocol scheme at the beginning (http://, https://,
+        // javascript:, etc.)
         // Use precompiled pattern for efficiency
         if (PROTOCOL_PATTERN.matcher(url).matches()) {
             return false;
         }
-        
+
         // Handle empty context path case
         String appContextPath = (contextPath != null) ? contextPath : "";
-        
+
         // Validate context path format if not empty
         if (!appContextPath.isEmpty() && !appContextPath.startsWith("/")) {
             // Invalid context path format, reject for safety
             return false;
         }
-        
+
         // Must start with context path or be root
         if (!appContextPath.isEmpty()) {
             // When contextPath is set, URL must be root or start with contextPath
@@ -262,14 +264,15 @@ public class JwtFilter implements Filter {
             if (BACKSLASH_AT_PATTERN.matcher(url).matches()) {
                 return false;
             }
-            
+
             // Check for simple domain-like patterns (e.g., '/evil.com' or '/evil.com/path')
-            // This pattern is more targeted to avoid rejecting valid paths with multiple dots
+            // This pattern is more targeted to avoid rejecting valid paths with multiple
+            // dots
             if (DOMAIN_PATTERN.matcher(url).matches()) {
                 return false;
             }
         }
-        
+
         return true;
     }
 

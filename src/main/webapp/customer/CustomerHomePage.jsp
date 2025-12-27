@@ -7,6 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Bookify - Online Bookstore</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
