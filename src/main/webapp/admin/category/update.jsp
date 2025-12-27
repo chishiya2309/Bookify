@@ -1,46 +1,53 @@
 <!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Category Management - Admin</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
+    <title>Edit Category</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
-<jsp:include page="../header_admin.jsp" />
+    
+<jsp:include page="../header_admin.jsp"/>
 
-<div class="container">
-    <h2>Edit Category</h2>
+<main class="admin-content">
+    
+    <div class="page-header">
+        <h2>Edit Category</h2>
+    </div>
 
     <c:if test="${not empty errorMessage}">
-        <div class="error-banner">${errorMessage}</div>
+        <div class="alert alert-danger" style="text-align: center; color: red;"><c:out value="${errorMessage}"/></div>
     </c:if>
 
-    <form action="${pageContext.request.contextPath}/admin/categories" method="post" class="form-card category-form" novalidate>
+    <c:if test="${not empty category}">
+        <form action="${pageContext.request.contextPath}/admin/categories" method="post" class="form-card">
+            <input type="hidden" name="action" value="update"/>
+            <input type="hidden" name="id" value="<c:out value='${category.categoryId}'/>"/>
 
-        <input type="hidden" name="action" value="update"/>
-        <input type="hidden" name="id" value="${category.categoryId}"/>
+            <div>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="<c:out value='${category.name}'/>" required maxlength="100"/>
+            </div>
 
-        <div class="form-row">
-            <label for="name">Category Name:</label>
-            <input id="name" type="text" name="name" value="${category.name}" required
-                   maxlength="100"
-                   minlength="1"
-                   placeholder="Enter category name (max 100 characters)"/>
+            <div class="form-actions">
+                <button type="submit" class="btn">Save</button>
+                <a class="btn-secondary" href="${pageContext.request.contextPath}/admin/categories">Cancel</a>
+            </div>
+        </form>
+    </c:if>
+
+    <c:if test="${empty category}">
+        <div style="text-align: center; margin-top: 20px;">
+            <p>Category not found.</p>
+            <a href="${pageContext.request.contextPath}/admin/categories">Back to list</a>
         </div>
+    </c:if>
+    
+</main>
 
-        <div class="buttons">
-            <button type="submit" class="btn">Save</button>
-            <a class="btn" href="${pageContext.request.contextPath}/admin/categories">Cancel</a>
-        </div>
-
-    </form>
-</div>
-
-<jsp:include page="../footer_admin.jsp" />
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/script.js"></script>
+<jsp:include page="../footer_admin.jsp"/>
 </body>
 </html>
+>>>>>>> main

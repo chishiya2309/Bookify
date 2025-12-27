@@ -1,6 +1,6 @@
 package com.bookstore.controller.admin;
 
-import com.bookstore.controller.client.ShoppingCartServlet;
+import com.bookstore.controller.ShoppingCartServlet;
 import com.bookstore.service.JwtUtil;
 import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.ValidationUtil;
