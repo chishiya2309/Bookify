@@ -29,12 +29,8 @@ public class AdminReviewServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        // Kiểm tra quyền admin
-        HttpSession session = request.getSession();
-        if (session.getAttribute("admin") == null) {
-            response.sendRedirect(request.getContextPath() + "/admin/login.jsp");
-            return;
-        }
+        // JwtFilter đã xử lý xác thực JWT cho /admin/* paths
+        // Không cần kiểm tra session thủ công
 
         String action = request.getParameter("action");
         if (action == null || action.isEmpty()) {
@@ -57,7 +53,7 @@ public class AdminReviewServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            request.getSession().setAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
             listReviews(request, response);
         }
 
@@ -81,8 +77,10 @@ public class AdminReviewServlet extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-                if (page < 1) page = 1;
-            } catch (NumberFormatException ignored) {}
+                if (page < 1)
+                    page = 1;
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         List<Review> reviewList = reviewServices.getReviewsForAdmin(

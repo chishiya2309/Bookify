@@ -18,6 +18,7 @@
         <a href="${pageContext.request.contextPath}/admin/books?action=showCreate" class="btn-create">
             + Create New Book
         </a>
+        <span style="margin-left: auto; color: #666;">Total: ${totalBooks} books</span>
     </div>
 
     <table>
@@ -31,6 +32,7 @@
             <th>Category</th>
             <th>Publisher</th>
             <th>Price</th>
+            <th>Quantity</th>
             <th>Last Updated</th>
             <th>Actions</th>
         </tr>
@@ -38,21 +40,17 @@
         <tbody>
         <c:if test="${empty books}">
             <tr>
-                <td colspan="10" style="text-align: center;">No data available.</td>
+                <td colspan="11" style="text-align: center;">No data available.</td>
             </tr>
         </c:if>
 
         <c:forEach var="book" items="${books}" varStatus="status">
             <tr>
-                <td>${status.index + 1}</td>
+                <td>${currentPage * pageSize + status.index + 1}</td>
                 <td>${book.bookId}</td>
                 <td>
                     <c:if test="${not empty book.images}">
-                        <c:forEach var="img" items="${book.images}">
-                            <c:if test="${img.isPrimary}">
-                                <img src="${img.url}" alt="${book.title}" style="width: 50px; height: 70px; object-fit: cover;">
-                            </c:if>
-                        </c:forEach>
+                        <img src="${book.images[0].url}" alt="${book.title}" style="width: 50px; height: 70px; object-fit: cover;">
                     </c:if>
                     <c:if test="${empty book.images}">
                         <span style="color: #999;">No image</span>
@@ -84,6 +82,7 @@
                         N/A
                     </c:if>
                 </td>
+                <td>${book.quantityInStock}</td>
                 <td>
                     <c:if test="${not empty book.lastUpdated}">
                         ${book.lastUpdated}
@@ -102,6 +101,43 @@
         </c:forEach>
         </tbody>
     </table>
+
+    <!-- Pagination -->
+    <c:if test="${totalPages > 1}">
+        <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 20px 0; flex-wrap: wrap;">
+            <c:if test="${currentPage > 0}">
+                <a href="${pageContext.request.contextPath}/admin/books?page=0&size=${pageSize}" 
+                   class="btn" style="padding: 8px 12px;">First</a>
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage - 1}&size=${pageSize}" 
+                   class="btn" style="padding: 8px 12px;">« Prev</a>
+            </c:if>
+            
+            <c:forEach begin="${currentPage > 2 ? currentPage - 2 : 0}" 
+                       end="${currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1}" 
+                       var="i">
+                <c:choose>
+                    <c:when test="${i == currentPage}">
+                        <span class="btn" style="padding: 8px 12px; background: #007bff; color: white;">${i + 1}</span>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/admin/books?page=${i}&size=${pageSize}" 
+                           class="btn" style="padding: 8px 12px;">${i + 1}</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+            
+            <c:if test="${currentPage < totalPages - 1}">
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage + 1}&size=${pageSize}" 
+                   class="btn" style="padding: 8px 12px;">Next »</a>
+                <a href="${pageContext.request.contextPath}/admin/books?page=${totalPages - 1}&size=${pageSize}" 
+                   class="btn" style="padding: 8px 12px;">Last</a>
+            </c:if>
+        </div>
+        
+        <div style="text-align: center; color: #666; margin-bottom: 20px;">
+            Page ${currentPage + 1} of ${totalPages}
+        </div>
+    </c:if>
 
     <div id="confirmModal" class="modal-backdrop">
         <div class="modal-box">
