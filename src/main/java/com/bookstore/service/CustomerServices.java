@@ -357,4 +357,4 @@ public class CustomerServices {
     public List<Category> listCategories() {
         // Delegate to listAllCategories() to avoid duplicate category-loading logic
         return listAllCategories();
-}
+}}

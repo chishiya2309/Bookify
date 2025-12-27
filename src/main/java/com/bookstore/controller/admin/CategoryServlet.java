@@ -76,8 +76,12 @@ public class CategoryServlet extends HttpServlet {
     private void showUpdateForm(HttpServletRequest request) {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
-            Category category = categoryService.findById(Integer.parseInt(idStr));
-            request.setAttribute("category", category);
+            try {
+                Category category = categoryService.findById(Integer.parseInt(idStr));
+                request.setAttribute("category", category);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("ID danh mục không hợp lệ");
+            }
         }
     }
 
@@ -88,16 +92,24 @@ public class CategoryServlet extends HttpServlet {
     }
 
     private void updateCategory(HttpServletRequest request) {
-        Integer id = Integer.parseInt(request.getParameter("id"));
-        String name = request.getParameter("name");
-        categoryService.update(id, name);
-        request.setAttribute("message", "Cập nhật danh mục thành công");
+        try {
+            Integer id = Integer.parseInt(request.getParameter("id"));
+            String name = request.getParameter("name");
+            categoryService.update(id, name);
+            request.setAttribute("message", "Cập nhật danh mục thành công");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID danh mục không hợp lệ");
+        }
     }
 
     private void deleteCategory(HttpServletRequest request) {
-        Integer id = Integer.parseInt(request.getParameter("id"));
-        categoryService.delete(id);
-        request.setAttribute("message", "Đã xóa danh mục");
+        try {
+            Integer id = Integer.parseInt(request.getParameter("id"));
+            categoryService.delete(id);
+            request.setAttribute("message", "Đã xóa danh mục");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID danh mục không hợp lệ");
+        }
     }
 
     @Override
