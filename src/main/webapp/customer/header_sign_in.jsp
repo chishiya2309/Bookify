@@ -17,7 +17,7 @@
 
         <div class="search-bar">
             <form action="${pageContext.request.contextPath}/search_book" method="get">
-                <input type="text" name="keyword" class="search-input" placeholder="Tìm kiếm sách..." required />
+                <input type="text" name="keyword" class="search-input" placeholder="Tìm kiếm sách..." />
                 <button type="submit" class="search-btn">Tìm kiếm</button>
             </form>
         </div>
