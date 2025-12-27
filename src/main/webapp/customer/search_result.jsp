@@ -100,7 +100,7 @@
                         <div class="item-author">
                             Tác giả: 
                             <c:forEach items="${book.authors}" var="author" varStatus="status">
-                                ${author.name}${!status.last ? ',' : ''}
+                                <c:out value="${author.name}" /><c:out value="${!status.last ? ',' : ''}" />
                             </c:forEach>
                         </div>
                         
