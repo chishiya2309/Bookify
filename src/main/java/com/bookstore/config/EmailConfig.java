@@ -71,7 +71,11 @@ public class EmailConfig {
     }
 
     public static int getSmtpPort() {
-        return Integer.parseInt(SMTP_PORT);
+        try {
+            return Integer.parseInt(SMTP_PORT);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid SMTP port configured: " + SMTP_PORT, e);
+        }
     }
 
     public static boolean isConfigured() {
