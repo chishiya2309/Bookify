@@ -100,13 +100,16 @@ public class ValidationUtil {
             return false;
         }
         
+        // Trim the keyword before checking length to prevent bypass with trailing spaces
+        String trimmedKeyword = keyword.trim();
+        
         // Limit maximum length to prevent DoS attacks through extremely long strings
-        if (keyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
+        if (trimmedKeyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
             return false;
         }
         
         // Check for potential SQL injection patterns as defense-in-depth
-        if (containsSqlInjection(keyword)) {
+        if (containsSqlInjection(trimmedKeyword)) {
             return false;
         }
         

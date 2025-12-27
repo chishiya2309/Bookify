@@ -21,6 +21,8 @@ import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.bookstore.service.ValidationUtil.isValidSearchKeyword;
+
 public class BookDAO {
     // Create a new book
     public static void createBook(Book book) {
@@ -251,7 +253,7 @@ public class BookDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             // Validate keyword length and check for malicious patterns to prevent DoS attacks
-            if (!com.bookstore.service.ValidationUtil.isValidSearchKeyword(keyword)) {
+            if (!isValidSearchKeyword(keyword)) {
                 return new ArrayList<>();
             }
             
