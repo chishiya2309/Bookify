@@ -75,7 +75,7 @@ public class PaymentStatusServlet extends HttpServlet {
                 return;
             }
 
-            Integer orderId = Integer.parseInt(orderIdStr);
+            int orderId = Integer.parseInt(orderIdStr);
 
             // Get order
             Order order = orderService.getOrderById(orderId);
