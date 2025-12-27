@@ -8,6 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giỏ hàng - Bookify</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -69,7 +70,7 @@
             font-weight: bold;
             margin: 0;
         }
-        .cart-badge {
+        .cart-page-badge {
             background: rgba(255,255,255,0.2);
             padding: 4px 12px;
             border-radius: 20px;
@@ -280,7 +281,7 @@
             body {
                 padding: 12px;
             }
-            .cart-badge {
+            .cart-page-badge {
                 font-size: 12px;
                 padding: 3px 10px;
             }
@@ -555,18 +556,22 @@
         
         <!-- Thông báo gộp giỏ hàng -->
         <c:if test="${not empty mergeMessage}">
-            <article style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid var(--color-warning); border-radius: 8px; padding: 16px;">
+            <article id="mergeToast" class="toast" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid var(--color-warning); border-radius: 8px; padding: 16px;">
                 <div style="display: flex; align-items: start; gap: 12px;">
                     <i class="fas fa-info-circle" style="color: var(--color-warning); font-size: 20px; margin-top: 2px;"></i>
-                    <section>
+                    <section style="flex: 1;">
                         <h2 style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">
                             Gộp giỏ hàng thành công
                         </h2>
-                        <div style="font-size: 14px; color: var(--text-main); line-height: 1.6;">
+                        <div style="font-size: 14px; color: var(--text-main); line-height: 1.6; white-space: pre-line;">
                             <c:out value="${mergeMessage}"/>
                         </div>
                     </section>
+                    <button type="button" class="toast-close" onclick="closeToast('mergeToast')" title="Đóng">
+                        <i class="fas fa-times" style="color: var(--color-warning);"></i>
+                    </button>
                 </div>
+                <div class="toast-progress" style="background: var(--color-warning);"></div>
             </article>
         </c:if>
         
@@ -585,10 +590,16 @@
                             </p>
                         </div>
                     </section>
-                    <a href="login?redirect=cart" class="btn btn-primary" style="white-space: nowrap;">
+                    <a href="#" onclick="goToLogin()" class="btn btn-primary" style="white-space: nowrap;">
                         <i class="fas fa-sign-in-alt"></i>
                         Đăng nhập / Đăng ký
                     </a>
+                    <script>
+                        function goToLogin() {
+                            var currentUrl = window.location.pathname + window.location.search;
+                            window.location.href = '${pageContext.request.contextPath}/customer/login.jsp?redirect=' + encodeURIComponent(currentUrl);
+                        }
+                    </script>
                 </div>
             </article>
         </c:if>
@@ -599,7 +610,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     Giỏ hàng của bạn
                     <c:if test="${not empty cart and not empty cart.items}">
-                        <span class="cart-badge">${cart.totalItems} sản phẩm</span>
+                        <span class="cart-page-badge">${cart.totalItems} sản phẩm</span>
                     </c:if>
                 </h1>
                 <c:if test="${not empty cart and not empty cart.items}">

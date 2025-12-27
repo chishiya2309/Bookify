@@ -20,7 +20,6 @@
     </c:if>
 
     <form action="${pageContext.request.contextPath}/admin/publishers" method="post" class="form-card publisher-form" novalidate>
-
         <input type="hidden" name="action" value="update"/>
         <input type="hidden" name="id" value="${publisher.publisherId}"/>
 
