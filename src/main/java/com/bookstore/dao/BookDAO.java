@@ -257,13 +257,16 @@ public class BookDAO {
                 return new ArrayList<>();
             }
             
+            // Trim keyword to ensure consistency with validation
+            String trimmedKeyword = keyword.trim();
+            
             // 1. Tìm sách theo tiêu đề 
             String qString = "SELECT DISTINCT b FROM Book b " +
                              "LEFT JOIN FETCH b.authors a " +
                              "WHERE lower(b.title) LIKE :keyword";
 
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
-            q.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+            q.setParameter("keyword", "%" + trimmedKeyword.toLowerCase() + "%");
 
             List<Book> list = q.getResultList();
 
