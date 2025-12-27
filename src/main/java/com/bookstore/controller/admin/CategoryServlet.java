@@ -57,12 +57,19 @@ public class CategoryServlet extends HttpServlet {
                     listCategories(request);
             }
         } catch (NumberFormatException e) {
+            log("NumberFormatException while parsing ID parameter", e);
             request.setAttribute("errorMessage", "ID không hợp lệ. Vui lòng nhập số nguyên.");
-            if ("showUpdate".equals(action) || "update".equals(action)) {
+            if ("showUpdate".equals(action)) {
                 url = "/admin/category/update.jsp";
+            } else if ("update".equals(action)) {
+                listCategories(request);
+                url = "/admin/category/show.jsp";
             } else if ("delete".equals(action)) {
                 listCategories(request);
                 url = "/admin/category/show.jsp";
+            } else {
+                // For any other action, list categories and show default page
+                listCategories(request);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             request.setAttribute("errorMessage", e.getMessage());
