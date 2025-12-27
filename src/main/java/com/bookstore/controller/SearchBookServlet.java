@@ -34,6 +34,10 @@ public class SearchBookServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        // Thiết lập encoding UTF-8 cho request và response trước khi xử lý tham số
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        
         // --- 1. KIỂM TRA ĐĂNG NHẬP (Dùng JwtAuthHelper) ---
         // Hàm này sẽ tự động set các attribute: "isLoggedIn", "userEmail", "userRole"
         JwtAuthHelper.checkLoginStatus(request);
