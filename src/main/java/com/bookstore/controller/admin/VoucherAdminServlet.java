@@ -159,32 +159,66 @@ public class VoucherAdminServlet extends HttpServlet {
         voucher.setDiscountType(Voucher.DiscountType.valueOf(discountType));
 
         String discountValue = request.getParameter("discountValue");
-        voucher.setDiscountValue(new BigDecimal(discountValue));
+        if (discountValue != null && !discountValue.isEmpty()) {
+            try {
+                voucher.setDiscountValue(new BigDecimal(discountValue));
+            } catch (NumberFormatException e) {
+                Logger.getLogger(VoucherAdminServlet.class.getName())
+                        .log(Level.WARNING, "Invalid discountValue: " + discountValue, e);
+                voucher.setDiscountValue(null);
+            }
+        } else {
+            voucher.setDiscountValue(null);
+        }
 
         String maxDiscount = request.getParameter("maxDiscount");
         if (maxDiscount != null && !maxDiscount.isEmpty()) {
-            voucher.setMaxDiscount(new BigDecimal(maxDiscount));
+            try {
+                voucher.setMaxDiscount(new BigDecimal(maxDiscount));
+            } catch (NumberFormatException e) {
+                Logger.getLogger(VoucherAdminServlet.class.getName())
+                        .log(Level.WARNING, "Invalid maxDiscount: " + maxDiscount, e);
+                voucher.setMaxDiscount(null);
+            }
         } else {
             voucher.setMaxDiscount(null);
         }
 
         String minOrderAmount = request.getParameter("minOrderAmount");
         if (minOrderAmount != null && !minOrderAmount.isEmpty()) {
-            voucher.setMinOrderAmount(new BigDecimal(minOrderAmount));
+            try {
+                voucher.setMinOrderAmount(new BigDecimal(minOrderAmount));
+            } catch (NumberFormatException e) {
+                Logger.getLogger(VoucherAdminServlet.class.getName())
+                        .log(Level.WARNING, "Invalid minOrderAmount: " + minOrderAmount, e);
+                voucher.setMinOrderAmount(BigDecimal.ZERO);
+            }
         } else {
             voucher.setMinOrderAmount(BigDecimal.ZERO);
         }
 
         String maxUses = request.getParameter("maxUses");
         if (maxUses != null && !maxUses.isEmpty()) {
-            voucher.setMaxUses(Integer.parseInt(maxUses));
+            try {
+                voucher.setMaxUses(Integer.parseInt(maxUses));
+            } catch (NumberFormatException e) {
+                Logger.getLogger(VoucherAdminServlet.class.getName())
+                        .log(Level.WARNING, "Invalid maxUses: " + maxUses, e);
+                voucher.setMaxUses(null);
+            }
         } else {
             voucher.setMaxUses(null);
         }
 
         String maxUsesPerUser = request.getParameter("maxUsesPerUser");
         if (maxUsesPerUser != null && !maxUsesPerUser.isEmpty()) {
-            voucher.setMaxUsesPerUser(Integer.parseInt(maxUsesPerUser));
+            try {
+                voucher.setMaxUsesPerUser(Integer.parseInt(maxUsesPerUser));
+            } catch (NumberFormatException e) {
+                Logger.getLogger(VoucherAdminServlet.class.getName())
+                        .log(Level.WARNING, "Invalid maxUsesPerUser: " + maxUsesPerUser, e);
+                voucher.setMaxUsesPerUser(1);
+            }
         } else {
             voucher.setMaxUsesPerUser(1);
         }
