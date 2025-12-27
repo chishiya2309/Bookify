@@ -61,7 +61,7 @@
         
         <div class="search-header">
             <c:if test="${not empty keyword}">
-                <h2>Kết quả tìm kiếm cho <span class="highlight">"${keyword}"</span></h2>
+                <h2>Kết quả tìm kiếm cho <span class="highlight">"<c:out value="${keyword}" />"</span></h2>
             </c:if>
             <c:if test="${empty keyword}">
                 <h2>Kết quả tìm kiếm</h2>
