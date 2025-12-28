@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Book - Admin</title>
+    <title>Thêm Sách mới - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
     <style>
@@ -135,14 +135,14 @@
 <jsp:include page="../header_admin.jsp" />
 
 <div class="container">
-    <h2>Create New Book</h2>
+    <h2>Thêm Sách mới</h2>
 
     <form action="${pageContext.request.contextPath}/admin/books" method="post" enctype="multipart/form-data" class="form-card" novalidate id="bookForm">
 
         <input type="hidden" name="action" value="create"/>
 
         <div class="form-row">
-            <label for="categoryId">Category:</label>
+            <label for="categoryId">Danh mục:</label>
             <select id="categoryId" name="categoryId" required>
                 <c:forEach items="${listCategory}" var="cat">
                     <option value="${cat.categoryId}">${cat.name}</option>
@@ -151,9 +151,9 @@
         </div>
 
         <div class="form-row">
-            <label for="publisherId">Publisher:</label>
+            <label for="publisherId">Nhà xuất bản:</label>
             <select id="publisherId" name="publisherId">
-                <option value="">-- Select Publisher --</option>
+                <option value="">-- Chọn NXB --</option>
                 <c:forEach items="${listPublishers}" var="pub">
                     <option value="${pub.publisherId}">${pub.name}</option>
                 </c:forEach>
@@ -161,15 +161,15 @@
         </div>
 
         <div class="form-row">
-            <label for="title">Title:</label>
+            <label for="title">Tiêu đề:</label>
             <input id="title" type="text" name="title" required
                    maxlength="255"
                    minlength="1"
-                   placeholder="Enter book title (max 255 characters)">
+                   placeholder="Nhập tiêu đề sách (tối đa 255 ký tự)">
         </div>
 
         <div class="form-row">
-            <label for="authorSelect">Author:</label>
+            <label for="authorSelect">Tác giả:</label>
             <select name="authorIds" id="authorSelect" multiple="multiple" required class="tomselect-authors">
                 <c:forEach items="${listAuthors}" var="author">
                     <option value="${author.authorId}">${author.name}</option>
@@ -183,26 +183,26 @@
                    maxlength="20"
                    minlength="10"
                    pattern="[0-9\-]{10,20}"
-                   placeholder="Enter ISBN (10-20 digits)"
-                   title="ISBN must be 10-20 characters, digits and hyphens only">
+                   placeholder="Nhập ISBN (10-20 ký tự)"
+                   title="ISBN phải có 10-20 ký tự, chỉ gồm số và dấu gạch ngang">
         </div>
 
         <div class="form-row">
-            <label for="publishDate">Publish Date:</label>
+            <label for="publishDate">Ngày xuất bản:</label>
             <input id="publishDate" type="date" name="publishDate" required
-                   title="Publish date cannot be in the future">
+                   title="Ngày xuất bản không được trong tương lai">
         </div>
 
         <div class="form-row" style="align-items: start;">
-            <label>Book Images:</label>
+            <label>Hình ảnh sách:</label>
             <div style="width: 100%;">
                 <div class="image-upload-section" id="dropZone">
                     <input type="file" id="bookImages" name="bookImages" multiple
                            accept="image/jpeg,image/png,image/jpg,image/webp">
                     <div class="upload-placeholder">
                         <div style="font-size: 48px; color: #ccc;">📷</div>
-                        <p><strong>Click to upload</strong> or drag and drop</p>
-                        <span>JPEG, PNG, JPG, WEBP (Max 5MB each)</span>
+                        <p><strong>Click để tải lên</strong> hoặc kéo thả</p>
+                        <span>JPEG, PNG, JPG, WEBP (Tối đa 5MB mỗi ảnh)</span>
                     </div>
                 </div>
                 <div class="image-preview-gallery" id="imagePreviewGallery"></div>
@@ -211,7 +211,7 @@
         </div>
 
         <div class="form-row">
-            <label for="price">Price:</label>
+            <label for="price">Giá:</label>
             <div class="input-prefix">
                 <span class="prefix">VND</span>
                 <input id="price" type="number" name="price" required
@@ -219,32 +219,32 @@
                        max="99999999.99"
                        step="0.01"
                        placeholder="0.00"
-                       title="Price must be greater than 0">
+                       title="Giá phải lớn hơn 0">
             </div>
         </div>
 
         <div class="form-row">
-            <label for="quantity">Quantity In Stock:</label>
+            <label for="quantity">Số lượng trong kho:</label>
             <input id="quantity" type="number" name="quantity" required
                    min="0"
                    max="999999"
                    step="1"
                    value="0"
-                   placeholder="Enter quantity in stock"
-                   title="Quantity must be 0 or greater">
+                   placeholder="Nhập số lượng"
+                   title="Số lượng phải từ 0 trở lên">
         </div>
 
         <div class="form-row" style="align-items: start;">
-            <label for="description">Description:</label>
+            <label for="description">Mô tả:</label>
             <textarea id="description" name="description" rows="5"
                       minlength="10"
                       maxlength="5000"
-                      placeholder="Enter book description (10-5000 characters)"></textarea>
+                      placeholder="Nhập mô tả sách (10-5000 ký tự)"></textarea>
         </div>
 
         <div class="buttons">
-            <button type="submit" class="btn">Save</button>
-            <a class="btn" href="${pageContext.request.contextPath}/admin/books">Cancel</a>
+            <button type="submit" class="btn">Lưu</button>
+            <a class="btn" href="${pageContext.request.contextPath}/admin/books">Huỷ</a>
         </div>
 
     </form>
@@ -293,7 +293,7 @@
             if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
                 selectedFiles.push(file);
             } else if (file.size > 5 * 1024 * 1024) {
-                alert('File "' + file.name + '" exceeds 5MB limit');
+                alert('File "' + file.name + '" vượt quá giới hạn 5MB');
             }
         }
         updateGallery();
@@ -311,11 +311,11 @@
                 
                 let html = '';
                 if (isPrimary) {
-                    html += '<span class="primary-badge">Primary</span>';
+                    html += '<span class="primary-badge">Ảnh chính</span>';
                 }
                 html += '<img src="' + e.target.result + '" alt="Preview">';
                 html += '<button type="button" class="remove-btn" onclick="removeImage(' + index + ')">&times;</button>';
-                html += '<button type="button" class="set-primary-btn" onclick="setPrimary(' + index + ')">Set as Primary</button>';
+                html += '<button type="button" class="set-primary-btn" onclick="setPrimary(' + index + ')">Đặt làm ảnh chính</button>';
                 html += '<div class="image-info">' + file.name + '</div>';
                 div.innerHTML = html;
                 gallery.appendChild(div);
@@ -352,7 +352,7 @@
     document.getElementById('bookForm').addEventListener('submit', function(e) {
         if (selectedFiles.length === 0) {
             e.preventDefault();
-            alert('Please upload at least one book image');
+            alert('Vui lòng tải lên ít nhất một hình ảnh sách');
             return false;
         }
     });
@@ -362,4 +362,3 @@
 </script>
 </body>
 </html>
-

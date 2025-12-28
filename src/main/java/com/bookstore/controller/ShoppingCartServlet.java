@@ -82,13 +82,11 @@ public class ShoppingCartServlet extends HttpServlet {
                                     ", Qty=" + item.getQuantity());
                         }
                     }
-
                     cartService.calculateCartTotals(cart);
                 } else {
                     System.out.println("[DEBUG] Failed to create cart for customer");
                     cart = new ShoppingCart(); // Tạo empty cart để tránh null
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("error", "Unable to load cart: " + e.getMessage());
@@ -104,7 +102,6 @@ public class ShoppingCartServlet extends HttpServlet {
         if (customer != null) {
             request.setAttribute("userEmail", customer.getEmail());
         }
-
         // Hiển thị thông báo merge nếu có
         String mergeMessage = (String) session.getAttribute(MERGE_MESSAGE_KEY);
         if (mergeMessage != null) {
@@ -140,7 +137,6 @@ public class ShoppingCartServlet extends HttpServlet {
 
         try {
             ShoppingCart cart;
-
             if (customer == null) {
                 // Guest user
                 cart = getGuestCart(session);
@@ -148,9 +144,7 @@ public class ShoppingCartServlet extends HttpServlet {
                 // Logged in user - sử dụng method mới
                 cart = cartService.getOrCreateCartForCustomer(customer);
             }
-
             String successMessage = null;
-
             switch (action) {
                 case "add":
                     addToCart(request, cart);
@@ -201,7 +195,6 @@ public class ShoppingCartServlet extends HttpServlet {
                     successMessage = "Đã cập nhật số lượng!";
                     break;
             }
-
             // Lưu lại guest cart vào session nếu là guest
             if (customer == null) {
                 saveGuestCart(session, cart);
@@ -232,13 +225,13 @@ public class ShoppingCartServlet extends HttpServlet {
      */
     private ShoppingCart getGuestCart(HttpSession session) {
         ShoppingCart guestCart = (ShoppingCart) session.getAttribute(GUEST_CART_KEY);
-
         if (guestCart == null) {
             guestCart = cartService.getOrCreateGuestCart();
             session.setAttribute(GUEST_CART_KEY, guestCart);
         }
 
         return guestCart;
+
     }
 
     /**
@@ -252,6 +245,7 @@ public class ShoppingCartServlet extends HttpServlet {
      * CART MERGING - Được gọi khi user đăng nhập thành công
      * Hàm này nên được gọi từ LoginServlet
      */
+
     public static void mergeCartOnLogin(HttpSession session, Customer customer,
             ShoppingCartServices cartService) {
         ShoppingCart guestCart = (ShoppingCart) session.getAttribute(GUEST_CART_KEY);
@@ -273,7 +267,6 @@ public class ShoppingCartServlet extends HttpServlet {
     private void addToCart(HttpServletRequest request, ShoppingCart cart) throws IllegalArgumentException {
         String bookIdParam = request.getParameter("bookId");
         String quantityParam = request.getParameter("quantity");
-
         if (bookIdParam == null) {
             throw new IllegalArgumentException("Missing required parameter: bookId");
         }
@@ -360,6 +353,7 @@ public class ShoppingCartServlet extends HttpServlet {
      * Đọc các parameter: quantity_[cartItemId] (user cart) hoặc
      * quantity_book_[bookId] (guest cart) từ form
      */
+
     private void updateCart(HttpServletRequest request, ShoppingCart cart) {
         boolean isGuestCart = (cart.getCartId() == null);
         System.out.println(
@@ -410,7 +404,9 @@ public class ShoppingCartServlet extends HttpServlet {
                         }
                         updatedCount++;
                     }
-                } catch (NumberFormatException e) {
+                } catch (
+
+                NumberFormatException e) {
                     System.out.println("[UPDATE CART] Invalid quantity format for item " +
                             (isGuestCart ? "Book:" + item.getBook().getBookId() : item.getCartItemId()));
                 }
@@ -469,7 +465,6 @@ public class ShoppingCartServlet extends HttpServlet {
         if (quantityParam == null) {
             throw new IllegalArgumentException("Missing required parameter: quantity");
         }
-
         try {
             Integer itemId = Integer.parseInt(itemIdParam);
             Integer quantity = Integer.parseInt(quantityParam);

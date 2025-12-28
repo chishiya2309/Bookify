@@ -1,5 +1,8 @@
 package com.bookstore.controller;
 
+import com.bookstore.model.Book;
+import com.bookstore.model.Review;
+import com.bookstore.service.BookServices;
 import com.bookstore.dao.OrderDAO;
 import com.bookstore.model.Book;
 import com.bookstore.model.Customer;
@@ -31,7 +34,6 @@ public class BookDetailServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-
         // ==================== LOAD MORE REVIEWS (AJAX) ====================
         if ("loadMore".equals(action)) {
             String idParam = request.getParameter("id");
@@ -45,7 +47,6 @@ public class BookDetailServlet extends HttpServlet {
             try {
                 int bookId = Integer.parseInt(idParam);
                 int page = Integer.parseInt(pageParam);
-
                 List<Review> reviews = reviewServices.getReviewsByBook(bookId, page); // ← DÙNG ReviewServices
 
                 response.setContentType("text/html; charset=UTF-8");
@@ -130,7 +131,6 @@ public class BookDetailServlet extends HttpServlet {
             request.setAttribute("reviews", reviews != null ? reviews : new java.util.ArrayList<>());
             request.setAttribute("totalReviews", totalReviews);
             request.setAttribute("loadedCount", reviews != null ? reviews.size() : 0);
-
             request.setAttribute("currentCustomer", currentCustomer); // ← Để JSP biết có đang login không
             request.setAttribute("customerReview", customerReview); // ← Đã review chưa + nội dung nếu có
             request.setAttribute("canReview", canReview); // ← Có quyền viết review không (đã mua + đã giao)

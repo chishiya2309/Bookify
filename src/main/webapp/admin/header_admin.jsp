@@ -24,11 +24,10 @@
         <a href="${pageContext.request.contextPath}/admin/books">Books</a>
         <a href="${pageContext.request.contextPath}/admin/customers">Customers</a>
         <a href="${pageContext.request.contextPath}/admin/reviews">Reviews</a>
-        <a href="${pageContext.request.contextPath}/admin/orders.jsp">Orders</a>
+        <a href="${pageContext.request.contextPath}/admin/orders">Orders</a>
         <a href="${pageContext.request.contextPath}/admin/publishers">Publishers</a>
         <a href="${pageContext.request.contextPath}/admin/authors">Authors</a>
         <a href="${pageContext.request.contextPath}/admin/vouchers">Vouchers</a>
         <a href="${pageContext.request.contextPath}/admin/user">Admin</a>
     </nav>
-
 </header>

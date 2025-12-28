@@ -4,9 +4,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 
 <div class="header-container">
-
     <div class="header-top">
-
         <div class="logo" style="display: flex; align-items: center; justify-content: center; padding: 8px 0;">
             <a href="${pageContext.request.contextPath}/" style="display: inline-block;">
                 <img src="https://res.cloudinary.com/dbqaczv3a/image/upload/v1765890230/Screenshot_2025-12-16_200154_yclv14.png"
@@ -25,7 +23,7 @@
         <div class="user-links">
             <span>Xin chào, <strong><c:out value="${userName}" default="Khách"/></strong></span>
             <span>|</span>
-            <a href="${pageContext.request.contextPath}/customer/orders.jsp">Đơn hàng</a> |
+            <a href="${pageContext.request.contextPath}/customer/orders">Đơn hàng</a> |
             <a href="${pageContext.request.contextPath}/auth/logout">Đăng xuất</a> |
             
             <!-- Cart with Mini-Cart Dropdown -->
@@ -265,7 +263,7 @@
                     <a href="${pageContext.request.contextPath}/view_category?id=${category.categoryId}">
                         <c:out value="${category.name}"/>
                     </a>
-                    
+                
                     <c:if test="${!status.last}"> | </c:if>
                 </c:forEach>
             </c:when>

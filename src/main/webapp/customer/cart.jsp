@@ -281,6 +281,7 @@
             body {
                 padding: 12px;
             }
+
             .cart-page-badge {
                 font-size: 12px;
                 padding: 3px 10px;
@@ -817,14 +818,11 @@
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
                 actionInput.value = 'remove';
-                
-                // Gửi cả itemId và bookId để server có thể xử lý đúng
-                // Guest cart sẽ dùng bookId, user cart sẽ dùng itemId
                 const itemIdInput = document.createElement('input');
                 itemIdInput.type = 'hidden';
                 itemIdInput.name = 'itemId';
                 itemIdInput.value = itemId;
-                
+
                 const bookIdInput = document.createElement('input');
                 bookIdInput.type = 'hidden';
                 bookIdInput.name = 'bookId';

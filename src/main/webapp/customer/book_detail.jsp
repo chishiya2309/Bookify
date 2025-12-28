@@ -110,7 +110,6 @@
     .buy-now-btn:hover { background: #c82333; }
     .shipping-info { margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee; }
     .shipping-info p { margin: 8px 0; font-size: 15px; color: #555; }
-
     .reviews-section { margin-top: 60px; border-top: 2px solid #eee; padding-top: 30px; text-align: left; }
     .reviews-section h2 { margin-bottom: 25px; color: #333; text-align: left; }
     .reviews-section h3 { text-align: left; }
@@ -255,7 +254,7 @@
 
       <div class="shipping-info">
         <p>🚚 Miễn phí vận chuyển cho đơn hàng từ 300.000₫</p>
-        <p>💳 Thanh toán: COD, thẻ tín dụng, chuyển khoản</p>
+        <p>💳 Thanh toán: COD, chuyển khoản ngân hàng</p>
         <p>↩️ Đổi trả trong 7 ngày nếu lỗi hoặc sai sản phẩm</p>
         <p>📞 Hỗ trợ khách hàng 24/7</p>
       </div>
@@ -355,6 +354,7 @@
 <jsp:include page="/customer/footer_customer.jsp"></jsp:include>
 
 <script>
+
   // IMAGE CAROUSEL
   let currentSlide = 0;
   const slides = document.querySelectorAll('.carousel-main img');
@@ -569,6 +569,5 @@
     form.submit();
   }
 </script>
-
 </body>
 </html>

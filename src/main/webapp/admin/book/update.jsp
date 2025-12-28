@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Book - Admin</title>
+    <title>Chỉnh sửa Sách - Admin</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.min.css" rel="stylesheet">
@@ -173,20 +173,20 @@
 <jsp:include page="../header_admin.jsp" />
 
 <div class="container">
-    <h2>Edit Book</h2>
+    <h2>Chỉnh sửa Sách</h2>
 
     <c:if test="${not empty errorMessage}">
         <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #c33;">
-            <strong>Error:</strong> ${errorMessage}
+            <strong>Lỗi:</strong> ${errorMessage}
             <br>
-            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Back to Books List</a>
+            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Quay lại danh sách sách</a>
         </div>
     </c:if>
     <c:if test="${empty book}">
         <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #c33;">
-            <strong>Error:</strong> Book not found!
+            <strong>Lỗi:</strong> Không tìm thấy sách!
             <br>
-            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Back to Books List</a>
+            <a href="${pageContext.request.contextPath}/admin/books" style="color: #c33; text-decoration: underline;">Quay lại danh sách sách</a>
         </div>
     </c:if>
 
@@ -197,7 +197,7 @@
         <input type="hidden" name="bookId" value="${book.bookId}"/>
 
         <div class="form-row">
-            <label for="categoryId">Category:</label>
+            <label for="categoryId">Danh mục:</label>
             <select id="categoryId" name="categoryId" required>
                 <c:forEach items="${listCategory}" var="cat">
                     <option value="${cat.categoryId}"
@@ -209,9 +209,9 @@
         </div>
 
         <div class="form-row">
-            <label for="publisherId">Publisher:</label>
+            <label for="publisherId">Nhà xuất bản:</label>
             <select id="publisherId" name="publisherId">
-                <option value="">-- Select Publisher --</option>
+                <option value="">-- Chọn NXB --</option>
                 <c:forEach items="${listPublishers}" var="pub">
                     <option value="${pub.publisherId}"
                             <c:if test="${not empty book.publisher && pub.publisherId == book.publisher.publisherId}">selected</c:if>>
@@ -222,15 +222,15 @@
         </div>
 
         <div class="form-row">
-            <label for="title">Title:</label>
+            <label for="title">Tiêu đề:</label>
             <input id="title" type="text" name="title" value="${book.title}" required
                    maxlength="255"
                    minlength="1"
-                   placeholder="Enter book title (max 255 characters)">
+                   placeholder="Nhập tiêu đề sách (tối đa 255 ký tự)">
         </div>
 
         <div class="form-row">
-            <label for="authorSelect">Author:</label>
+            <label for="authorSelect">Tác giả:</label>
             <select name="authorIds" id="authorSelect" multiple="multiple" required class="tomselect-authors">
                 <c:forEach items="${listAuthors}" var="allAuth">
                     <c:set var="isSelected" value="" />
@@ -255,33 +255,33 @@
                    maxlength="20"
                    minlength="10"
                    pattern="[0-9\-]{10,20}"
-                   placeholder="Enter ISBN (10-20 digits)"
-                   title="ISBN must be 10-20 characters, digits and hyphens only">
+                   placeholder="Nhập ISBN (10-20 ký tự)"
+                   title="ISBN phải có 10-20 ký tự, chỉ gồm số và dấu gạch ngang">
         </div>
 
         <div class="form-row">
-            <label for="publishDate">Publish Date:</label>
+            <label for="publishDate">Ngày xuất bản:</label>
             <input id="publishDate" type="date" name="publishDate" value="${book.publishDate}" required
-                   title="Publish date cannot be in the future">
+                   title="Ngày xuất bản không được trong tương lai">
         </div>
 
         <div class="form-row" style="align-items: start;">
-            <label>Book Images:</label>
+            <label>Hình ảnh sách:</label>
             <div style="width: 100%;">
                 <!-- Existing Images Section -->
                 <c:if test="${not empty book.images}">
-                    <div class="section-title">Current Images (Drag to reorder)</div>
+                    <div class="section-title">Hình ảnh hiện tại (Kéo để sắp xếp lại)</div>
                     <div class="image-gallery" id="existingImagesGallery">
                         <c:forEach items="${book.images}" var="img" varStatus="status">
                             <div class="image-item ${img.isPrimary ? 'is-primary' : ''}" 
                                  data-image-id="${img.imageId}" 
                                  data-sort-order="${img.sortOrder}">
                                 <c:if test="${img.isPrimary}">
-                                    <span class="primary-badge">Primary</span>
+                                    <span class="primary-badge">Ảnh chính</span>
                                 </c:if>
-                                <img src="${img.url}" alt="Book Image">
+                                <img src="${img.url}" alt="Hình ảnh sách">
                                 <button type="button" class="remove-btn" onclick="markForDeletion(${img.imageId}, this)">&times;</button>
-                                <button type="button" class="set-primary-btn" onclick="setPrimaryExisting(${img.imageId})">Set as Primary</button>
+                                <button type="button" class="set-primary-btn" onclick="setPrimaryExisting(${img.imageId})">Đặt làm ảnh chính</button>
                             </div>
                         </c:forEach>
                     </div>
@@ -294,14 +294,14 @@
                 </div>
                 
                 <!-- Add New Images Section -->
-                <div class="section-title" style="margin-top: 20px;">Add New Images</div>
+                <div class="section-title" style="margin-top: 20px;">Thêm hình ảnh mới</div>
                 <div class="image-upload-section" id="dropZone">
                     <input type="file" id="newBookImages" name="newBookImages" multiple
                            accept="image/jpeg,image/png,image/jpg,image/webp">
                     <div class="upload-placeholder">
                         <div style="font-size: 36px; color: #ccc;">📷</div>
-                        <p><strong>Click to upload</strong> or drag and drop</p>
-                        <span>JPEG, PNG, JPG, WEBP (Max 5MB each)</span>
+                        <p><strong>Click để tải lên</strong> hoặc kéo thả</p>
+                        <span>JPEG, PNG, JPG, WEBP (Tối đa 5MB mỗi ảnh)</span>
                     </div>
                 </div>
                 <div class="new-images-preview image-gallery" id="newImagesPreview"></div>
@@ -309,7 +309,7 @@
         </div>
 
         <div class="form-row">
-            <label for="price">Price:</label>
+            <label for="price">Giá:</label>
             <div class="input-prefix">
                 <span class="prefix">VND</span>
                 <input id="price" type="number" name="price" value="${book.price}" required
@@ -317,32 +317,32 @@
                        max="99999999.99"
                        step="0.01"
                        placeholder="0.00"
-                       title="Price must be greater than 0">
+                       title="Giá phải lớn hơn 0">
             </div>
         </div>
 
         <div class="form-row">
-            <label for="quantity">Quantity In Stock:</label>
+            <label for="quantity">Số lượng trong kho:</label>
             <input id="quantity" type="number" name="quantity" required
                    min="0"
                    max="999999"
                    step="1"
                    value="${book.quantityInStock}"
-                   placeholder="Enter quantity in stock"
-                   title="Quantity must be 0 or greater">
+                   placeholder="Nhập số lượng"
+                   title="Số lượng phải từ 0 trở lên">
         </div>
 
         <div class="form-row" style="align-items: start;">
-            <label for="description">Description:</label>
+            <label for="description">Mô tả:</label>
             <textarea id="description" name="description" rows="5"
                       minlength="10"
                       maxlength="5000"
-                      placeholder="Enter book description (10-5000 characters)">${book.description}</textarea>
+                      placeholder="Nhập mô tả sách (10-5000 ký tự)">${book.description}</textarea>
         </div>
 
         <div class="buttons">
-            <button type="submit" class="btn">Save</button>
-            <a class="btn" href="${pageContext.request.contextPath}/admin/books">Cancel</a>
+            <button type="submit" class="btn">Lưu</button>
+            <a class="btn" href="${pageContext.request.contextPath}/admin/books">Huỷ</a>
         </div>
 
     </form>
@@ -390,7 +390,7 @@
     }
     
     function markForDeletion(imageId, btn) {
-        if (!confirm('Are you sure you want to delete this image?')) return;
+        if (!confirm('Bạn có chắc chắn muốn xoá hình ảnh này?')) return;
         
         const item = btn.closest('.image-item');
         item.style.display = 'none';
@@ -426,7 +426,7 @@
                 if (!item.querySelector('.primary-badge')) {
                     const badge = document.createElement('span');
                     badge.className = 'primary-badge';
-                    badge.textContent = 'Primary';
+                    badge.textContent = 'Ảnh chính';
                     item.insertBefore(badge, item.firstChild);
                 }
             } else {
@@ -469,7 +469,7 @@
             if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
                 newFiles.push(file);
             } else if (file.size > 5 * 1024 * 1024) {
-                alert('File "' + file.name + '" exceeds 5MB limit');
+                alert('File "' + file.name + '" vượt quá giới hạn 5MB');
             }
         }
         updateNewPreview();

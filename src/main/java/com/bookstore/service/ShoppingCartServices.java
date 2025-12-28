@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.bookstore.service;
 
 import com.bookstore.dao.BookDAO;
@@ -79,8 +75,7 @@ public class ShoppingCartServices {
      *         Trả về đối tượng đã được quản lý bởi EntityManager để có thể tiếp tục
      *         thao tác.
      * @throws NullPointerException nếu customer null hoặc customer.getUserId() null
-     *                              khi
-     *                              cố gắng tạo giỏ hàng mới
+     *                              khi cố gắng tạo giỏ hàng mới
      * @see #getCartByCustomer(Customer)
      * @see #createCart(Customer)
      */
@@ -177,6 +172,7 @@ public class ShoppingCartServices {
 
         cart.setTotalAmount(totalAmount);
         cart.setTotalItems(totalItems);
+
     }
 
     public void removeItemFromCart(ShoppingCart cart, Integer itemId) {
@@ -221,6 +217,7 @@ public class ShoppingCartServices {
      * orphanRemoval = true sẽ tự động xóa các CartItem từ DB khi update cart
      */
     public void clearCart(ShoppingCart cart) {
+
         boolean isGuestCart = (cart.getCartId() == null);
 
         // Clear collection trước - orphanRemoval sẽ xóa từ DB khi update
@@ -236,6 +233,7 @@ public class ShoppingCartServices {
 
     public boolean validateCart(ShoppingCart cart) {
         for (CartItem item : cart.getItems()) {
+
             if (!item.getBook().isAvailable(item.getQuantity())) {
                 return false;
             }

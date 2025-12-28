@@ -1,14 +1,15 @@
 package com.bookstore.service;
 
-import java.util.List;
-
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.bookstore.dao.AdminDAO;
 import com.bookstore.dao.AdminHomePageDAO;
+import com.bookstore.dao.AdminOrderDAO;
+import com.bookstore.model.Address;
 import com.bookstore.model.Admin;
 import com.bookstore.model.Order;
 import com.bookstore.model.Review;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.util.List;
 
 public class AdminServices {
 
@@ -29,20 +30,20 @@ public class AdminServices {
             super(message);
         }
     }
-    
+
     private final AdminDAO adminDAO;
-    
+
     public AdminServices() {
         this.adminDAO = new AdminDAO();
     }
-    
+
     // Constructor for dependency injection (useful for testing)
     public AdminServices(AdminDAO adminDAO) {
         this.adminDAO = adminDAO;
     }
-    
+
     // ==================== Validation Methods ====================
-    
+
     /**
      * Validates email format using the same pattern as User entity.
      * 
@@ -65,7 +66,7 @@ public class AdminServices {
         }
         return null; // Valid
     }
-    
+
     /**
      * Validates password meets minimum requirements (>= 6 characters).
      * 
@@ -84,7 +85,7 @@ public class AdminServices {
         }
         return null; // Valid
     }
-    
+
     /**
      * Validates full name is not empty.
      * 
@@ -100,26 +101,26 @@ public class AdminServices {
         }
         return null; // Valid
     }
-    
+
     // ==================== CRUD Service Methods ====================
-    
+
     /**
      * List admins with pagination and optional search.
      * 
-     * @param page the page number (1-based)
+     * @param page     the page number (1-based)
      * @param pageSize the number of items per page
-     * @param search optional search keyword (can be null or empty)
+     * @param search   optional search keyword (can be null or empty)
      * @return list of admins for the requested page
      */
     public List<Admin> listAdmins(int page, int pageSize, String search) {
         int offset = (page - 1) * pageSize;
-        
+
         if (search != null && !search.trim().isEmpty()) {
             return adminDAO.search(search.trim(), offset, pageSize);
         }
         return adminDAO.findAll(offset, pageSize);
     }
-    
+
     /**
      * Count total admins for pagination, with optional search filter.
      * 
@@ -132,7 +133,7 @@ public class AdminServices {
         }
         return adminDAO.countAll();
     }
-    
+
     /**
      * Get a single admin by ID.
      * 
@@ -145,7 +146,7 @@ public class AdminServices {
         }
         return adminDAO.findById(id);
     }
-    
+
     /**
      * Get a single admin by email.
      * 
@@ -158,11 +159,11 @@ public class AdminServices {
         }
         return adminDAO.findByEmail(email.trim());
     }
-    
+
     /**
      * Create a new admin with BCrypt-hashed password.
      * 
-     * @param email the admin email
+     * @param email    the admin email
      * @param password the plain text password (will be hashed)
      * @param fullName the admin's full name
      * @throws ValidationException if validation fails
@@ -173,38 +174,38 @@ public class AdminServices {
         if (emailError != null) {
             throw new ValidationException(emailError);
         }
-        
+
         // Validate password
         String passwordError = validatePassword(password);
         if (passwordError != null) {
             throw new ValidationException(passwordError);
         }
-        
+
         // Validate full name
         String fullNameError = validateFullName(fullName);
         if (fullNameError != null) {
             throw new ValidationException(fullNameError);
         }
-        
+
         // Check for duplicate email
         if (adminDAO.existsByEmail(email.trim())) {
             throw new ValidationException("Email đã được sử dụng");
         }
-        
+
         // Hash password with BCrypt
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        
+
         // Create and save admin
         Admin admin = new Admin(email.trim(), hashedPassword, fullName.trim());
         adminDAO.save(admin);
     }
-    
+
     /**
      * Update an existing admin.
      * If password is empty/null, the existing password is preserved.
      * 
-     * @param id the admin ID to update
-     * @param email the new email
+     * @param id       the admin ID to update
+     * @param email    the new email
      * @param password the new password (empty/null to keep existing)
      * @param fullName the new full name
      * @throws ValidationException if validation fails or admin not found
@@ -215,28 +216,28 @@ public class AdminServices {
         if (existingAdmin == null) {
             throw new ValidationException("Admin không tồn tại");
         }
-        
+
         // Validate email
         String emailError = validateEmail(email);
         if (emailError != null) {
             throw new ValidationException(emailError);
         }
-        
+
         // Validate full name
         String fullNameError = validateFullName(fullName);
         if (fullNameError != null) {
             throw new ValidationException(fullNameError);
         }
-        
+
         // Check for duplicate email (excluding current admin)
         if (adminDAO.existsByEmailExcluding(email.trim(), id)) {
             throw new ValidationException("Email đã được sử dụng");
         }
-        
+
         // Update fields
         existingAdmin.setEmail(email.trim());
         existingAdmin.setFullName(fullName.trim());
-        
+
         // Update password only if provided
         if (password != null && !password.isEmpty()) {
             String passwordError = validatePassword(password);
@@ -246,17 +247,17 @@ public class AdminServices {
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
             existingAdmin.setPassword(hashedPassword);
         }
-        
+
         adminDAO.update(existingAdmin);
     }
-    
+
     /**
      * Delete an admin with business rule checks.
      * Cannot delete self or the last admin in the system.
      * 
-     * @param id the admin ID to delete
+     * @param id             the admin ID to delete
      * @param currentAdminId the ID of the admin performing the deletion
-     * @throws BusinessException if business rules are violated
+     * @throws BusinessException   if business rules are violated
      * @throws ValidationException if admin not found
      */
     public void deleteAdmin(Integer id, Integer currentAdminId) throws BusinessException, ValidationException {
@@ -265,21 +266,21 @@ public class AdminServices {
         if (admin == null) {
             throw new ValidationException("Admin không tồn tại");
         }
-        
+
         // Prevent self-deletion
         if (id.equals(currentAdminId)) {
             throw new BusinessException("Không thể xóa tài khoản của chính mình");
         }
-        
+
         // Prevent deletion of last admin
         long adminCount = adminDAO.countAll();
         if (adminCount <= 1) {
             throw new BusinessException("Không thể xóa admin cuối cùng trong hệ thống");
         }
-        
+
         adminDAO.delete(id);
     }
-    
+
     /**
      * Check if an email already exists.
      * 
@@ -292,11 +293,11 @@ public class AdminServices {
         }
         return adminDAO.existsByEmail(email.trim());
     }
-    
+
     /**
      * Check if an email exists excluding a specific admin ID.
      * 
-     * @param email the email to check
+     * @param email     the email to check
      * @param excludeId the admin ID to exclude
      * @return true if email exists for another admin, false otherwise
      */
@@ -306,9 +307,9 @@ public class AdminServices {
         }
         return adminDAO.existsByEmailExcluding(email.trim(), excludeId);
     }
-    
+
     // ==================== Admin Home Page Methods ====================
-    
+
     public long countAllBooks() {
         return AdminHomePageDAO.countAllBooks();
     }
@@ -335,5 +336,50 @@ public class AdminServices {
 
     public List<Review> findRecentReviews() {
         return AdminHomePageDAO.findRecentReviews();
+    }
+
+    public List<Order> listAllOrders() {
+        List<Order> orders = AdminOrderDAO.findAllOrders();
+        return orders;
+    }
+
+    public List<Order> listAllOrdersPaginated(int page, int size) {
+        return AdminOrderDAO.findAllOrdersPaginated(page, size);
+    }
+
+    public long countOrders() {
+        return AdminOrderDAO.countAllOrders();
+    }
+
+    public Order getOrder(int id) {
+        return AdminOrderDAO.findById(id);
+    }
+
+    public void deleteOrder(int id) {
+        Order o = AdminOrderDAO.findById(id);
+        if (o != null) {
+            AdminOrderDAO.delete(o);
+        }
+    }
+
+    public Order getOrderForEdit(int id) {
+        return AdminOrderDAO.findByIdWithDetails(id);
+    }
+
+    public void updateOrder(
+            int orderId,
+            String recipientName,
+            String paymentMethod,
+            Order.OrderStatus status,
+            Address address) {
+        AdminOrderDAO.updateOrder(orderId, recipientName, paymentMethod, status, address);
+    }
+
+    public void updateOrderDetailQty(int detailId, int qty) {
+        AdminOrderDAO.updateOrderDetailQty(detailId, qty);
+    }
+
+    public void removeOrderDetail(int detailId) {
+        AdminOrderDAO.removeOrderDetail(detailId);
     }
 }

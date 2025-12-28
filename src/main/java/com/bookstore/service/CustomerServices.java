@@ -20,21 +20,21 @@ public class CustomerServices {
 
     private final CategoryService categoryService = new CategoryService();
     private final CustomerDAO customerDAO;
-    
+
     // Phone number pattern: starts with 0 or +84, followed by 9 digits
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(\\+84|0)[0-9]{9}$");
-    
+
     public CustomerServices() {
         this.customerDAO = new CustomerDAO();
     }
-    
+
     // Constructor for dependency injection (useful for testing)
     public CustomerServices(CustomerDAO customerDAO) {
         this.customerDAO = customerDAO;
     }
 
     // ==================== Validation Methods ====================
-    
+
     /**
      * Validates email format using the same pattern as User entity.
      * 
@@ -53,7 +53,7 @@ public class CustomerServices {
         }
         return null; // Valid
     }
-    
+
     /**
      * Validates password meets minimum requirements (>= 6 characters).
      * 
@@ -72,7 +72,7 @@ public class CustomerServices {
         }
         return null; // Valid
     }
-    
+
     /**
      * Validates full name is not empty.
      * 
@@ -88,7 +88,7 @@ public class CustomerServices {
         }
         return null; // Valid
     }
-    
+
     /**
      * Validates phone number format (starts with 0 or +84, followed by 9 digits).
      * 
@@ -107,26 +107,26 @@ public class CustomerServices {
         }
         return null; // Valid
     }
-    
+
     // ==================== CRUD Service Methods ====================
-    
+
     /**
      * List customers with pagination and optional search.
      * 
-     * @param page the page number (1-based)
+     * @param page     the page number (1-based)
      * @param pageSize the number of items per page
-     * @param search optional search keyword (can be null or empty)
+     * @param search   optional search keyword (can be null or empty)
      * @return list of customers for the requested page
      */
     public List<Customer> listCustomers(int page, int pageSize, String search) {
         int offset = (page - 1) * pageSize;
-        
+
         if (search != null && !search.trim().isEmpty()) {
             return customerDAO.search(search.trim(), offset, pageSize);
         }
         return customerDAO.findAll(offset, pageSize);
     }
-    
+
     /**
      * Count total customers for pagination, with optional search filter.
      * 
@@ -139,7 +139,7 @@ public class CustomerServices {
         }
         return customerDAO.countAll();
     }
-    
+
     /**
      * Get a single customer by ID.
      * 
@@ -152,9 +152,10 @@ public class CustomerServices {
         }
         return customerDAO.findById(id);
     }
-    
+
     /**
-     * Get a single customer by ID with all details (addresses, orders, reviews) loaded.
+     * Get a single customer by ID with all details (addresses, orders, reviews)
+     * loaded.
      * Use this method when displaying customer detail page.
      * 
      * @param id the customer ID
@@ -166,7 +167,7 @@ public class CustomerServices {
         }
         return customerDAO.findByIdWithDetails(id);
     }
-    
+
     /**
      * Get a single customer by email.
      * 
@@ -179,112 +180,117 @@ public class CustomerServices {
         }
         return customerDAO.findByEmail(email.trim());
     }
-    
+
     /**
-     * Private helper method that validates inputs, creates, and saves a new customer.
+     * Private helper method that validates inputs, creates, and saves a new
+     * customer.
      * 
-     * @param email the customer email
-     * @param password the plain text password (will be hashed)
-     * @param fullName the customer's full name
+     * @param email       the customer email
+     * @param password    the plain text password (will be hashed)
+     * @param fullName    the customer's full name
      * @param phoneNumber the customer's phone number
      * @return the created and saved customer
      * @throws ValidationException if validation fails
      */
-    private Customer validateAndCreateCustomer(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+    private Customer validateAndCreateCustomer(String email, String password, String fullName, String phoneNumber)
+            throws ValidationException {
         // Validate email
         String emailError = validateEmail(email);
         if (emailError != null) {
             throw new ValidationException(emailError);
         }
-        
+
         // Validate password
         String passwordError = validatePassword(password);
         if (passwordError != null) {
             throw new ValidationException(passwordError);
         }
-        
+
         // Validate full name
         String fullNameError = validateFullName(fullName);
         if (fullNameError != null) {
             throw new ValidationException(fullNameError);
         }
-        
+
         // Validate phone number
         String phoneError = validatePhoneNumber(phoneNumber);
         if (phoneError != null) {
             throw new ValidationException(phoneError);
         }
-        
+
         // Check for duplicate email
         if (customerDAO.existsByEmail(email.trim())) {
             throw new ValidationException("Email đã được sử dụng");
         }
-        
+
         // Hash password with BCrypt
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        
+
         // Create and save customer
         Customer customer = new Customer(email.trim(), hashedPassword, fullName.trim(), phoneNumber.trim());
         customer.setRegisterDate(LocalDateTime.now());
         customerDAO.save(customer);
-        
+
         return customer;
     }
-    
+
     /**
      * Create a new customer with BCrypt-hashed password.
      * 
-     * @param email the customer email
-     * @param password the plain text password (will be hashed)
-     * @param fullName the customer's full name
+     * @param email       the customer email
+     * @param password    the plain text password (will be hashed)
+     * @param fullName    the customer's full name
      * @param phoneNumber the customer's phone number
      * @throws ValidationException if validation fails
      */
-    public void createCustomer(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+    public void createCustomer(String email, String password, String fullName, String phoneNumber)
+            throws ValidationException {
         validateAndCreateCustomer(email, password, fullName, phoneNumber);
     }
-    
+
     /**
      * Create a new customer with BCrypt-hashed password and addresses.
      */
-    public Customer createCustomerWithAddresses(String email, String password, String fullName, String phoneNumber) throws ValidationException {
+    public Customer createCustomerWithAddresses(String email, String password, String fullName, String phoneNumber)
+            throws ValidationException {
         return validateAndCreateCustomer(email, password, fullName, phoneNumber);
     }
-    
+
     /**
      * Update an existing customer.
      * If password is empty/null, the existing password is preserved.
      * Email cannot be changed (read-only).
      * 
-     * @param id the customer ID to update
-     * @param fullName the new full name
-     * @param password the new password (empty/null to keep existing)
+     * @param id          the customer ID to update
+     * @param fullName    the new full name
+     * @param password    the new password (empty/null to keep existing)
      * @param phoneNumber the new phone number
      * @throws ValidationException if validation fails or customer not found
      */
-    public void updateCustomer(Integer id, String fullName, String password, String phoneNumber) throws ValidationException {
+    public void updateCustomer(Integer id, String fullName, String password, String phoneNumber)
+            throws ValidationException {
         // Find existing customer
         Customer existingCustomer = customerDAO.findById(id);
         if (existingCustomer == null) {
             throw new ValidationException("Khách hàng không tồn tại");
         }
-        
+
         // Validate full name
         String fullNameError = validateFullName(fullName);
         if (fullNameError != null) {
             throw new ValidationException(fullNameError);
         }
-        
+
         // Validate phone number
         String phoneError = validatePhoneNumber(phoneNumber);
         if (phoneError != null) {
             throw new ValidationException(phoneError);
         }
-        
+
         // Update fields
         existingCustomer.setFullName(fullName.trim());
         existingCustomer.setPhoneNumber(phoneNumber.trim());
-        
+
         // Update password only if provided
         if (password != null && !password.isEmpty()) {
             String passwordError = validatePassword(password);
@@ -294,10 +300,9 @@ public class CustomerServices {
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
             existingCustomer.setPassword(hashedPassword);
         }
-        
+
         customerDAO.update(existingCustomer);
     }
-    
 
     public void deleteCustomer(Integer id) throws ValidationException {
         // Check if customer exists
@@ -305,10 +310,10 @@ public class CustomerServices {
         if (customer == null) {
             throw new ValidationException("Khách hàng không tồn tại");
         }
-        
+
         customerDAO.delete(id);
     }
-    
+
     /**
      * Check if an email already exists.
      * 
@@ -321,7 +326,7 @@ public class CustomerServices {
         }
         return customerDAO.existsByEmail(email.trim());
     }
-    
+
     // ==================== Customer Home Page Methods ====================
 
     public List<Category> listAllCategories() {
@@ -338,6 +343,7 @@ public class CustomerServices {
 
     /**
      * Lấy Customer từ database theo userId (DEV/TEST only)
+     * 
      * @param userId User ID của customer
      * @return Customer nếu tìm thấy, null nếu không tìm thấy
      */
@@ -349,7 +355,7 @@ public class CustomerServices {
             em.close();
         }
     }
-    
+
     public List<Book> listMostFavoredBooks() {
         return CustomerHomePageDAO.listMostFavoredBooks();
     }
@@ -357,4 +363,5 @@ public class CustomerServices {
     public List<Category> listCategories() {
         // Delegate to listAllCategories() to avoid duplicate category-loading logic
         return listAllCategories();
-}}
+    }
+}

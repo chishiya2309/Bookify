@@ -166,7 +166,6 @@ public class BookDAO {
             TypedQuery<Book> q = em.createQuery(qString, Book.class);
             q.setParameter("id", bookId);
             Book book = q.getSingleResult();
-
             // Fetch images separately to avoid MultipleBagFetchException
             if (book != null) {
                 String imageQuery = "SELECT img FROM BookImage img WHERE img.book.bookId = :bookId ORDER BY img.isPrimary DESC, img.sortOrder ASC";
@@ -180,7 +179,6 @@ public class BookDAO {
                     book.setImages(new ArrayList<>());
                 }
             }
-
             return book;
         } catch (NoResultException e) {
             return null;
@@ -406,4 +404,23 @@ public class BookDAO {
             em.close();
         }
     }
+
+    /**
+     * Kiểm tra sách có trong đơn hàng không để ngăn xoá
+     */
+    public static boolean hasOrders(Integer bookId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String qString = "SELECT COUNT(od) FROM OrderDetail od WHERE od.book.bookId = :bookId";
+            TypedQuery<Long> q = em.createQuery(qString, Long.class);
+            q.setParameter("bookId", bookId);
+            return q.getSingleResult() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
+

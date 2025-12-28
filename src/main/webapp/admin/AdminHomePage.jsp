@@ -7,12 +7,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Trang quản trị - Bookify</title>
+
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
 </head>
 <body>
     <jsp:include page="/admin/header_admin.jsp"></jsp:include>
 
     <div align="center" class="container">
+
         <h2 class="page-title">Bảng điều khiển quản trị</h2>
         
         <div class="quick-actions" style="margin-bottom: 20px;">
@@ -25,6 +27,7 @@
         </div>
         
         <hr width="60%">
+
 
         <h3>Đơn hàng gần đây:</h3>
         <table border="1" cellpadding="5">
@@ -50,7 +53,7 @@
                         <c:otherwise>0</c:otherwise>
                     </c:choose>
                 </td>
-                <td>
+                <td>    
                     <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>₫
                 </td>
                 <td>${order.paymentMethod}</td>
@@ -66,7 +69,6 @@
         </table>
 
         <br>
-
         <h3>Đánh giá gần đây:</h3>
         <table border="1" cellpadding="5">
             <tr>

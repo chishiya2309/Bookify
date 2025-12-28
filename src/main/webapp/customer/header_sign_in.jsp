@@ -222,11 +222,9 @@
         <c:choose>
             <c:when test="${not empty listCategories}">
                 <c:forEach items="${listCategories}" var="category" varStatus="status">
-                    
                     <a href="${pageContext.request.contextPath}/view_category?id=${category.categoryId}">
                         <c:out value="${category.name}"/>
                     </a>
-                    
                     <c:if test="${!status.last}"> | </c:if>
                 </c:forEach>
             </c:when>
@@ -251,10 +249,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginLink) {
         var currentPath = window.location.pathname + window.location.search;
         var contextPath = headerContextPath;
+        // Skip adding redirect if already on login or register pages
         if (currentPath !== contextPath + '/' &&
             currentPath !== contextPath &&
-            currentPath.indexOf('/login') === -1 &&
-            currentPath.indexOf('/register') === -1) {
+            currentPath.indexOf('login.jsp') === -1 &&
+            currentPath.indexOf('register.jsp') === -1) {
             loginLink.href = contextPath + '/customer/login.jsp?redirect=' + encodeURIComponent(currentPath);
         }
     }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
-
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -75,7 +74,6 @@ public class JwtFilter implements Filter {
         if (shouldExclude(path)) {
             // Lấy token để kiểm tra nếu là ADMIN thì redirect
             String token = extractToken(httpRequest);
-
             // Kiểm tra nếu là ADMIN cố vào trang customer hoặc trang chủ
             if (token != null && JwtUtil.validateToken(token)) {
                 String role = JwtUtil.extractRole(token);
@@ -85,7 +83,6 @@ public class JwtFilter implements Filter {
                     return;
                 }
             }
-
             chain.doFilter(request, response);
             return;
         }
@@ -125,7 +122,6 @@ public class JwtFilter implements Filter {
                 chain.doFilter(request, response);
             } else {
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
                 // Redirect về trang phù hợp với role của user
                 if (isAdmin) {
                     // Admin cố vào trang customer -> về dashboard admin
@@ -194,6 +190,7 @@ public class JwtFilter implements Filter {
         }
 
         return false;
+
     }
 
     private String extractToken(HttpServletRequest request) {
@@ -214,6 +211,7 @@ public class JwtFilter implements Filter {
         }
 
         return null;
+
     }
 
     /**
@@ -224,6 +222,7 @@ public class JwtFilter implements Filter {
      * - Starts with the application context path or is root
      * 
      * @param url         The URL to validate
+     * 
      * @param contextPath The application context path
      * @return true if the URL is a valid internal redirect, false otherwise
      */
@@ -231,14 +230,11 @@ public class JwtFilter implements Filter {
         if (url == null || url.isEmpty()) {
             return false;
         }
-
         // Must be a relative URL (starts with / but not //)
         if (!url.startsWith("/") || url.startsWith("//")) {
             return false;
         }
 
-        // Must not contain protocol scheme at the beginning (http://, https://,
-        // javascript:, etc.)
         // Use precompiled pattern for efficiency
         if (PROTOCOL_PATTERN.matcher(url).matches()) {
             return false;
@@ -275,7 +271,6 @@ public class JwtFilter implements Filter {
                 return false;
             }
         }
-
         return true;
     }
 

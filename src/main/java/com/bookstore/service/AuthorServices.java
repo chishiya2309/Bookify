@@ -37,4 +37,11 @@ public class AuthorServices {
     public long countAuthorsForAdmin(String name) {
         return authorDAO.countAuthorsForAdmin(name);
     }
+
+    /**
+     * Đếm số sách của tác giả để kiểm tra trước khi xoá
+     */
+    public long countBooksByAuthor(Integer authorId) {
+        return authorDAO.countBooksByAuthor(authorId);
+    }
 }

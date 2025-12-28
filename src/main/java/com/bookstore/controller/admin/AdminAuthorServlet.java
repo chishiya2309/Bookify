@@ -343,6 +343,15 @@ public class AdminAuthorServlet extends HttpServlet {
         if (authorIdStr != null && !authorIdStr.isEmpty()) {
             try {
                 int authorId = Integer.parseInt(authorIdStr);
+                
+                // Kiểm tra xem tác giả có sách liên kết không
+                long bookCount = authorServices.countBooksByAuthor(authorId);
+                if (bookCount > 0) {
+                    request.getSession().setAttribute("errorMessage", 
+                        "Không thể xoá tác giả này vì có " + bookCount + " sách liên kết. Vui lòng xoá hoặc cập nhật các sách trước.");
+                    return;
+                }
+                
                 Author author = authorServices.getAuthorById(authorId);
 
                 if (author != null && author.getPhotoUrl() != null

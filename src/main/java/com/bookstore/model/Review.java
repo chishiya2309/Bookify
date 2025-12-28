@@ -9,30 +9,21 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "reviews",
-        indexes = {
-                @Index(name = "idx_reviews_book_id", columnList = "book_id"),
-                @Index(name = "idx_reviews_customer_id", columnList = "customer_id"),
-                @Index(name = "idx_reviews_book_date", columnList = "book_id, review_date DESC"),
-                @Index(name = "idx_reviews_book_rating", columnList = "book_id, rating DESC"),
-                @Index(name = "idx_reviews_customer_date", columnList = "customer_id, review_date DESC"),
-                @Index(name = "idx_reviews_verified", columnList = "is_verified")
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_review_customer_book",
-                        columnNames = {"customer_id", "book_id"}
-                )
-        }
-)
+@Table(name = "reviews", indexes = {
+        @Index(name = "idx_reviews_book_id", columnList = "book_id"),
+        @Index(name = "idx_reviews_customer_id", columnList = "customer_id"),
+        @Index(name = "idx_reviews_book_date", columnList = "book_id, review_date DESC"),
+        @Index(name = "idx_reviews_book_rating", columnList = "book_id, rating DESC"),
+        @Index(name = "idx_reviews_customer_date", columnList = "customer_id, review_date DESC"),
+        @Index(name = "idx_reviews_verified", columnList = "is_verified")
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_review_customer_book", columnNames = { "customer_id", "book_id" })
+})
 public class Review implements Serializable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Integer reviewId;
-
     @NotNull(message = "Rating không được để trống")
     @Min(value = 1, message = "Rating tối thiểu là 1 sao")
     @Max(value = 5, message = "Rating tối đa là 5 sao")
@@ -51,7 +42,7 @@ public class Review implements Serializable {
     private LocalDateTime reviewDate;
 
     @Column(name = "is_verified", nullable = false)
-    private Boolean isVerified = false;  // Mặc định false
+    private Boolean isVerified = false; // Mặc định false
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -149,7 +140,7 @@ public class Review implements Serializable {
     public void onCreate() {
         this.reviewDate = LocalDateTime.now();
         if (this.isVerified == null) {
-            this.isVerified = false;  // ← Quan trọng: mặc định chưa duyệt
+            this.isVerified = false; // ← Quan trọng: mặc định chưa duyệt
         }
     }
 

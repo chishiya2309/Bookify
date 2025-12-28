@@ -49,12 +49,10 @@ public class Payment implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Integer paymentId;
-
     @NotNull(message = "Số tiền thanh toán không được để trống")
     @DecimalMin(value = "0.0", inclusive = false, message = "Số tiền phải lớn hơn 0")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
-
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
@@ -86,7 +84,6 @@ public class Payment implements Serializable {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
     @NotNull(message = "Payment phải thuộc về một đơn hàng")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", unique = true, nullable = false)

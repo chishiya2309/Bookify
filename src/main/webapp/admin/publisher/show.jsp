@@ -5,18 +5,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publisher Management - Admin</title>
+    <title>Quản lý Nhà xuất bản - Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
 </head>
 <body>
 <jsp:include page="../header_admin.jsp" />
 
 <div class="container">
-    <h2>Publisher Management</h2>
+    <h2>Quản lý Nhà xuất bản</h2>
+
+    <c:if test="${not empty errorMessage}">
+        <div class="error-banner">${errorMessage}</div>
+    </c:if>
+    
+    <c:if test="${not empty message}">
+        <div class="success-banner" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 15px;">${message}</div>
+    </c:if>
 
     <div class="actions-bar">
         <a href="${pageContext.request.contextPath}/admin/publishers?action=showCreate" class="btn-create">
-            + Create New Publisher
+            + Thêm NXB
         </a>
     </div>
 
@@ -24,17 +32,17 @@
         <thead>
         <tr>
             <th>ID</th>
-            <th>Full Name</th>
+            <th>Tên</th>
             <th>Email</th>
-            <th>Address</th>
+            <th>Địa chỉ</th>
             <th>Website</th>
-            <th>Actions</th>
+            <th>Hành động</th>
         </tr>
         </thead>
         <tbody>
         <c:if test="${empty listPublishers}">
             <tr>
-                <td colspan="6" style="text-align: center;">No data available.</td>
+                <td colspan="6" style="text-align: center;">Không có dữ liệu.</td>
             </tr>
         </c:if>
 
@@ -49,10 +57,10 @@
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <a class="btn-action edit" href="${pageContext.request.contextPath}/admin/publishers?action=showUpdate&id=${publisher.publisherId}">Edit</a>
+                        <a class="btn-action edit" href="${pageContext.request.contextPath}/admin/publishers?action=showUpdate&id=${publisher.publisherId}">Sửa</a>
                         <a class="btn-action delete" href="${pageContext.request.contextPath}/admin/publishers?action=delete&id=${publisher.publisherId}"
                            data-id="${publisher.publisherId}">
-                            Delete
+                            Xoá
                         </a>
                     </div>
                 </td>
@@ -63,11 +71,11 @@
 
     <div id="confirmModal" class="modal-backdrop">
         <div class="modal-box">
-            <h3>Confirm Delete</h3>
-            <p id="confirmText">Are you sure?</p>
+            <h3>Xác nhận xoá</h3>
+            <p id="confirmText">Bạn có chắc chắn muốn xoá?</p>
             <div class="modal-actions">
-                <button type="button" class="modal-btn cancel" id="btnCancel">Cancel</button>
-                <button type="button" class="modal-btn confirm" id="btnConfirm">Delete</button>
+                <button type="button" class="modal-btn cancel" id="btnCancel">Huỷ</button>
+                <button type="button" class="modal-btn confirm" id="btnConfirm">Xoá</button>
             </div>
         </div>
     </div>

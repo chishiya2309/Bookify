@@ -82,12 +82,16 @@
         function isValidRedirectUrl(url) {
             if (!url) return false;
             
+            // Prevent redirect loop - don't redirect to login or register pages
+            if (url.indexOf('login.jsp') !== -1 || url.indexOf('register.jsp') !== -1) {
+                return false;
+            }
+            
             // Allow relative paths (like 'checkout', 'cart')
             // They will be converted to absolute paths later
             if (!url.startsWith('/') && !url.startsWith('//') && !url.includes(':')) {
                 return true;
             }
-            
             // Must be a relative URL (starts with / but not //)
             if (!url.startsWith('/') || url.startsWith('//')) {
                 return false;
