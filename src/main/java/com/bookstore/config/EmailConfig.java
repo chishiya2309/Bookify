@@ -4,17 +4,19 @@ package com.bookstore.config;
  * EmailConfig - Configuration for Brevo HTTP API
  * Using HTTP API instead of SMTP for better cloud hosting compatibility
  * 
- * IMPORTANT: On Render.com and other cloud providers, SMTP ports (587, 465)
- * are often blocked. HTTP API works reliably through standard HTTPS (port 443).
+ * IMPORTANT: API Key should be set via environment variable BREVO_API_KEY
+ * On Render: Settings > Environment > Add BREVO_API_KEY
  **/
 public class EmailConfig {
 
     // Brevo HTTP API Configuration
     private static final String API_URL = "https://api.brevo.com/v3/smtp/email";
 
-    // Brevo API Key - Get from: https://app.brevo.com/settings/keys/api
-    // This is different from SMTP key!
-    private static final String API_KEY = "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";
+    // Read API Key from environment variable for security
+    // Set BREVO_API_KEY in Render Dashboard: Environment > Add Environment Variable
+    private static final String API_KEY = System.getenv("BREVO_API_KEY") != null
+            ? System.getenv("BREVO_API_KEY")
+            : ""; // Fallback empty - will throw error if not configured
 
     private static final String FROM_EMAIL = "lequanghung.work@gmail.com";
     private static final String FROM_NAME = "Bookify - Nhà sách trực tuyến";
@@ -30,12 +32,13 @@ public class EmailConfig {
     }
 
     /**
-     * Get Brevo API Key
+     * Get Brevo API Key from environment variable
      */
     public static String getApiKey() {
-        if (API_KEY == null || API_KEY.isEmpty() || API_KEY.startsWith("YOUR_")) {
+        if (API_KEY == null || API_KEY.isEmpty()) {
             throw new IllegalStateException(
-                    "Brevo API key not configured. Get it from: https://app.brevo.com/settings/keys/api");
+                    "Brevo API key not configured. Set BREVO_API_KEY environment variable. " +
+                            "Get your key from: https://app.brevo.com/settings/keys/api");
         }
         return API_KEY;
     }
@@ -49,7 +52,7 @@ public class EmailConfig {
     }
 
     public static boolean isConfigured() {
-        return API_KEY != null && !API_KEY.isEmpty() && !API_KEY.startsWith("YOUR_");
+        return API_KEY != null && !API_KEY.isEmpty();
     }
 
     public static String getAdminEmail() {
