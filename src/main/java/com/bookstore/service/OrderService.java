@@ -110,7 +110,7 @@ public class OrderService {
             order = new Order();
             order.setCustomer(managedCustomer); // Use managed customer
             order.setShippingAddress(managedAddress); // Use managed address
-            order.setOrderDate(LocalDateTime.now());
+            order.setOrderDate(com.bookstore.config.VietnamTimeConfig.now()); // Vietnam timezone
             order.setOrderStatus(OrderStatus.PENDING);
             order.setPaymentStatus(PaymentStatus.UNPAID);
             order.setPaymentMethod(paymentMethod);

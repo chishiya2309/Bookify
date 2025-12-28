@@ -46,7 +46,7 @@ public class PaymentService {
         payment.setMethod(method);
         payment.setStatus(PaymentStatus.PENDING);
         payment.setPaymentGateway(gateway);
-        payment.setPaymentDate(LocalDateTime.now());
+        payment.setPaymentDate(com.bookstore.config.VietnamTimeConfig.now());
 
         // Generate transaction ID
         String transactionId = generateTransactionId(order.getOrderId());
@@ -300,7 +300,7 @@ public class PaymentService {
      * @return Transaction ID
      */
     public String generateTransactionId(Integer orderId) {
-        String timestamp = LocalDateTime.now()
+        String timestamp = com.bookstore.config.VietnamTimeConfig.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String random = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         return String.format("PAY-%s-%d-%s", timestamp, orderId, random);
