@@ -234,6 +234,20 @@ public class Order implements Serializable {
         return Collections.unmodifiableList(orderDetails);
     }
 
+    /**
+     * Tính tổng số lượng sản phẩm trong đơn hàng.
+     * 
+     * @return tổng số lượng từ tất cả các chi tiết đơn hàng
+     */
+    public int getTotalQuantity() {
+        if (orderDetails == null || orderDetails.isEmpty()) {
+            return 0;
+        }
+        return orderDetails.stream()
+                .mapToInt(OrderDetail::getQuantity)
+                .sum();
+    }
+
     public void setOrderDetails(List<OrderDetail> orderDetails) {
         this.orderDetails = orderDetails;
     }

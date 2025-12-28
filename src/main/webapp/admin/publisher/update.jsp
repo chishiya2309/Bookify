@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publisher Management - Admin</title>
+    <title>Chỉnh sửa Nhà xuất bản - Admin</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
 </head>
 <body>
 <jsp:include page="../header_admin.jsp" />
 
 <div class="container">
-    <h2>Edit Publisher</h2>
+    <h2>Chỉnh sửa Nhà xuất bản</h2>
 
-    <!-- Display error message if exists -->
+    <!-- Hiển thị thông báo lỗi nếu có -->
     <c:if test="${not empty errorMessage}">
         <div class="error-banner">${errorMessage}</div>
     </c:if>
@@ -24,27 +24,27 @@
         <input type="hidden" name="id" value="${publisher.publisherId}"/>
 
         <div class="form-row">
-            <label for="name">Publisher Name:</label>
+            <label for="name">Tên NXB:</label>
             <input id="name" type="text" name="name" value="${publisher.name}" required
                    maxlength="255"
                    minlength="1"
-                   placeholder="Enter publisher name (max 255 characters)"/>
+                   placeholder="Nhập tên nhà xuất bản (tối đa 255 ký tự)"/>
         </div>
 
         <div class="form-row">
-            <label for="contactEmail">Contact Email:</label>
+            <label for="contactEmail">Email liên hệ:</label>
             <input id="contactEmail" type="email" name="contactEmail" value="${publisher.contactEmail}" required
                    maxlength="100"
                    pattern="^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
                    placeholder="example@mail.com"
-                   title="Email must be valid format"/>
+                   title="Email phải đúng định dạng"/>
         </div>
 
         <div class="form-row">
-            <label for="address">Address:</label>
+            <label for="address">Địa chỉ:</label>
             <input id="address" type="text" name="address" value="${publisher.address}"
                    maxlength="500"
-                   placeholder="Enter address (optional, max 500 characters)"/>
+                   placeholder="Nhập địa chỉ (tuỳ chọn, tối đa 500 ký tự)"/>
         </div>
 
         <div class="form-row">
@@ -53,12 +53,12 @@
                    maxlength="255"
                    pattern="^(https?://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*$"
                    placeholder="https://www.example.com"
-                   title="Website must be valid URL format"/>
+                   title="Website phải đúng định dạng URL"/>
         </div>
 
         <div class="buttons">
-            <button type="submit" class="btn">Save</button>
-            <a class="btn" href="${pageContext.request.contextPath}/admin/publishers">Cancel</a>
+            <button type="submit" class="btn">Lưu</button>
+            <a class="btn" href="${pageContext.request.contextPath}/admin/publishers">Huỷ</a>
         </div>
 
     </form>

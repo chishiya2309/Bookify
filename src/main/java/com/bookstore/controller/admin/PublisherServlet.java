@@ -159,8 +159,16 @@ public class PublisherServlet extends HttpServlet {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
-            publisherService.deletePublisher(id); // Hoặc deletePublisher
-            request.setAttribute("message", "Deleted successfully!");
+            
+            // Kiểm tra xem NXB có sách liên kết không
+            long bookCount = com.bookstore.dao.PublisherDAO.countBooksByPublisher(id);
+            if (bookCount > 0) {
+                request.setAttribute("errorMessage", 
+                    "Không thể xoá nhà xuất bản này vì có " + bookCount + " sách liên kết. Vui lòng chuyển hoặc xoá các sách trước.");
+            } else {
+                publisherService.deletePublisher(id);
+                request.setAttribute("message", "Xoá nhà xuất bản thành công!");
+            }
         }
         listPublishers(request, response);
     }

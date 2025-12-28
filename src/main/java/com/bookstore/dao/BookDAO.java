@@ -404,4 +404,23 @@ public class BookDAO {
             em.close();
         }
     }
+
+    /**
+     * Kiểm tra sách có trong đơn hàng không để ngăn xoá
+     */
+    public static boolean hasOrders(Integer bookId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String qString = "SELECT COUNT(od) FROM OrderDetail od WHERE od.book.bookId = :bookId";
+            TypedQuery<Long> q = em.createQuery(qString, Long.class);
+            q.setParameter("bookId", bookId);
+            return q.getSingleResult() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
+

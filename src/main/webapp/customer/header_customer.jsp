@@ -23,7 +23,7 @@
         <div class="user-links">
             <span>Xin chào, <strong><c:out value="${userName}" default="Khách"/></strong></span>
             <span>|</span>
-            <a href="${pageContext.request.contextPath}/customer/orders.jsp">Đơn hàng</a> |
+            <a href="${pageContext.request.contextPath}/customer/orders">Đơn hàng</a> |
             <a href="${pageContext.request.contextPath}/auth/logout">Đăng xuất</a> |
             
             <!-- Cart with Mini-Cart Dropdown -->

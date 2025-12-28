@@ -64,10 +64,13 @@ public class Payment implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private PaymentMethod method;
-    @NotNull(message="Trạng thái thanh toán không được để trống")@Enumerated(EnumType.STRING)@Column(nullable=false,length=50)
-    private PaymentStatus status = PaymentStatus.PENDING;<<<<<<<HEAD
 
-    @Column(name="payment_gateway",length=50)
+    @NotNull(message = "Trạng thái thanh toán không được để trống")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    @Column(name = "payment_gateway", length = 50)
     private String paymentGateway;
 
     @Column(name = "refund_amount", precision = 10, scale = 2)

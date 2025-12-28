@@ -23,7 +23,12 @@ public class OrderServices {
 
     // My Order History
     public List<Order> getOrderHistory(Customer customer) {
-        return orderDAO.findByCustomerId(customer.getUserId());
+        System.out.println("[OrderServices] getOrderHistory called for customer ID: " + customer.getUserId()
+                + ", email: " + customer.getEmail());
+        List<Order> orders = orderDAO.findByCustomerIdWithDetails(customer.getUserId());
+        System.out
+                .println("[OrderServices] Found " + orders.size() + " orders for customer ID: " + customer.getUserId());
+        return orders;
     }
 
     // Order Detail (Customer)
@@ -71,7 +76,8 @@ public class OrderServices {
     // Hủy đơn
     public boolean cancelOrder(Integer orderId) {
         Order order = orderDAO.findById(orderId);
-        if (order == null) return false;
+        if (order == null)
+            return false;
 
         // ❗ Không cho hủy nếu đã hoàn tất
         if (order.getOrderStatus() == Order.OrderStatus.DELIVERED) {
@@ -82,3 +88,4 @@ public class OrderServices {
         orderDAO.update(order);
         return true;
     }
+}

@@ -114,4 +114,22 @@ public class AuthorDAO {
             em.close();
         }
     }
+
+    /**
+     * Đếm số sách của tác giả để kiểm tra trước khi xoá
+     */
+    public long countBooksByAuthor(Integer authorId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String qString = "SELECT COUNT(b) FROM Book b JOIN b.authors a WHERE a.authorId = :authorId";
+            TypedQuery<Long> q = em.createQuery(qString, Long.class);
+            q.setParameter("authorId", authorId);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
 }

@@ -93,7 +93,7 @@ public class ValidationUtil {
      */
     public static boolean isValidPasswordBasic(String password) {
         return password != null && password.length() >= 6;
-    }<<<<<<<HEAD=======
+    }
 
     /**
      * Validates search keyword to prevent DoS attacks

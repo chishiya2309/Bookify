@@ -650,19 +650,46 @@
                 </section>
             </c:when>
             <c:otherwise>
-                <!-- Success Banner -->
-                <header class="success-banner">
-                    <div class="success-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <h1 class="success-title">Đặt hàng thành công!</h1>
-                    <p class="success-message">
-                        Cảm ơn bạn đã đặt hàng tại Bookify. Chúng tôi sẽ xử lý đơn hàng của bạn trong thời gian sớm nhất.
-                    </p>
-                    <div class="order-number">
-                        Mã đơn hàng: #${order.orderId}
-                    </div>
-                </header>
+                <!-- Banner - Changes based on order status -->
+                <c:choose>
+                    <c:when test="${param.cancelled == 'true' || order.orderStatus == 'CANCELLED'}">
+                        <!-- Cancelled Order Banner -->
+                        <header class="success-banner" style="background: linear-gradient(135deg, #6C757D 0%, #495057 100%);">
+                            <div class="success-icon">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <h1 class="success-title">Đơn hàng đã được hủy</h1>
+                            <p class="success-message">
+                                <c:choose>
+                                    <c:when test="${not empty param.message}">
+                                        ${param.message}
+                                    </c:when>
+                                    <c:otherwise>
+                                        Đơn hàng của bạn đã được hủy thành công.
+                                    </c:otherwise>
+                                </c:choose>
+                            </p>
+                            <div class="order-number">
+                                Mã đơn hàng: #${order.orderId}
+                            </div>
+                        </header>
+                    </c:when>
+                    <c:otherwise>
+                        <!-- Success Banner -->
+                        <header class="success-banner">
+                            <div class="success-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h1 class="success-title">Đặt hàng thành công!</h1>
+                            <p class="success-message">
+                                Cảm ơn bạn đã đặt hàng tại Bookify. Chúng tôi sẽ xử lý đơn hàng của bạn trong thời gian sớm nhất.
+                            </p>
+                            <div class="order-number">
+                                Mã đơn hàng: #${order.orderId}
+                            </div>
+                        </header>
+                    </c:otherwise>
+                </c:choose>
 
                 <!-- Order Status Timeline -->
                 <section class="info-card">
@@ -671,32 +698,48 @@
                         Trạng thái đơn hàng
                     </header>
                     
-                    <div class="status-timeline">
-                        <div class="status-step completed">
-                            <div class="status-step-icon">
-                                <i class="fas fa-check"></i>
+                    <c:choose>
+                        <c:when test="${order.orderStatus == 'CANCELLED'}">
+                            <!-- Cancelled Order Timeline -->
+                            <div class="status-timeline">
+                                <div class="status-step" style="flex: none; width: 100%;">
+                                    <div class="status-step-icon" style="background: #DC3545; color: white;">
+                                        <i class="fas fa-times"></i>
+                                    </div>
+                                    <div class="status-step-label" style="color: #DC3545; font-weight: 600;">Đơn hàng đã bị hủy</div>
+                                </div>
                             </div>
-                            <div class="status-step-label">Đã đặt hàng</div>
-                        </div>
-                        <div class="status-step ${order.orderStatus == 'PROCESSING' || order.orderStatus == 'SHIPPED' || order.orderStatus == 'DELIVERED' ? 'active' : ''}">
-                            <div class="status-step-icon">
-                                <i class="fas fa-box"></i>
+                        </c:when>
+                        <c:otherwise>
+                            <!-- Normal Order Timeline -->
+                            <div class="status-timeline">
+                                <div class="status-step completed">
+                                    <div class="status-step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="status-step-label">Đã đặt hàng</div>
+                                </div>
+                                <div class="status-step ${order.orderStatus == 'PROCESSING' || order.orderStatus == 'SHIPPED' || order.orderStatus == 'DELIVERED' ? 'active' : ''}">
+                                    <div class="status-step-icon">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div class="status-step-label">Đang xử lý</div>
+                                </div>
+                                <div class="status-step ${order.orderStatus == 'SHIPPED' || order.orderStatus == 'DELIVERED' ? 'active' : ''}">
+                                    <div class="status-step-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div class="status-step-label">Đang giao</div>
+                                </div>
+                                <div class="status-step ${order.orderStatus == 'DELIVERED' ? 'active' : ''}">
+                                    <div class="status-step-icon">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <div class="status-step-label">Đã giao</div>
+                                </div>
                             </div>
-                            <div class="status-step-label">Đang xử lý</div>
-                        </div>
-                        <div class="status-step ${order.orderStatus == 'SHIPPED' || order.orderStatus == 'DELIVERED' ? 'active' : ''}">
-                            <div class="status-step-icon">
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="status-step-label">Đang giao</div>
-                        </div>
-                        <div class="status-step ${order.orderStatus == 'DELIVERED' ? 'active' : ''}">
-                            <div class="status-step-icon">
-                                <i class="fas fa-home"></i>
-                            </div>
-                            <div class="status-step-label">Đã giao</div>
-                        </div>
-                    </div>
+                        </c:otherwise>
+                    </c:choose>
                 </section>
 
                 <!-- Order Details -->
@@ -953,7 +996,7 @@
                     <a href="${pageContext.request.contextPath}/" class="btn btn-secondary">
                         <i class="fas fa-home"></i> Về trang chủ
                     </a>
-                    <a href="${pageContext.request.contextPath}/customer/order-history" class="btn btn-primary">
+                    <a href="${pageContext.request.contextPath}/customer/orders" class="btn btn-primary">
                         <i class="fas fa-history"></i> Xem đơn hàng của tôi
                     </a>
                     <%-- Cancel button: Only for COD orders in PENDING or PROCESSING status --%>

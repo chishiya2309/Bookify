@@ -1,18 +1,15 @@
 package com.bookstore.service;
 
+import com.bookstore.dao.AdminDAO;
 import com.bookstore.dao.AdminHomePageDAO;
 import com.bookstore.dao.AdminOrderDAO;
 import com.bookstore.model.Address;
-import com.bookstore.model.Order;
-import com.bookstore.model.OrderDetail;
-import com.bookstore.model.Review;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
-import org.mindrot.jbcrypt.BCrypt;
-import com.bookstore.dao.AdminDAO;
-import com.bookstore.dao.AdminHomePageDAO;
 import com.bookstore.model.Admin;
+import com.bookstore.model.Order;
 import com.bookstore.model.Review;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.util.List;
 
 public class AdminServices {
 
@@ -312,7 +309,6 @@ public class AdminServices {
     }
 
     // ==================== Admin Home Page Methods ====================
-    >>>>>>>4e1829 a22c4425843803225cc84573955a8a55e4
 
     public long countAllBooks() {
         return AdminHomePageDAO.countAllBooks();
@@ -340,11 +336,19 @@ public class AdminServices {
 
     public List<Review> findRecentReviews() {
         return AdminHomePageDAO.findRecentReviews();
-    }<<<<<<<HEAD
+    }
 
     public List<Order> listAllOrders() {
         List<Order> orders = AdminOrderDAO.findAllOrders();
         return orders;
+    }
+
+    public List<Order> listAllOrdersPaginated(int page, int size) {
+        return AdminOrderDAO.findAllOrdersPaginated(page, size);
+    }
+
+    public long countOrders() {
+        return AdminOrderDAO.countAllOrders();
     }
 
     public Order getOrder(int id) {

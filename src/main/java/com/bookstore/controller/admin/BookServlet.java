@@ -207,6 +207,7 @@ public class BookServlet extends HttpServlet {
 
             // 7. Save to DB
             bookService.updateBook(book);
+        }
         listBooks(request, response);
         getServletContext().getRequestDispatcher("/admin/book/show.jsp").forward(request, response);
     }
@@ -396,6 +397,15 @@ public class BookServlet extends HttpServlet {
         if (bookIdStr != null) {
             int bookId = Integer.parseInt(bookIdStr);
 
+            // Kiểm tra xem sách có trong đơn hàng không
+            boolean hasOrders = com.bookstore.dao.BookDAO.hasOrders(bookId);
+            if (hasOrders) {
+                request.setAttribute("errorMessage", 
+                    "Không thể xoá sách này vì đã có đơn hàng liên kết. Sách đã được đặt mua bởi khách hàng.");
+                listBooks(request, response);
+                return;
+            }
+
             Book book = bookService.getBookById(bookId);
             Cloudinary cloudinary = CloudinaryUtil.cloudinary;
 
@@ -409,6 +419,7 @@ public class BookServlet extends HttpServlet {
             }
 
             bookService.deleteBook(bookId);
+            request.setAttribute("message", "Xoá sách thành công!");
             listBooks(request, response);
         }
     }
@@ -565,7 +576,6 @@ public class BookServlet extends HttpServlet {
         if (publisherIdStr != null && !publisherIdStr.isEmpty()) {
             Publisher publisher = bookService.findPublisherById(Integer.parseInt(publisherIdStr));
             book.setPublisher(publisher);
->>>>>>> 4e1829a22c4425843803225cc84573955a8a55e4
         }
     }
 

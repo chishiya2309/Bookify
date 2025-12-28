@@ -137,8 +137,16 @@ public class CategoryServlet extends HttpServlet {
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
-            categoryService.deleteCategory(id);
-            request.setAttribute("message", "Deleted successfully!");
+            
+            // Kiểm tra xem danh mục có sách liên kết không
+            long bookCount = com.bookstore.dao.CategoryDAO.countBooksByCategory(id);
+            if (bookCount > 0) {
+                request.setAttribute("errorMessage", 
+                    "Không thể xoá danh mục này vì có " + bookCount + " sách thuộc danh mục. Vui lòng chuyển hoặc xoá các sách trước.");
+            } else {
+                categoryService.deleteCategory(id);
+                request.setAttribute("message", "Xoá danh mục thành công!");
+            }
         }
         listCategories(request, response);
     }

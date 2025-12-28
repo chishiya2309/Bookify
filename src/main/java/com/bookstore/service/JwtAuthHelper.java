@@ -82,7 +82,8 @@ public class JwtAuthHelper {
                     session.setAttribute("userEmail", email);
                     session.setAttribute("userRole", role);
                     session.setAttribute("userName", customer.getFullName());
-                    System.out.println("[DEBUG] Restored customer from JWT: " + email);
+                    System.out.println(
+                            "[DEBUG] Restored customer from JWT: " + email + ", userId: " + customer.getUserId());
                     return customer;
                 }
             } finally {

@@ -26,7 +26,6 @@ public class BookDetailServlet extends HttpServlet {
     private final BookServices bookServices = new BookServices();
     private final ReviewServices reviewServices = new ReviewServices(); // ← THÊM
     private final OrderDAO orderDAO = new OrderDAO(); // ← THÊM để kiểm tra đã mua sách chưa
-    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
