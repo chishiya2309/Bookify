@@ -196,15 +196,42 @@ public class ShoppingCartServices {
     }
 
     /**
+     * Xóa item khỏi giỏ hàng theo bookId (dùng cho guest cart)
+     * Guest cart không có cartItemId từ DB nên cần xóa theo bookId
+     */
+    public void removeItemByBookId(ShoppingCart cart, Integer bookId) {
+        boolean isGuestCart = (cart.getCartId() == null);
+
+        boolean itemExists = cart.getItems().stream()
+                .anyMatch(item -> item.getBook().getBookId().equals(bookId));
+
+        if (itemExists) {
+            cart.getItems().removeIf(item -> item.getBook().getBookId().equals(bookId));
+            calculateCartTotals(cart);
+
+            // Chỉ persist vào DB nếu không phải guest cart
+            if (!isGuestCart) {
+                cartDAO.update(cart);
+            }
+        }
+    }
+
+    /**
      * Xóa tất cả items trong giỏ hàng
      * orphanRemoval = true sẽ tự động xóa các CartItem từ DB khi update cart
      */
     public void clearCart(ShoppingCart cart) {
+        boolean isGuestCart = (cart.getCartId() == null);
+
         // Clear collection trước - orphanRemoval sẽ xóa từ DB khi update
         cart.getItems().clear();
         cart.setTotalAmount(BigDecimal.ZERO);
         cart.setTotalItems(0);
-        cartDAO.update(cart);
+
+        // Chỉ persist vào DB nếu không phải guest cart
+        if (!isGuestCart) {
+            cartDAO.update(cart);
+        }
     }
 
     public boolean validateCart(ShoppingCart cart) {

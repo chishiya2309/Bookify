@@ -33,6 +33,14 @@ public class BookServices {
         return bookDAO.getAllBooks();
     }
 
+    public List<Book> getAllBooksPaginated(int page, int size) {
+        return BookDAO.getAllBooksPaginated(page, size);
+    }
+
+    public long countAllBooks() {
+        return BookDAO.countAllBooks();
+    }
+
     public void updateBook(Book book) {
         BookDAO.updateBook(book);
     }

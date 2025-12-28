@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page pageEncoding="UTF-8" %>
 <%-- Header Admin - included file --%>
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
