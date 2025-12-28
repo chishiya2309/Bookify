@@ -20,9 +20,12 @@
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
 
-            <!-- Connection Pool (optional but recommended) -->
-            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <!-- Connection Pool - optimized for Render free tier -->
+            <property name="hibernate.hikari.maximumPoolSize" value="3"/>
+            <property name="hibernate.hikari.minimumIdle" value="1"/>
             <property name="hibernate.hikari.idleTimeout" value="30000"/>
+            <property name="hibernate.hikari.connectionTimeout" value="20000"/>
+            <property name="hibernate.hikari.maxLifetime" value="1800000"/>
         </properties>
     </persistence-unit>
 </persistence>
