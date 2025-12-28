@@ -82,7 +82,8 @@ public class PublisherServlet extends HttpServlet {
 
     private void listPublishers(HttpServletRequest request, HttpServletResponse response) {
         // Gọi Service lấy danh sách
-        List<Publisher> listPublishers = publisherService.getAllPublishers(); // Hoặc findAll() tùy tên hàm trong Service
+        List<Publisher> listPublishers = publisherService.getAllPublishers(); // Hoặc findAll() tùy tên hàm trong
+                                                                              // Service
         request.setAttribute("listPublishers", listPublishers);
     }
 
@@ -103,6 +104,14 @@ public class PublisherServlet extends HttpServlet {
 
         // Gọi hàm chung để đọc dữ liệu từ form
         readPublisherFields(newPublisher, request);
+
+        // Validate dữ liệu
+        String validationError = validatePublisher(newPublisher);
+        if (validationError != null) {
+            request.setAttribute("errorMessage", validationError);
+            getServletContext().getRequestDispatcher("/admin/publisher/create.jsp").forward(request, response);
+            return;
+        }
 
         // Lưu vào DB
         publisherService.createPublisher(newPublisher); // Hoặc createPublisher(newPublisher)
@@ -127,7 +136,16 @@ public class PublisherServlet extends HttpServlet {
                 // 2. Cập nhật thông tin mới vào đối tượng cũ
                 readPublisherFields(publisher, request);
 
-                // 3. Lưu xuống DB
+                // 3. Validate dữ liệu
+                String validationError = validatePublisher(publisher);
+                if (validationError != null) {
+                    request.setAttribute("errorMessage", validationError);
+                    request.setAttribute("publisher", publisher);
+                    getServletContext().getRequestDispatcher("/admin/publisher/update.jsp").forward(request, response);
+                    return;
+                }
+
+                // 4. Lưu xuống DB
                 publisherService.updatePublisher(publisher); // Hoặc updatePublisher
                 request.setAttribute("message", "Updated successfully!");
             }
@@ -159,6 +177,51 @@ public class PublisherServlet extends HttpServlet {
         publisher.setContactEmail(email);
         publisher.setAddress(address);
         publisher.setWebsite(website);
+    }
+
+    // --- VALIDATION METHOD ---
+    private String validatePublisher(Publisher publisher) {
+        // 1. Validate Name
+        if (publisher.getName() == null || publisher.getName().trim().isEmpty()) {
+            return "Tên nhà xuất bản không được để trống.";
+        }
+        if (publisher.getName().length() > 255) {
+            return "Tên nhà xuất bản không được vượt quá 255 ký tự.";
+        }
+
+        // 2. Validate Contact Email (required and valid format)
+        if (publisher.getContactEmail() == null || publisher.getContactEmail().trim().isEmpty()) {
+            return "Email liên hệ không được để trống.";
+        }
+        // Simple email regex validation
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        if (!publisher.getContactEmail().matches(emailRegex)) {
+            return "Email liên hệ không hợp lệ.";
+        }
+        if (publisher.getContactEmail().length() > 100) {
+            return "Email không được vượt quá 100 ký tự.";
+        }
+
+        // 3. Validate Address (optional but if provided, check length)
+        if (publisher.getAddress() != null && !publisher.getAddress().trim().isEmpty()) {
+            if (publisher.getAddress().length() > 500) {
+                return "Địa chỉ không được vượt quá 500 ký tự.";
+            }
+        }
+
+        // 4. Validate Website (optional but if provided, check format)
+        if (publisher.getWebsite() != null && !publisher.getWebsite().trim().isEmpty()) {
+            if (publisher.getWebsite().length() > 255) {
+                return "Website không được vượt quá 255 ký tự.";
+            }
+            // Simple URL validation
+            String urlRegex = "^(https?://)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*$";
+            if (!publisher.getWebsite().matches(urlRegex)) {
+                return "Website không hợp lệ. Ví dụ: https://example.com";
+            }
+        }
+
+        return null; // No validation errors
     }
 
     @Override

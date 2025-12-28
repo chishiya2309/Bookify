@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác nhận đơn hàng</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+    "
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f5f5f5; padding: 20px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                style="
+                  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+                  padding: 30px;
+                  text-align: center;
+                "
+              >
+                <h1 style="margin: 0; color: #ffffff; font-size: 28px">
+                  📚 Bookify
+                </h1>
+                <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 14px">
+                  Nhà sách trực tuyến
+                </p>
+              </td>
+            </tr>
+
+            <!-- Success Message -->
+            <tr>
+              <td style="padding: 40px 30px 20px 30px; text-align: center">
+                <!-- Checkmark Icon using table for better email client support -->
+                <table
+                  width="80"
+                  height="80"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #198754;
+                    border-radius: 50%;
+                    margin: 0 auto 20px;
+                  "
+                >
+                  <tr>
+                    <td
+                      align="center"
+                      valign="middle"
+                      style="
+                        color: #ffffff;
+                        font-size: 40px;
+                        line-height: 80px;
+                        text-align: center;
+                      "
+                    >
+                      ✓
+                    </td>
+                  </tr>
+                </table>
+                <h2 style="margin: 0 0 10px 0; color: #212529; font-size: 24px">
+                  Đặt hàng thành công!
+                </h2>
+                <p style="margin: 0; color: #6c757d; font-size: 16px">
+                  Cảm ơn bạn đã đặt hàng tại Bookify
+                </p>
+              </td>
+            </tr>
+
+            <!-- Order Info -->
+            <tr>
+              <td style="padding: 0 30px 30px 30px">
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <p style="margin: 0 0 10px 0; color: #212529">
+                        <strong>Xin chào {{customerName}},</strong>
+                      </p>
+                      <p style="margin: 0; color: #6c757d; font-size: 14px">
+                        Đơn hàng của bạn đã được xác nhận và đang được xử lý.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-top: 15px">
+                      <table width="100%" cellpadding="5" cellspacing="0">
+                        <tr>
+                          <td style="color: #6c757d; font-size: 14px">
+                            Mã đơn hàng:
+                          </td>
+                          <td
+                            align="right"
+                            style="color: #212529; font-weight: bold"
+                          >
+                            #{{orderId}}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="color: #6c757d; font-size: 14px">
+                            Ngày đặt:
+                          </td>
+                          <td align="right" style="color: #212529">
+                            {{orderDate}}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Order Items -->
+            <tr>
+              <td style="padding: 0 30px 30px 30px">
+                <h3
+                  style="
+                    margin: 0 0 15px 0;
+                    color: #212529;
+                    font-size: 18px;
+                    border-bottom: 2px solid #0d6efd;
+                    padding-bottom: 10px;
+                  "
+                >
+                  Sản phẩm đã đặt
+                </h3>
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <thead>
+                    <tr style="background-color: #f8f9fa">
+                      <th
+                        style="
+                          padding: 12px;
+                          text-align: left;
+                          font-size: 13px;
+                          color: #6c757d;
+                        "
+                      >
+                        Ảnh
+                      </th>
+                      <th
+                        style="
+                          padding: 12px;
+                          text-align: left;
+                          font-size: 13px;
+                          color: #6c757d;
+                        "
+                      >
+                        Sản phẩm
+                      </th>
+                      <th
+                        style="
+                          padding: 12px;
+                          text-align: center;
+                          font-size: 13px;
+                          color: #6c757d;
+                        "
+                      >
+                        SL
+                      </th>
+                      <th
+                        style="
+                          padding: 12px;
+                          text-align: right;
+                          font-size: 13px;
+                          color: #6c757d;
+                        "
+                      >
+                        Giá
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{items}}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Order Summary -->
+            <tr>
+              <td style="padding: 0 30px 30px 30px">
+                <table width="100%" cellpadding="8" cellspacing="0">
+                  <tr>
+                    <td style="color: #6c757d">Tạm tính:</td>
+                    <td align="right" style="color: #212529">{{subtotal}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #6c757d">Phí vận chuyển:</td>
+                    <td align="right" style="color: #198754; font-weight: bold">
+                      {{shipping}}
+                    </td>
+                  </tr>
+                  {{voucherRow}}
+                  <tr style="border-top: 2px solid #0d6efd">
+                    <td
+                      style="
+                        padding-top: 15px;
+                        color: #212529;
+                        font-size: 18px;
+                        font-weight: bold;
+                      "
+                    >
+                      Tổng cộng:
+                    </td>
+                    <td
+                      align="right"
+                      style="
+                        padding-top: 15px;
+                        color: #0d6efd;
+                        font-size: 20px;
+                        font-weight: bold;
+                      "
+                    >
+                      {{totalAmount}}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Shipping Info -->
+            <tr>
+              <td style="padding: 0 30px 30px 30px">
+                <h3
+                  style="
+                    margin: 0 0 15px 0;
+                    color: #212529;
+                    font-size: 18px;
+                    border-bottom: 2px solid #0d6efd;
+                    padding-bottom: 10px;
+                  "
+                >
+                  Thông tin giao hàng
+                </h3>
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <p style="margin: 0 0 8px 0; color: #212529">
+                        <strong>{{recipientName}}</strong>
+                      </p>
+                      <p
+                        style="
+                          margin: 0 0 8px 0;
+                          color: #6c757d;
+                          font-size: 14px;
+                        "
+                      >
+                        📞 {{recipientPhone}}
+                      </p>
+                      <p style="margin: 0; color: #6c757d; font-size: 14px">
+                        📍 {{shippingAddress}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Payment Method -->
+            <tr>
+              <td style="padding: 0 30px 30px 30px">
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #fff3cd;
+                    border-radius: 8px;
+                    padding: 15px;
+                    border-left: 4px solid #ff9900;
+                  "
+                >
+                  <tr>
+                    <td>
+                      <p
+                        style="
+                          margin: 0 0 5px 0;
+                          color: #856404;
+                          font-size: 13px;
+                          font-weight: bold;
+                        "
+                      >
+                        Phương thức thanh toán
+                      </p>
+                      <p style="margin: 0; color: #856404; font-size: 14px">
+                        {{paymentMethod}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  background-color: #f8f9fa;
+                  padding: 30px;
+                  text-align: center;
+                  border-top: 1px solid #e0e0e0;
+                "
+              >
+                <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px">
+                  Cảm ơn bạn đã tin tưởng và mua sắm tại Bookify!
+                </p>
+                <p style="margin: 0 0 15px 0; color: #6c757d; font-size: 13px">
+                  Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.
+                </p>
+                <p style="margin: 0; color: #adb5bd; font-size: 12px">
+                  © 2025 Bookify. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

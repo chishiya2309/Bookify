@@ -15,13 +15,15 @@ public class OrderServices {
         this.orderDAO = new OrderDAO();
     }
 
-    /* =========================
-       CUSTOMER SIDE
-       ========================= */
+    /*
+     * =========================
+     * CUSTOMER SIDE
+     * =========================
+     */
 
     // My Order History
     public List<Order> getOrderHistory(Customer customer) {
-        return orderDAO.findOrdersByCustomer(customer);
+        return orderDAO.findByCustomerId(customer.getUserId());
     }
 
     // Order Detail (Customer)
@@ -31,7 +33,8 @@ public class OrderServices {
 
     // Tổng số lượng sách trong đơn
     public int calculateTotalQuantity(Order order) {
-        if (order == null || order.getOrderDetails() == null) return 0;
+        if (order == null || order.getOrderDetails() == null)
+            return 0;
 
         return order.getOrderDetails()
                 .stream()
@@ -39,9 +42,11 @@ public class OrderServices {
                 .sum();
     }
 
-    /* =========================
-       ADMIN SIDE
-       ========================= */
+    /*
+     * =========================
+     * ADMIN SIDE
+     * =========================
+     */
 
     // Lấy tất cả đơn hàng
     public List<Order> getAllOrders() {
@@ -56,7 +61,8 @@ public class OrderServices {
     // Cập nhật trạng thái đơn
     public void updateOrderStatus(Integer orderId, Order.OrderStatus newStatus) {
         Order order = orderDAO.findById(orderId);
-        if (order == null) return;
+        if (order == null)
+            return;
 
         order.setOrderStatus(newStatus);
         orderDAO.update(order);
@@ -76,4 +82,3 @@ public class OrderServices {
         orderDAO.update(order);
         return true;
     }
-}
