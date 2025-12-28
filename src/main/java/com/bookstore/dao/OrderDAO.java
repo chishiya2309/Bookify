@@ -410,4 +410,43 @@ public class OrderDAO {
             em.close();
         }
     }
+
+    /**
+     * Kiểm tra nếu khách hàng đã mua sách và đơn hàng có trạng thái DELIVERED
+     * Dùng để xác định khách hàng có quyền viết review không
+     * 
+     * @param customerId ID of the customer
+     * @param bookId     ID of the book
+     * @return true if customer has a delivered order containing this book
+     */
+    public boolean hasCustomerPurchasedBookWithDelivered(Integer customerId, Integer bookId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+
+        try {
+            // Dùng native query để đảm bảo chính xác
+            String sql = "SELECT COUNT(*) FROM order_details od " +
+                    "INNER JOIN orders o ON od.order_id = o.order_id " +
+                    "WHERE o.customer_id = :customerId " +
+                    "AND od.book_id = :bookId " +
+                    "AND o.order_status = 'DELIVERED'";
+
+            jakarta.persistence.Query query = em.createNativeQuery(sql);
+            query.setParameter("customerId", customerId);
+            query.setParameter("bookId", bookId);
+
+            Object result = query.getSingleResult();
+            long count = ((Number) result).longValue();
+
+            LOGGER.log(Level.INFO, "Check purchase: customerId={0}, bookId={1}, count={2}",
+                    new Object[] { customerId, bookId, count });
+
+            return count > 0;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,
+                    "Error checking if customer purchased book with DELIVERED status: " + e.getMessage(), e);
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
