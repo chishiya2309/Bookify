@@ -4,25 +4,28 @@ import com.bookstore.config.EmailConfig;
 import com.bookstore.model.Order;
 import com.bookstore.model.OrderDetail;
 import com.bookstore.model.Payment;
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * EmailService - Service for sending emails via Brevo SMTP
- * Supports HTML templates and business email notifications
+ * EmailService - Service for sending emails via Brevo HTTP API
+ * Using HTTP API instead of SMTP for better cloud hosting compatibility
+ * Emails are sent asynchronously to avoid blocking the main thread
  */
 public class EmailService {
 
@@ -31,46 +34,99 @@ public class EmailService {
     @SuppressWarnings("deprecation")
     private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getInstance(new Locale("vi", "VN"));
 
+    // Thread pool for async email sending - prevents blocking webhook/request
+    // threads
+    private static final ExecutorService EMAIL_EXECUTOR = Executors.newFixedThreadPool(2);
+
     /**
-     * Send email with HTML content
+     * Send email with HTML content (async - non-blocking)
+     * Uses Brevo HTTP API instead of SMTP for cloud compatibility
      * 
      * @param to          Recipient email address
      * @param subject     Email subject
      * @param htmlContent HTML content
      */
     public void sendEmail(String to, String subject, String htmlContent) {
+        EMAIL_EXECUTOR.submit(() -> sendEmailViaApi(to, subject, htmlContent));
+    }
+
+    /**
+     * Send email synchronously via Brevo HTTP API
+     */
+    private void sendEmailViaApi(String to, String subject, String htmlContent) {
+        HttpURLConnection connection = null;
         try {
-            // Create session
-            Session session = Session.getInstance(
-                    EmailConfig.getMailProperties(),
-                    new Authenticator() {
-                        @Override
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(
-                                    EmailConfig.getSmtpUsername(),
-                                    EmailConfig.getSmtpPassword());
-                        }
-                    });
+            URL url = new URL(EmailConfig.getApiUrl());
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("api-key", EmailConfig.getApiKey());
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(30000);
 
-            // Create message
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(
+            // Build JSON payload - escape special characters in content
+            String escapedHtmlContent = escapeJsonString(htmlContent);
+            String escapedSubject = escapeJsonString(subject);
+            String escapedFromName = escapeJsonString(EmailConfig.getFromName());
+
+            String jsonPayload = String.format(
+                    "{" +
+                            "\"sender\":{\"name\":\"%s\",\"email\":\"%s\"}," +
+                            "\"to\":[{\"email\":\"%s\"}]," +
+                            "\"subject\":\"%s\"," +
+                            "\"htmlContent\":\"%s\"" +
+                            "}",
+                    escapedFromName,
                     EmailConfig.getFromEmail(),
-                    EmailConfig.getFromName()));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-            message.setSubject(subject);
-            message.setContent(htmlContent, "text/html; charset=UTF-8");
+                    to,
+                    escapedSubject,
+                    escapedHtmlContent);
 
-            // Send email
-            Transport.send(message);
+            // Send request
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
 
-            LOGGER.log(Level.INFO, "Email sent successfully to: {0}, subject: {1}",
-                    new Object[] { to, subject });
+            // Check response
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                LOGGER.log(Level.INFO, "Email sent successfully via Brevo API to: {0}, subject: {1}",
+                        new Object[] { to, subject });
+            } else {
+                // Read error response
+                String errorResponse = "";
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8))) {
+                    errorResponse = br.lines().collect(Collectors.joining("\n"));
+                }
+                LOGGER.log(Level.WARNING, "Brevo API returned error {0}: {1}",
+                        new Object[] { responseCode, errorResponse });
+            }
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to send email to: " + to, e);
-            throw new RuntimeException("Failed to send email", e);
+            LOGGER.log(Level.WARNING, "Failed to send email via Brevo API to: " + to + " - " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
+    }
+
+    /**
+     * Escape special characters for JSON string
+     */
+    private String escapeJsonString(String input) {
+        if (input == null)
+            return "";
+        return input
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 
     /**
@@ -122,8 +178,7 @@ public class EmailService {
             // Load and populate template
             String template = loadTemplate("order-confirmation.html");
 
-            // Format shipping fee - show "Miễn phí" if shipping fee is 0, otherwise show
-            // the amount
+            // Format shipping fee
             String shippingFeeDisplay;
             if (order.getShippingFee() == null || order.getShippingFee().compareTo(BigDecimal.ZERO) == 0) {
                 shippingFeeDisplay = "Miễn phí";
@@ -131,11 +186,9 @@ public class EmailService {
                 shippingFeeDisplay = CURRENCY_FORMATTER.format(order.getShippingFee()) + "₫";
             }
 
-            // Get subtotal - use order.getSubtotal() if available, otherwise calculate from
-            // order details
+            // Get subtotal
             BigDecimal subtotal = order.getSubtotal();
             if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) == 0) {
-                // Calculate subtotal from order details if not set
                 subtotal = order.getOrderDetails().stream()
                         .map(OrderDetail::getSubTotal)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -177,9 +230,6 @@ public class EmailService {
 
     /**
      * Send payment confirmation email
-     * 
-     * @param order   Order
-     * @param payment Payment
      */
     public void sendPaymentConfirmation(Order order, Payment payment) {
         try {
@@ -206,9 +256,6 @@ public class EmailService {
 
     /**
      * Send shipping notification email
-     * 
-     * @param order          Order
-     * @param trackingNumber Tracking number
      */
     public void sendShippingNotification(Order order, String trackingNumber) {
         try {
@@ -232,9 +279,6 @@ public class EmailService {
 
     /**
      * Send order cancellation email
-     * 
-     * @param order  Cancelled order
-     * @param reason Cancellation reason
      */
     public void sendOrderCancellation(Order order, String reason) {
         try {
@@ -257,10 +301,7 @@ public class EmailService {
     }
 
     /**
-     * Send admin notification email for payment issues
-     * 
-     * @param subject Email subject
-     * @param message Notification message content
+     * Send admin notification email
      */
     public void sendAdminNotification(String subject, String message) {
         try {
@@ -286,15 +327,11 @@ public class EmailService {
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to send admin notification: " + subject, e);
-            // Don't throw - admin notifications should not break main flow
         }
     }
 
     /**
      * Load email template from resources
-     * 
-     * @param templateName Template file name
-     * @return Template content
      */
     private String loadTemplate(String templateName) {
         try {
