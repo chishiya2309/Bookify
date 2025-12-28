@@ -228,7 +228,7 @@ public class CustomerServices {
 
         // Create and save customer
         Customer customer = new Customer(email.trim(), hashedPassword, fullName.trim(), phoneNumber.trim());
-        customer.setRegisterDate(LocalDateTime.now());
+        customer.setRegisterDate(com.bookstore.config.VietnamTimeConfig.now());
         customerDAO.save(customer);
 
         return customer;
