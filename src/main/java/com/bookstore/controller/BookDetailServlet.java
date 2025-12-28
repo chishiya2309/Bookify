@@ -1,5 +1,6 @@
 package com.bookstore.controller;
 
+import com.bookstore.dao.OrderDAO;
 import com.bookstore.model.Book;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Review;
@@ -21,6 +22,7 @@ public class BookDetailServlet extends HttpServlet {
 
     private final BookServices bookServices = new BookServices();
     private final ReviewServices reviewServices = new ReviewServices(); // ← THÊM
+    private final OrderDAO orderDAO = new OrderDAO(); // ← THÊM để kiểm tra đã mua sách chưa
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -101,12 +103,24 @@ public class BookDetailServlet extends HttpServlet {
 
             // ==================== LẤY THÔNG TIN CUSTOMER HIỆN TẠI ====================
             HttpSession session = request.getSession();
+
+            // PHẢI restore customer từ JWT trước để đảm bảo có thông tin đầy đủ
             Customer currentCustomer = (Customer) session.getAttribute("customer");
+            if (currentCustomer == null) {
+                currentCustomer = com.bookstore.service.JwtAuthHelper.restoreCustomerFromJwt(
+                        request, session, com.bookstore.data.DBUtil.getEmFactory());
+            }
 
             // Kiểm tra xem customer đã review sách này chưa (nếu đã login)
             Review customerReview = null;
+            boolean canReview = false; // Chỉ cho phép đánh giá nếu đã mua và đã giao hàng
+
             if (currentCustomer != null) {
                 customerReview = reviewServices.getCustomerReviewForBook(
+                        currentCustomer.getUserId(), bookId);
+
+                // Kiểm tra xem customer đã mua sách này với trạng thái DELIVERED chưa
+                canReview = orderDAO.hasCustomerPurchasedBookWithDelivered(
                         currentCustomer.getUserId(), bookId);
             }
 
@@ -119,13 +133,7 @@ public class BookDetailServlet extends HttpServlet {
 
             request.setAttribute("currentCustomer", currentCustomer); // ← Để JSP biết có đang login không
             request.setAttribute("customerReview", customerReview); // ← Đã review chưa + nội dung nếu có
-
-            // Restore customer from JWT for header display
-            com.bookstore.model.Customer customer = (com.bookstore.model.Customer) session.getAttribute("customer");
-            if (customer == null) {
-                customer = com.bookstore.service.JwtAuthHelper.restoreCustomerFromJwt(
-                        request, session, com.bookstore.data.DBUtil.getEmFactory());
-            }
+            request.setAttribute("canReview", canReview); // ← Có quyền viết review không (đã mua + đã giao)
 
             // Load categories for header
             com.bookstore.service.CustomerServices customerServices = new com.bookstore.service.CustomerServices();

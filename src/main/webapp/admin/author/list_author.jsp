@@ -47,20 +47,18 @@
         .author-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
 
         .bio-preview {
-            max-height: 120px;             /* Hiển thị khoảng 5-6 dòng */
             overflow: hidden;
             line-height: 1.5;
-            white-space: normal;
-            text-align: left;              /* Chỉ tiểu sử căn trái để dễ đọc */
-            padding: 0 8px;                /* Thêm chút padding cho đẹp */
-
-            display: -webkit-box;
-            -webkit-line-clamp: 6;         /* Tối đa 6 dòng */
-            -webkit-box-orient: vertical;
+            white-space: nowrap;           /* Không xuống dòng */
+            text-align: left;
+            padding: 0 8px;
+            text-overflow: ellipsis;       /* Hiển thị ... khi text dài */
+            max-width: 400px;              /* Giới hạn chiều rộng */
         }
 
-        /* BỎ HOÀN TOÀN DẤU ... */
-        /* Không còn ::after nào cả */
+        .bio-preview:hover {
+            cursor: help;
+        }
 
         .action-btn {
             padding: 6px 12px;
@@ -142,16 +140,16 @@
                 <td data-label="Ảnh">
                     <c:choose>
                         <c:when test="${not empty author.photoUrl}">
-                            <img src="${author.photoUrl}" alt="${fn:escapeXml(author.name)}" class="author-photo" loading="lazy"
-                                 onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+                            <img src="${author.photoUrl}" alt="${fn:escapeXml(author.name)}" class="author-photo"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23eee%22 width=%22100%%22 height=%22100%%22/><text x=%2250%%22 y=%2255%%22 font-size=%2210%22 text-anchor=%22middle%22 fill=%22%23999%22>No Image</text></svg>';">
                         </c:when>
                         <c:otherwise>
-                            <img src="https://via.placeholder.com/80?text=No+Image" alt="Không có ảnh" class="author-photo">
+                            <img src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23eee%22 width=%22100%%22 height=%22100%%22/><text x=%2250%%22 y=%2255%%22 font-size=%2210%22 text-anchor=%22middle%22 fill=%22%23999%22>No Image</text></svg>" alt="Không có ảnh" class="author-photo">
                         </c:otherwise>
                     </c:choose>
                 </td>
                 <td data-label="Tên"><strong>${fn:escapeXml(author.name)}</strong></td>
-                <td data-label="Tiểu sử" class="bio-preview">
+                <td data-label="Tiểu sử" class="bio-preview" title="${fn:escapeXml(author.biography)}">
                     <c:choose>
                         <c:when test="${not empty author.biography}">
                             <c:out value="${author.biography}" escapeXml="true"/>

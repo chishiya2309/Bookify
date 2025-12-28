@@ -288,14 +288,10 @@
       </div>
     </c:if>
 
-    <c:if test="${not empty currentCustomer && empty customerReview}">
-      <!-- HIỂN THỊ THÔNG BÁO NẾU CÓ LỖI (VÍ DỤ: CHƯA MUA SÁCH) -->
-      <c:if test="${not empty sessionScope.error}">
-        <div class="purchase-required-notice">
-          <strong>⚠️ Lưu ý:</strong> ${sessionScope.error}
-        </div>
-        <c:remove var="error" scope="session" />
-      </c:if>
+    <%-- Đã đăng nhập + chưa đánh giá + đã mua sách với đơn DELIVERED --%>
+    <c:if test="${not empty currentCustomer && empty customerReview && canReview}">
+      <%-- Xóa error cũ nếu có vì user đã đủ điều kiện review --%>
+      <c:remove var="error" scope="session" />
 
       <div class="write-review-box">
         <h3>Viết đánh giá của bạn</h3>
@@ -323,6 +319,13 @@
           </div>
           <button type="submit" style="padding:12px 24px; background:#007bff; color:white; border:none; border-radius:6px;">Gửi đánh giá</button>
         </form>
+      </div>
+    </c:if>
+
+    <%-- Đã đăng nhập + chưa đánh giá + CHƯA mua sách hoặc đơn chưa giao --%>
+    <c:if test="${not empty currentCustomer && empty customerReview && !canReview}">
+      <div class="purchase-required-notice">
+        <strong>📝 Viết đánh giá:</strong> Bạn cần mua sách này và đợi đơn hàng được giao thành công (trạng thái DELIVERED) trước khi có thể viết đánh giá.
       </div>
     </c:if>
 

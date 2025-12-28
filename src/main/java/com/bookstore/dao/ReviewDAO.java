@@ -171,8 +171,7 @@ public class ReviewDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             Query query = em.createQuery(
-                    "SELECT COUNT(r) FROM Review r WHERE r.customer.userId = :customerId"
-            );
+                    "SELECT COUNT(r) FROM Review r WHERE r.customer.userId = :customerId");
             query.setParameter("customerId", customerId);
             return (Long) query.getSingleResult();
         } finally {
@@ -187,8 +186,7 @@ public class ReviewDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             Query query = em.createQuery(
-                    "SELECT COUNT(r) FROM Review r WHERE r.book.bookId = :bookId"
-            );
+                    "SELECT COUNT(r) FROM Review r WHERE r.book.bookId = :bookId");
             query.setParameter("bookId", bookId);
             return (Long) query.getSingleResult();
         } finally {
@@ -244,7 +242,8 @@ public class ReviewDAO {
                 jpql.append("AND LOWER(b.title) LIKE LOWER(:bookTitle) ");
             }
             if (customerSearch != null && !customerSearch.trim().isEmpty()) {
-                jpql.append("AND (LOWER(c.fullName) LIKE LOWER(:customerSearch) OR LOWER(c.email) LIKE LOWER(:customerSearch)) ");
+                jpql.append(
+                        "AND (LOWER(c.fullName) LIKE LOWER(:customerSearch) OR LOWER(c.email) LIKE LOWER(:customerSearch)) ");
             }
             if (rating != null) {
                 jpql.append("AND r.rating = :rating ");
@@ -309,7 +308,8 @@ public class ReviewDAO {
                 jpql.append("AND LOWER(r.book.title) LIKE LOWER(:bookTitle) ");
             }
             if (customerSearch != null && !customerSearch.trim().isEmpty()) {
-                jpql.append("AND (LOWER(r.customer.fullName) LIKE LOWER(:customerSearch) OR LOWER(r.customer.email) LIKE LOWER(:customerSearch)) ");
+                jpql.append(
+                        "AND (LOWER(r.customer.fullName) LIKE LOWER(:customerSearch) OR LOWER(r.customer.email) LIKE LOWER(:customerSearch)) ");
             }
             if (rating != null) {
                 jpql.append("AND r.rating = :rating ");
@@ -338,20 +338,28 @@ public class ReviewDAO {
             em.close();
         }
     }
+
     public boolean hasPurchasedAndDelivered(Integer customerId, Integer bookId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
-            String jpql = """
-                SELECT COUNT(od) > 0 FROM OrderDetail od
-                JOIN od.order o
-                WHERE od.book.bookId = :bookId
-                  AND o.customer.userId = :customerId
-                  AND o.orderStatus = com.bookstore.model.Order.OrderStatus.DELIVERED
-                """;
-            TypedQuery<Boolean> query = em.createQuery(jpql, Boolean.class);
-            query.setParameter("bookId", bookId);
+            // Dùng Native SQL để đảm bảo đúng column names
+            String sql = "SELECT COUNT(*) FROM order_details od " +
+                    "INNER JOIN orders o ON od.order_id = o.order_id " +
+                    "WHERE o.customer_id = :customerId " +
+                    "AND od.book_id = :bookId " +
+                    "AND o.order_status = 'DELIVERED'";
+
+            jakarta.persistence.Query query = em.createNativeQuery(sql);
             query.setParameter("customerId", customerId);
-            return query.getSingleResult();
+            query.setParameter("bookId", bookId);
+
+            Object result = query.getSingleResult();
+            long count = ((Number) result).longValue();
+
+            System.out.println("[ReviewDAO] hasPurchasedAndDelivered: customerId=" + customerId +
+                    ", bookId=" + bookId + ", count=" + count);
+
+            return count > 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;

@@ -1,7 +1,10 @@
 package com.bookstore.controller.admin;
 
+import com.bookstore.dao.AdminDAO;
+import com.bookstore.model.Admin;
 import com.bookstore.model.Author;
 import com.bookstore.service.AuthorServices;
+import com.bookstore.service.JwtUtil;
 import com.bookstore.util.CloudinaryUtil;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -17,14 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 @WebServlet("/admin/authors")
-@MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
-        maxFileSize = 1024 * 1024 * 5,       // 5MB
-        maxRequestSize = 1024 * 1024 * 10    // 10MB
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+        maxFileSize = 1024 * 1024 * 5, // 5MB
+        maxRequestSize = 1024 * 1024 * 10 // 10MB
 )
 public class AdminAuthorServlet extends HttpServlet {
 
     private final AuthorServices authorServices = new AuthorServices();
+    private final AdminDAO adminDAO = new AdminDAO();
     private static final int PAGE_SIZE = 20;
 
     @Override
@@ -39,10 +42,10 @@ public class AdminAuthorServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession();
-        if (session.getAttribute("admin") == null) {
-            response.sendRedirect(request.getContextPath() + "/admin/login.jsp");
-            return;
+        // Kiểm tra JWT authentication thay vì chỉ session
+        Admin currentAdmin = checkAdminAuth(request, response);
+        if (currentAdmin == null) {
+            return; // Đã redirect đến login
         }
 
         String action = request.getParameter("action");
@@ -83,7 +86,7 @@ public class AdminAuthorServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            session.setAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            request.getSession().setAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
             redirectToList(request, response, searchName, pageStr);
         }
     }
@@ -125,7 +128,7 @@ public class AdminAuthorServlet extends HttpServlet {
     }
 
     private void saveAuthor(HttpServletRequest request, HttpServletResponse response,
-                            String searchName, String pageStr)
+            String searchName, String pageStr)
             throws IOException, ServletException {
 
         Author author = null;
@@ -213,7 +216,8 @@ public class AdminAuthorServlet extends HttpServlet {
                     }
 
                     if (!photoUrl.matches("^(?i)https?://.+")) {
-                        request.getSession().setAttribute("errorMessage", "URL ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)");
+                        request.getSession().setAttribute("errorMessage",
+                                "URL ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)");
                         setFormAttributes(request, author, searchName, pageStr);
                         request.getRequestDispatcher("/admin/author/edit_author.jsp").forward(request, response);
                         return;
@@ -267,7 +271,7 @@ public class AdminAuthorServlet extends HttpServlet {
     }
 
     private void setFormAttributes(HttpServletRequest request, Author author,
-                                   String searchName, String pageStr) {
+            String searchName, String pageStr) {
         request.setAttribute("author", author);
         request.setAttribute("searchName", searchName);
         request.setAttribute("searchPage", pageStr);
@@ -295,9 +299,7 @@ public class AdminAuthorServlet extends HttpServlet {
                         "folder", "bookstore/authors",
                         "public_id", uniqueId,
                         "overwrite", true,
-                        "resource_type", "image"
-                )
-        );
+                        "resource_type", "image"));
 
         return uploadResult.get("secure_url").toString();
     }
@@ -319,10 +321,12 @@ public class AdminAuthorServlet extends HttpServlet {
     }
 
     private String extractPublicId(String imageUrl) {
-        if (imageUrl == null) return null;
+        if (imageUrl == null)
+            return null;
 
         String[] parts = imageUrl.split("/upload/");
-        if (parts.length < 2) return null;
+        if (parts.length < 2)
+            return null;
 
         String publicPath = parts[1];
         publicPath = publicPath.replaceFirst("^v\\d+/", "");
@@ -359,13 +363,14 @@ public class AdminAuthorServlet extends HttpServlet {
             try {
                 int page = Integer.parseInt(pageStr);
                 return Math.max(page, 1);
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
         return 1;
     }
 
     private void redirectToList(HttpServletRequest request, HttpServletResponse response,
-                                String searchName, String currentPageStr) throws IOException {
+            String searchName, String currentPageStr) throws IOException {
 
         StringBuilder url = new StringBuilder(request.getContextPath() + "/admin/authors?action=list");
 
@@ -379,9 +384,77 @@ public class AdminAuthorServlet extends HttpServlet {
                 if (page > 1) {
                     url.append("&page=").append(page);
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         response.sendRedirect(url.toString());
+    }
+
+    // ==================== JWT Authentication ====================
+
+    /**
+     * Kiểm tra xác thực admin từ JWT token.
+     * 
+     * @return Admin object nếu xác thực thành công, null nếu không (đã redirect đến
+     *         login)
+     */
+    private Admin checkAdminAuth(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String token = extractJwtToken(request);
+
+        if (token == null || !JwtUtil.validateToken(token)) {
+            HttpSession session = request.getSession();
+            session.setAttribute("errorMessage", "Phiên đăng nhập đã hết hạn");
+            response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+            return null;
+        }
+
+        try {
+            String role = JwtUtil.extractRole(token);
+            if (!"ADMIN".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+                return null;
+            }
+
+            String email = JwtUtil.extractEmail(token);
+            Admin admin = adminDAO.findByEmail(email);
+
+            if (admin == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+                return null;
+            }
+
+            // Lưu admin vào request để sử dụng trong các thao tác
+            request.setAttribute("currentAdmin", admin);
+            return admin;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/admin/AdminLogin.jsp");
+            return null;
+        }
+    }
+
+    /**
+     * Trích xuất JWT token từ cookies hoặc Authorization header.
+     */
+    private String extractJwtToken(HttpServletRequest request) {
+        // Kiểm tra Authorization header trước
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        // Kiểm tra cookies
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }
