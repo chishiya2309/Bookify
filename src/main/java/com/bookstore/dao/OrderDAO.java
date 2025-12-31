@@ -322,16 +322,29 @@ public class OrderDAO {
             System.out.println("[OrderDAO] findByCustomerIdWithDetails called with customerId: " + customerId);
 
             // Step 1: Fetch Orders with OrderDetails and Books
+            // Fix: Add orderId to ORDER BY to ensure consistent ordering with DISTINCT
             String jpql1 = "SELECT DISTINCT o FROM Order o " +
                     "LEFT JOIN FETCH o.orderDetails od " +
                     "LEFT JOIN FETCH od.book " +
                     "WHERE o.customer.userId = :customerId " +
-                    "ORDER BY o.orderDate DESC";
+                    "ORDER BY o.orderDate DESC, o.orderId DESC";
             TypedQuery<Order> query1 = em.createQuery(jpql1, Order.class);
             query1.setParameter("customerId", customerId);
             List<Order> orders = query1.getResultList();
 
             System.out.println("[OrderDAO] Query returned " + orders.size() + " orders for customerId: " + customerId);
+
+            // Debug: Log order IDs found
+            if (!orders.isEmpty()) {
+                StringBuilder orderIds = new StringBuilder();
+                for (Order o : orders) {
+                    orderIds.append(o.getOrderId()).append(" (customer=").append(o.getCustomer().getUserId())
+                            .append("), ");
+                }
+                System.out.println("[OrderDAO] Order IDs found: " + orderIds);
+            } else {
+                System.out.println("[OrderDAO] WARNING: No orders found for customerId: " + customerId);
+            }
 
             // Step 2: Fetch Authors for all books
             if (!orders.isEmpty()) {

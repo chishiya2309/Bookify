@@ -1,18 +1,22 @@
 package com.bookstore.config;
 
-import java.util.Properties;
-
 /**
- * EmailConfig - Configuration for Brevo (Sendinblue) SMTP
+ * EmailConfig - Configuration for Brevo HTTP API
+ * Using HTTP API instead of SMTP for better cloud hosting compatibility
+ * 
+ * IMPORTANT: API Key should be set via environment variable BREVO_API_KEY
+ * On Render: Settings > Environment > Add BREVO_API_KEY
  **/
 public class EmailConfig {
 
-    // Brevo SMTP Configuration (Port 587 with STARTTLS)
-    private static final String SMTP_HOST = "smtp-relay.brevo.com";
-    private static final String SMTP_PORT = "587";
+    // Brevo HTTP API Configuration
+    private static final String API_URL = "https://api.brevo.com/v3/smtp/email";
 
-    private static final String SMTP_USERNAME = "9d4aab001@smtp-brevo.com";
-    private static final String SMTP_PASSWORD = "xsmtpsib-2f26310a595e31fce16822c7836520b6bf7f0b523095efcb4f107fa5249ccf51-32OypTEmSKw5kYUa";
+    // Read API Key from environment variable for security
+    // Set BREVO_API_KEY in Render Dashboard: Environment > Add Environment Variable
+    private static final String API_KEY = System.getenv("BREVO_API_KEY") != null
+            ? System.getenv("BREVO_API_KEY")
+            : ""; // Fallback empty - will throw error if not configured
 
     private static final String FROM_EMAIL = "lequanghung.work@gmail.com";
     private static final String FROM_NAME = "Bookify - Nhà sách trực tuyến";
@@ -21,41 +25,22 @@ public class EmailConfig {
     private static final String ADMIN_EMAIL = "lequanghung.work@gmail.com";
 
     /**
-     * Get SMTP username
+     * Get Brevo API URL
      */
-    public static String getSmtpUsername() {
-        if (SMTP_USERNAME == null || SMTP_USERNAME.isEmpty() || SMTP_USERNAME.equals("YOUR_BREVO_EMAIL")) {
-            throw new IllegalStateException("Brevo SMTP username not configured. Update EmailConfig.java");
-        }
-        return SMTP_USERNAME;
+    public static String getApiUrl() {
+        return API_URL;
     }
 
     /**
-     * Get SMTP password (SMTP Key)
+     * Get Brevo API Key from environment variable
      */
-    public static String getSmtpPassword() {
-        if (SMTP_PASSWORD == null || SMTP_PASSWORD.isEmpty() || SMTP_PASSWORD.equals("YOUR_BREVO_SMTP_KEY")) {
+    public static String getApiKey() {
+        if (API_KEY == null || API_KEY.isEmpty()) {
             throw new IllegalStateException(
-                    "Brevo SMTP key not configured. Get it from: https://app.brevo.com/settings/keys/smtp");
+                    "Brevo API key not configured. Set BREVO_API_KEY environment variable. " +
+                            "Get your key from: https://app.brevo.com/settings/keys/api");
         }
-        return SMTP_PASSWORD;
-    }
-
-    /**
-     * Get mail properties for Jakarta Mail (STARTTLS on Port 587)
-     */
-    public static Properties getMailProperties() {
-        Properties props = new Properties();
-        props.put("mail.smtp.host", SMTP_HOST);
-        props.put("mail.smtp.port", SMTP_PORT);
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true"); // STARTTLS for port 587
-        props.put("mail.smtp.starttls.required", "true");
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-        props.put("mail.smtp.connectiontimeout", "15000");
-        props.put("mail.smtp.timeout", "15000");
-        props.put("mail.debug", "true");
-        return props;
+        return API_KEY;
     }
 
     public static String getFromEmail() {
@@ -66,21 +51,8 @@ public class EmailConfig {
         return FROM_NAME;
     }
 
-    public static String getSmtpHost() {
-        return SMTP_HOST;
-    }
-
-    public static int getSmtpPort() {
-        try {
-            return Integer.parseInt(SMTP_PORT);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid SMTP port configured: " + SMTP_PORT, e);
-        }
-    }
-
     public static boolean isConfigured() {
-        return !SMTP_USERNAME.equals("YOUR_BREVO_EMAIL")
-                && !SMTP_PASSWORD.equals("YOUR_BREVO_SMTP_KEY");
+        return API_KEY != null && !API_KEY.isEmpty();
     }
 
     public static String getAdminEmail() {

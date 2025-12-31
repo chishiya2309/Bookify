@@ -92,17 +92,31 @@ public class OrderService {
         try {
             tx.begin();
 
-            // Tạo đơn hàng
+            // CRITICAL FIX: Customer from session is a detached entity
+            // We must get a managed reference to ensure correct customer_id is persisted
+            Customer managedCustomer = em.find(Customer.class, customer.getUserId());
+            if (managedCustomer == null) {
+                throw new IllegalArgumentException("Customer không tồn tại trong database: " + customer.getUserId());
+            }
+
+            // Also get managed Address to ensure FK is correct
+            Address managedAddress = em.find(Address.class, shippingAddress.getAddressId());
+            if (managedAddress == null) {
+                throw new IllegalArgumentException(
+                        "Địa chỉ không tồn tại trong database: " + shippingAddress.getAddressId());
+            }
+
+            // Tạo đơn hàng with managed entities
             order = new Order();
-            order.setCustomer(customer);
-            order.setShippingAddress(shippingAddress);
-            order.setOrderDate(LocalDateTime.now());
+            order.setCustomer(managedCustomer); // Use managed customer
+            order.setShippingAddress(managedAddress); // Use managed address
+            order.setOrderDate(com.bookstore.config.VietnamTimeConfig.now()); // Vietnam timezone
             order.setOrderStatus(OrderStatus.PENDING);
             order.setPaymentStatus(PaymentStatus.UNPAID);
             order.setPaymentMethod(paymentMethod);
-            order.setRecipientName(shippingAddress.getRecipientName() != null
-                    ? shippingAddress.getRecipientName()
-                    : customer.getFullName());
+            order.setRecipientName(managedAddress.getRecipientName() != null
+                    ? managedAddress.getRecipientName()
+                    : managedCustomer.getFullName());
 
             BigDecimal totalAmount = BigDecimal.ZERO;
             List<String> stockErrors = new ArrayList<>();
