@@ -28,6 +28,7 @@
         <a href="${pageContext.request.contextPath}/admin/publishers">Publishers</a>
         <a href="${pageContext.request.contextPath}/admin/authors">Authors</a>
         <a href="${pageContext.request.contextPath}/admin/vouchers">Vouchers</a>
+        <a href="${pageContext.request.contextPath}/admin/metrics">Thống kê</a>
         <a href="${pageContext.request.contextPath}/admin/user">Admin</a>
     </nav>
 </header>

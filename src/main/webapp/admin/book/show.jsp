@@ -22,11 +22,36 @@
         <div class="success-banner" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 15px;">${message}</div>
     </c:if>
 
-    <div class="actions-bar">
+    <div class="actions-bar" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
         <a href="${pageContext.request.contextPath}/admin/books?action=showCreate" class="btn-create">
             + Thêm sách
         </a>
-        <span style="margin-left: auto; color: #666;">Tổng cộng: ${totalBooks} sách</span>
+        
+        <form action="${pageContext.request.contextPath}/admin/books" method="get" 
+              style="display: flex; gap: 8px; flex: 1; max-width: 400px;">
+            <input type="text" name="keyword" value="${keyword}" placeholder="Tìm theo tên sách, ISBN hoặc tác giả..."
+                   style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <button type="submit" class="btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                🔍 Tìm
+            </button>
+            <c:if test="${not empty keyword}">
+                <a href="${pageContext.request.contextPath}/admin/books" class="btn" 
+                   style="padding: 8px 12px; background: #6c757d; color: white; border-radius: 4px; text-decoration: none;">
+                    ✕
+                </a>
+            </c:if>
+        </form>
+        
+        <span style="margin-left: auto; color: #666;">
+            <c:choose>
+                <c:when test="${not empty keyword}">
+                    Tìm thấy: <strong>${totalBooks}</strong> sách cho "<em>${keyword}</em>"
+                </c:when>
+                <c:otherwise>
+                    Tổng cộng: ${totalBooks} sách
+                </c:otherwise>
+            </c:choose>
+        </span>
     </div>
 
     <table>
@@ -112,11 +137,12 @@
 
     <!-- Phân trang -->
     <c:if test="${totalPages > 1}">
+        <c:set var="keywordParam" value="${not empty keyword ? '&keyword='.concat(keyword) : ''}" />
         <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 20px 0; flex-wrap: wrap;">
             <c:if test="${currentPage > 0}">
-                <a href="${pageContext.request.contextPath}/admin/books?page=0&size=${pageSize}" 
+                <a href="${pageContext.request.contextPath}/admin/books?page=0&size=${pageSize}${keywordParam}" 
                    class="btn" style="padding: 8px 12px;">Đầu</a>
-                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage - 1}&size=${pageSize}" 
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage - 1}&size=${pageSize}${keywordParam}" 
                    class="btn" style="padding: 8px 12px;">« Trước</a>
             </c:if>
             
@@ -128,16 +154,16 @@
                         <span class="btn" style="padding: 8px 12px; background: #007bff; color: white;">${i + 1}</span>
                     </c:when>
                     <c:otherwise>
-                        <a href="${pageContext.request.contextPath}/admin/books?page=${i}&size=${pageSize}" 
+                        <a href="${pageContext.request.contextPath}/admin/books?page=${i}&size=${pageSize}${keywordParam}" 
                            class="btn" style="padding: 8px 12px;">${i + 1}</a>
                     </c:otherwise>
                 </c:choose>
             </c:forEach>
             
             <c:if test="${currentPage < totalPages - 1}">
-                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage + 1}&size=${pageSize}" 
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage + 1}&size=${pageSize}${keywordParam}" 
                    class="btn" style="padding: 8px 12px;">Sau »</a>
-                <a href="${pageContext.request.contextPath}/admin/books?page=${totalPages - 1}&size=${pageSize}" 
+                <a href="${pageContext.request.contextPath}/admin/books?page=${totalPages - 1}&size=${pageSize}${keywordParam}" 
                    class="btn" style="padding: 8px 12px;">Cuối</a>
             </c:if>
         </div>

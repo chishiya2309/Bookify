@@ -377,6 +377,95 @@ public class BookDAO {
         }
     }
 
+    // Search books with pagination - for admin panel
+    public static List<Book> searchBooksPaginated(String keyword, int page, int size) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return getAllBooksPaginated(page, size);
+            }
+
+            String trimmedKeyword = keyword.trim().toLowerCase();
+
+            // Step 1: Get paginated book IDs matching search
+            String idQuery = "SELECT b.bookId FROM Book b " +
+                    "LEFT JOIN b.authors a " +
+                    "WHERE LOWER(b.title) LIKE :keyword " +
+                    "OR LOWER(b.isbn) LIKE :keyword " +
+                    "OR LOWER(a.name) LIKE :keyword " +
+                    "ORDER BY b.title ASC";
+            TypedQuery<Integer> query = em.createQuery(idQuery, Integer.class);
+            query.setParameter("keyword", "%" + trimmedKeyword + "%");
+            query.setFirstResult(page * size);
+            query.setMaxResults(size);
+            List<Integer> bookIds = query.getResultList();
+
+            if (bookIds.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            // Step 2: Fetch books with relationships
+            String qString = "SELECT DISTINCT b FROM Book b " +
+                    "LEFT JOIN FETCH b.authors " +
+                    "LEFT JOIN FETCH b.category " +
+                    "LEFT JOIN FETCH b.publisher " +
+                    "WHERE b.bookId IN :bookIds " +
+                    "ORDER BY b.title ASC";
+            TypedQuery<Book> q = em.createQuery(qString, Book.class);
+            q.setParameter("bookIds", bookIds);
+            List<Book> books = q.getResultList();
+
+            // Step 3: Fetch primary images
+            String imgQuery = "SELECT img FROM BookImage img WHERE img.book.bookId IN :bookIds AND img.isPrimary = true";
+            TypedQuery<BookImage> imageQuery = em.createQuery(imgQuery, BookImage.class);
+            imageQuery.setParameter("bookIds", bookIds);
+            List<BookImage> primaryImages = imageQuery.getResultList();
+
+            java.util.Map<Integer, List<BookImage>> imageMap = new java.util.HashMap<>();
+            for (BookImage img : primaryImages) {
+                imageMap.computeIfAbsent(img.getBook().getBookId(), k -> new ArrayList<>()).add(img);
+            }
+
+            for (Book book : books) {
+                book.setImages(imageMap.getOrDefault(book.getBookId(), new ArrayList<>()));
+            }
+
+            return books;
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to search books paginated");
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    // Count search results for pagination
+    public static long countSearchBooks(String keyword) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return countAllBooks();
+            }
+
+            String trimmedKeyword = keyword.trim().toLowerCase();
+
+            String jpql = "SELECT COUNT(DISTINCT b) FROM Book b " +
+                    "LEFT JOIN b.authors a " +
+                    "WHERE LOWER(b.title) LIKE :keyword " +
+                    "OR LOWER(b.isbn) LIKE :keyword " +
+                    "OR LOWER(a.name) LIKE :keyword";
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+            query.setParameter("keyword", "%" + trimmedKeyword + "%");
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
+
     public static List<Book> listBooksByCategory(int categoryId) {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
@@ -423,4 +512,3 @@ public class BookDAO {
         }
     }
 }
-
