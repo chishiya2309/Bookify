@@ -76,6 +76,7 @@ public class BookServlet extends HttpServlet {
 
         String pageParam = request.getParameter("page");
         String sizeParam = request.getParameter("size");
+        String keyword = request.getParameter("keyword");
 
         if (pageParam != null && !pageParam.isEmpty()) {
             try {
@@ -99,8 +100,19 @@ public class BookServlet extends HttpServlet {
             }
         }
 
-        List<Book> books = bookService.getAllBooksPaginated(page, size);
-        long totalBooks = bookService.countAllBooks();
+        List<Book> books;
+        long totalBooks;
+
+        // Check if search keyword is provided
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            books = bookService.searchBooksPaginated(keyword.trim(), page, size);
+            totalBooks = bookService.countSearchBooks(keyword.trim());
+            request.setAttribute("keyword", keyword.trim());
+        } else {
+            books = bookService.getAllBooksPaginated(page, size);
+            totalBooks = bookService.countAllBooks();
+        }
+
         int totalPages = (int) Math.ceil((double) totalBooks / size);
 
         request.setAttribute("books", books);
@@ -400,8 +412,8 @@ public class BookServlet extends HttpServlet {
             // Kiểm tra xem sách có trong đơn hàng không
             boolean hasOrders = com.bookstore.dao.BookDAO.hasOrders(bookId);
             if (hasOrders) {
-                request.setAttribute("errorMessage", 
-                    "Không thể xoá sách này vì đã có đơn hàng liên kết. Sách đã được đặt mua bởi khách hàng.");
+                request.setAttribute("errorMessage",
+                        "Không thể xoá sách này vì đã có đơn hàng liên kết. Sách đã được đặt mua bởi khách hàng.");
                 listBooks(request, response);
                 return;
             }

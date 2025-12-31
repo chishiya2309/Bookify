@@ -73,6 +73,14 @@ public class BookServices {
         return BookDAO.searchBooks(keyword);
     }
 
+    public List<Book> searchBooksPaginated(String keyword, int page, int size) {
+        return BookDAO.searchBooksPaginated(keyword, page, size);
+    }
+
+    public long countSearchBooks(String keyword) {
+        return BookDAO.countSearchBooks(keyword);
+    }
+
     public List<Book> listBooksByCategory(int categoryId) {
         return BookDAO.listBooksByCategory(categoryId);
     }
