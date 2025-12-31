@@ -312,7 +312,12 @@
     <div class="stats-container">
         <div class="page-header">
             <h2>📊 Thống kê tổng quan</h2>
-            <span class="date-info">Cập nhật: <%= new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()) %></span>
+            <%
+                // Use Vietnam timezone for correct display on Render (UTC server)
+                java.time.LocalDateTime vietnamNow = com.bookstore.config.VietnamTimeConfig.now();
+                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            %>
+            <span class="date-info">Cập nhật: <%= vietnamNow.format(formatter) %></span>
         </div>
 
         <!-- KPI Cards -->
