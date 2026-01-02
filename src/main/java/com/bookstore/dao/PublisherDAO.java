@@ -108,4 +108,22 @@ public class PublisherDAO {
             em.close();
         }
     }
+
+    /**
+     * Đếm số sách thuộc nhà xuất bản để kiểm tra trước khi xoá
+     */
+    public static long countBooksByPublisher(Integer publisherId) {
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
+        try {
+            String qString = "SELECT COUNT(b) FROM Book b WHERE b.publisher.publisherId = :publisherId";
+            TypedQuery<Long> q = em.createQuery(qString, Long.class);
+            q.setParameter("publisherId", publisherId);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
 }

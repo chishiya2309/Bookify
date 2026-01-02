@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import com.bookstore.data.DBUtil;
 import com.bookstore.model.Customer;
 import com.bookstore.service.CustomerServices;
 import com.bookstore.service.JwtAuthHelper;
 
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,22 +21,11 @@ import jakarta.servlet.http.HttpSession;
 public class CustomerProfileServlet extends HttpServlet {
     
     private final CustomerServices customerServices;
-    private EntityManagerFactory emf;
+    private final EntityManagerFactory emf;
     
     public CustomerProfileServlet() {
         this.customerServices = new CustomerServices();
-    }
-    
-    @Override
-    public void init() throws ServletException {
-        emf = Persistence.createEntityManagerFactory("bookify_pu");
-    }
-    
-    @Override
-    public void destroy() {
-        if (emf != null && emf.isOpen()) {
-            emf.close();
-        }
+        this.emf = DBUtil.getEmFactory(); // Use singleton instead of creating new EMF
     }
     
     /**

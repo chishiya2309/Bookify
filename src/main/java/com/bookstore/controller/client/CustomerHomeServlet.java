@@ -1,4 +1,4 @@
-package com.bookstore.controller;
+package com.bookstore.controller.client;
 
 import com.bookstore.model.Book;
 import com.bookstore.model.Category;
@@ -17,14 +17,12 @@ import java.util.List;
 @WebServlet("")
 public class CustomerHomeServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    
-    // Gọi Service (đã khớp tên file CustomerServices.java trong project của bạn)
+
     private CustomerServices customerService;
 
     public CustomerHomeServlet() {
         super();
     }
-
 
     @Override
     public void init() throws ServletException {
@@ -34,27 +32,31 @@ public class CustomerHomeServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        // If CustomerServices needs explicit cleanup, do it here.
-        // For example: customerService.close(); if such a method exists.
+
         customerService = null;
         super.destroy();
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        // 0. Kiểm tra trạng thái đăng nhập từ JWT token
         JwtAuthHelper.checkLoginStatus(request);
-        
-        // 0.1. Kiểm tra nếu là ADMIN thì redirect về trang admin
+
+        // 0.1 Khôi phục customer từ JWT vào session nếu chưa có
+        jakarta.servlet.http.HttpSession session = request.getSession();
+        com.bookstore.model.Customer customer = (com.bookstore.model.Customer) session.getAttribute("customer");
+        if (customer == null) {
+            customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, com.bookstore.data.DBUtil.getEmFactory());
+        }
+
+        // 0.2. Kiểm tra nếu là ADMIN thì redirect về trang admin
         String userRole = (String) request.getAttribute("userRole");
         if ("ADMIN".equals(userRole)) {
             // Admin không được phép truy cập trang customer
             response.sendRedirect(request.getContextPath() + "/admin/");
             return;
         }
-        
+
         // 1. Lấy dữ liệu từ Service
         List<Book> listNewBooks = customerService.listNewBooks();
         List<Book> listBestSellingBooks = customerService.listBestSellingBooks();
@@ -67,17 +69,14 @@ public class CustomerHomeServlet extends HttpServlet {
         request.setAttribute("listFavoredBooks", listFavoredBooks);
         request.setAttribute("listCategories", listCategories);
 
-        // 3. Forward sang trang JSP
-        // ĐƯỜNG DẪN QUAN TRỌNG: Phải khớp với thư mục 'customer' trong ảnh bạn gửi
-        String homepage = "customer/CustomerHomePage.jsp"; 
-        
+        String homepage = "customer/CustomerHomePage.jsp";
+
         RequestDispatcher dispatcher = request.getRequestDispatcher(homepage);
         dispatcher.forward(request, response);
     }
-    
-    
+
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         doGet(req, resp);
     }

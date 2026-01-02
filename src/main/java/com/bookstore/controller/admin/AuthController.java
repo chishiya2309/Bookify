@@ -1,5 +1,7 @@
-package com.bookstore.controller;
+package com.bookstore.controller.admin;
 
+import com.bookstore.controller.ShoppingCartServlet;
+import com.bookstore.data.DBUtil;
 import com.bookstore.service.JwtUtil;
 import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.ValidationUtil;
@@ -12,7 +14,6 @@ import com.bookstore.model.Admin;
 import com.google.gson.Gson;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -54,10 +55,10 @@ public class AuthController extends HttpServlet {
     @Override
     public void init() throws ServletException {
         try {
-            emf = Persistence.createEntityManagerFactory("bookify_pu");
+            emf = DBUtil.getEmFactory(); // Use singleton instead of creating new EMF
             cartService = new ShoppingCartServices();
         } catch (Exception e) {
-            throw new ServletException("Failed to initialize EntityManagerFactory", e);
+            throw new ServletException("Failed to initialize services", e);
         }
     }
     
@@ -429,10 +430,5 @@ public class AuthController extends HttpServlet {
         out.flush();
     }
     
-    @Override
-    public void destroy() {
-        if (emf != null && emf.isOpen()) {
-            emf.close();
-        }
-    }
+    // Note: Do NOT close emf here as it's a shared singleton from DBUtil
 }

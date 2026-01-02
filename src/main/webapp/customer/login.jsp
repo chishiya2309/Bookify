@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập Khách hàng | Bookstore</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/auth-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -81,6 +82,16 @@
         function isValidRedirectUrl(url) {
             if (!url) return false;
             
+            // Prevent redirect loop - don't redirect to login or register pages
+            if (url.indexOf('login.jsp') !== -1 || url.indexOf('register.jsp') !== -1) {
+                return false;
+            }
+            
+            // Allow relative paths (like 'checkout', 'cart')
+            // They will be converted to absolute paths later
+            if (!url.startsWith('/') && !url.startsWith('//') && !url.includes(':')) {
+                return true;
+            }
             // Must be a relative URL (starts with / but not //)
             if (!url.startsWith('/') || url.startsWith('//')) {
                 return false;
@@ -102,6 +113,19 @@
             }
             
             return true;
+        }
+        
+        // Convert relative path to absolute URL
+        function getFullRedirectUrl(redirectPath) {
+            if (!redirectPath) return contextPath + '/';
+            
+            // Already an absolute URL starting with contextPath
+            if (redirectPath.startsWith(contextPath + '/') || redirectPath.startsWith('/')) {
+                return redirectPath;
+            }
+            
+            // Relative path like 'checkout' or 'cart' - prepend contextPath/customer/
+            return contextPath + '/customer/' + redirectPath;
         }
         
         // ✅ Auto-focus password field if email is pre-filled
@@ -152,7 +176,7 @@
                         setTimeout(function() {
                             // Redirect về trang trước đó nếu có, không thì về trang chủ
                             if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
-                                window.location.href = redirectUrl;
+                                window.location.href = getFullRedirectUrl(redirectUrl);
                             } else {
                                 window.location.href = contextPath + '/';
                             }
