@@ -45,7 +45,7 @@
             </p>
             
             <p class="forgot-password">
-                <a href="${pageContext.request.contextPath}/forgot_password.jsp">Quên mật khẩu?</a>
+                <a href="${pageContext.request.contextPath}/customer/forgotpassword.jsp">Quên mật khẩu?</a>
             </p>
             
             <button type="submit" class="btn-login" id="loginButton">

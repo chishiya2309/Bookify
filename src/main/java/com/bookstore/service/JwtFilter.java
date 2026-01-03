@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -31,6 +32,7 @@ public class JwtFilter implements Filter {
             "/customer/search_result.jsp", // Trang kết quả tìm kiếm (không cần đăng nhập)
             "/customer/login.jsp",
             "/customer/register.jsp",
+            "/customer/forgotpassword.jsp", // Trang quên mật khẩu
             "/customer/cart.jsp", // Giỏ hàng JSP (khách có thể xem)
             "/customer/cart", // Giỏ hàng Servlet (query database)
             "/css/auth-style.css",
@@ -43,6 +45,7 @@ public class JwtFilter implements Filter {
             "/auth/register",
             "/auth/logout",
             "/auth/refresh",
+            "/auth/forgot-password", // API quên mật khẩu
             "/customer/cart", // Cart servlet cho guest
             "/view_book", // Xem chi tiết sách (không cần đăng nhập)
             "/search_book", // Tìm kiếm sách (không cần đăng nhập)
@@ -61,6 +64,14 @@ public class JwtFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
+        
+        // DEBUG: Log path để kiểm tra
+        System.out.println("[JwtFilter] Path: " + path + " | shouldExclude: " + shouldExclude(path));
+        
+        // DEBUG: Log thêm cho forgotpassword
+        if (path.contains("forgot")) {
+            System.out.println("[JwtFilter] FORGOTPASSWORD detected! Path: " + path);
+        }
 
         // Bỏ qua các static resources
         if (path.startsWith("/css/") || path.startsWith("/js/") ||
@@ -72,6 +83,14 @@ public class JwtFilter implements Filter {
         // Bỏ qua các URL không cần xác thực (kiểm tra TRƯỚC khi kiểm tra token)
         // Đảm bảo path "/" luôn được phép truy cập để hiển thị CustomerHomePage
         if (shouldExclude(path)) {
+            // Trang forgotpassword và auth-related pages KHÔNG cần kiểm tra token
+            // Cho phép truy cập trực tiếp mà không redirect
+            if (path.contains("forgotpassword") || path.contains("login") || 
+                path.contains("register") || path.contains("forgot-password")) {
+                chain.doFilter(request, response);
+                return;
+            }
+            
             // Lấy token để kiểm tra nếu là ADMIN thì redirect
             String token = extractToken(httpRequest);
             // Kiểm tra nếu là ADMIN cố vào trang customer hoặc trang chủ
