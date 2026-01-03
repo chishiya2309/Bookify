@@ -15,13 +15,12 @@ import org.slf4j.LoggerFactory;
 import com.bookstore.dao.UserRepository;
 import com.bookstore.model.Customer;
 import com.bookstore.model.User;
+import com.bookstore.data.DBUtil;
 import com.bookstore.service.EmailService;
 import com.bookstore.service.ValidationUtil;
 import com.google.gson.Gson;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -50,12 +49,10 @@ public class ForgotPasswordServlet extends HttpServlet {
     private static final int MAX_REQUESTS = 3;
     private static final long RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
-    private EntityManagerFactory emf;
     private EmailService emailService;
 
     @Override
     public void init() throws ServletException {
-        emf = Persistence.createEntityManagerFactory("bookify_pu");
         emailService = new EmailService();
     }
 
@@ -112,7 +109,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         // Check if email exists
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             UserRepository userRepo = new UserRepository(em);
             Optional<User> optionalUser = userRepo.findByEmail(email);
@@ -227,7 +224,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         // Update password
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             UserRepository userRepo = new UserRepository(em);
             Optional<User> optionalUser = userRepo.findByEmail(email);
@@ -315,9 +312,7 @@ public class ForgotPasswordServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        if (emf != null && emf.isOpen()) {
-            emf.close();
-        }
+        // DBUtil manages the shared EntityManagerFactory - don't close it here
     }
 
     // Inner classes for OTP and Rate Limit data
