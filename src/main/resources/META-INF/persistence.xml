@@ -25,7 +25,11 @@
             <property name="hibernate.hikari.minimumIdle" value="1"/>
             <property name="hibernate.hikari.idleTimeout" value="30000"/>
             <property name="hibernate.hikari.connectionTimeout" value="20000"/>
-            <property name="hibernate.hikari.maxLifetime" value="1800000"/>
+            <property name="hibernate.hikari.maxLifetime" value="180000"/>
+            
+            <!-- Connection validation - fix "terminating connection" error from Aiven -->
+            <property name="hibernate.hikari.keepaliveTime" value="60000"/>
+            <property name="hibernate.hikari.connectionTestQuery" value="SELECT 1"/>
         </properties>
     </persistence-unit>
 </persistence>
