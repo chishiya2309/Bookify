@@ -393,4 +393,102 @@ public class EmailService {
                 return method;
         }
     }
+
+    // ==================== FORGOT PASSWORD OTP ====================
+
+    /**
+     * Send OTP email for password reset (synchronous for immediate feedback)
+     * 
+     * @param toEmail recipient email
+     * @param otpCode 6-digit OTP code
+     * @return true if sent successfully
+     */
+    public boolean sendOtpEmail(String toEmail, String otpCode) {
+        String subject = "Mã xác nhận đặt lại mật khẩu - Bookify";
+        String htmlContent = buildOtpEmailTemplate(otpCode);
+        
+        return sendEmailSync(toEmail, subject, htmlContent);
+    }
+
+    /**
+     * Send email synchronously (blocking) - used for OTP where we need immediate feedback
+     */
+    private boolean sendEmailSync(String to, String subject, String htmlContent) {
+        HttpURLConnection connection = null;
+        try {
+            @SuppressWarnings("deprecation")
+            URL url = new URL(EmailConfig.getApiUrl());
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("api-key", EmailConfig.getApiKey());
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(30000);
+
+            String escapedHtmlContent = escapeJsonString(htmlContent);
+            String escapedSubject = escapeJsonString(subject);
+            String escapedFromName = escapeJsonString(EmailConfig.getFromName());
+
+            String jsonPayload = String.format(
+                    "{" +
+                            "\"sender\":{\"name\":\"%s\",\"email\":\"%s\"}," +
+                            "\"to\":[{\"email\":\"%s\"}]," +
+                            "\"subject\":\"%s\"," +
+                            "\"htmlContent\":\"%s\"" +
+                            "}",
+                    escapedFromName,
+                    EmailConfig.getFromEmail(),
+                    to,
+                    escapedSubject,
+                    escapedHtmlContent);
+
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                LOGGER.log(Level.INFO, "OTP email sent successfully to: {0}", to);
+                return true;
+            } else {
+                LOGGER.log(Level.WARNING, "Failed to send OTP email, response code: {0}", responseCode);
+                return false;
+            }
+
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Failed to send OTP email to: " + to + " - " + e.getMessage());
+            return false;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    /**
+     * Build OTP email HTML template
+     */
+    private String buildOtpEmailTemplate(String otpCode) {
+        return "<!DOCTYPE html>" +
+            "<html><head><meta charset='UTF-8'></head>" +
+            "<body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>" +
+            "<div style='max-width: 500px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>" +
+            "<div style='text-align: center; margin-bottom: 30px;'>" +
+            "<h1 style='color: #0D6EFD; margin: 0;'>📚 Bookify</h1>" +
+            "<p style='color: #666; margin-top: 5px;'>Nhà sách trực tuyến</p>" +
+            "</div>" +
+            "<h2 style='color: #333; text-align: center;'>Mã xác nhận đặt lại mật khẩu</h2>" +
+            "<p style='color: #666; text-align: center;'>Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng sử dụng mã sau:</p>" +
+            "<div style='background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;'>" +
+            "<span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0D6EFD;'>" + otpCode + "</span>" +
+            "</div>" +
+            "<p style='color: #666; text-align: center; font-size: 14px;'>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>" +
+            "<p style='color: #999; text-align: center; font-size: 12px;'>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
+            "<hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'>" +
+            "<p style='color: #999; text-align: center; font-size: 12px;'>&copy; 2025 Bookify. All rights reserved.</p>" +
+            "</div></body></html>";
+    }
 }

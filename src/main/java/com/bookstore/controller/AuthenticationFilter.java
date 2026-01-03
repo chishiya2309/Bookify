@@ -1,13 +1,22 @@
 package com.bookstore.controller;
 
-import com.bookstore.service.JwtUtil;
-import com.bookstore.model.Customer;
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import com.bookstore.service.JwtUtil;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 // Chỉ áp dụng cho các đường dẫn của khách hàng
 @WebFilter(urlPatterns = { "/customer/*" })
@@ -17,6 +26,7 @@ public class AuthenticationFilter implements Filter {
     private static final List<String> GUEST_ALLOWED_PATHS = Arrays.asList(
             "/customer/login.jsp",
             "/customer/register.jsp",
+            "/customer/forgotpassword.jsp", // Trang quên mật khẩu
             "/customer/cart", // Giỏ hàng Servlet
             "/customer/cart.jsp", // Giỏ hàng JSP
             "/customer/book_detail.jsp",
