@@ -100,6 +100,14 @@
         .password-toggle input {
             padding-right: 40px;
         }
+        /* Ẩn icon mắt mặc định của trình duyệt Edge/Chrome */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        input::-webkit-credentials-auto-fill-button {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
