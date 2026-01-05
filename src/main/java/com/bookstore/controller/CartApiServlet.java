@@ -21,12 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CartApiServlet - AJAX API for cart operations
- * 
- * Endpoints:
- * - POST /api/cart/add - Add item to cart (returns JSON)
- * - GET /api/cart/count - Get cart item count
- * - GET /api/cart/items - Get cart items for mini-cart
+ * CartApiServlet - API AJAX cho các thao tác với giỏ hàng
+ * * Các endpoint:
+ * - POST /api/cart/add - Thêm sản phẩm vào giỏ hàng (trả về định dạng JSON)
+ * - GET /api/cart/count - Lấy số lượng sản phẩm hiện có trong giỏ
+ * - GET /api/cart/items - Lấy danh sách sản phẩm để hiển thị trên mini-cart
  */
 @WebServlet("/api/cart/*")
 public class CartApiServlet extends HttpServlet {
@@ -60,7 +59,7 @@ public class CartApiServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
 
-        // Restore from JWT if needed
+        // Khôi phục khách hàng từ JWT nếu cần
         if (customer == null) {
             customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
@@ -101,7 +100,7 @@ public class CartApiServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Customer customer = (Customer) session.getAttribute("customer");
 
-        // Restore from JWT if needed
+        // Khôi phục khách hàng từ JWT nếu cần
         if (customer == null) {
             customer = JwtAuthHelper.restoreCustomerFromJwt(request, session, DBUtil.getEmFactory());
         }
@@ -125,7 +124,7 @@ public class CartApiServlet extends HttpServlet {
     }
 
     /**
-     * Get cart item count
+     * Lấy số lượng sản phẩm trong giỏ hàng
      */
     private void handleGetCount(HttpSession session, Customer customer,
             HttpServletResponse response) throws IOException {
@@ -141,7 +140,7 @@ public class CartApiServlet extends HttpServlet {
     }
 
     /**
-     * Get cart items for mini-cart display
+     * Lấy danh sách sản phẩm trong giỏ hàng để hiển thị trên mini-cart
      */
     private void handleGetItems(HttpSession session, Customer customer,
             HttpServletResponse response) throws IOException {
@@ -169,7 +168,7 @@ public class CartApiServlet extends HttpServlet {
                 itemMap.put("subtotal",
                         item.getBook().getPrice().multiply(new java.math.BigDecimal(item.getQuantity())));
 
-                // Get primary image URL
+                // Lấy primary image URL
                 String imageUrl = item.getBook().getPrimaryImageUrl();
                 if (imageUrl == null || imageUrl.isEmpty()) {
                     imageUrl = "/images/no-image.jpg";
@@ -188,7 +187,7 @@ public class CartApiServlet extends HttpServlet {
     }
 
     /**
-     * Add item to cart via AJAX
+     * Thêm sản phẩm vào giỏ hàng thông qua AJAX
      */
     private void handleAddToCart(HttpSession session, Customer customer,
             HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -205,7 +204,7 @@ public class CartApiServlet extends HttpServlet {
             int bookId = Integer.parseInt(bookIdParam);
             int quantity = Integer.parseInt(quantityParam);
 
-            // Validate book exists and has stock
+            // Kiểm tra sách tồn tại và có trong kho
             Book book = bookDAO.findById(bookId);
             if (book == null) {
                 sendError(response, 404, "Sách không tồn tại");
@@ -218,7 +217,7 @@ public class CartApiServlet extends HttpServlet {
                 return;
             }
 
-            // Get or create cart
+            // Lấy hoặc tạo giỏ hàng
             ShoppingCart cart;
             if (customer == null) {
                 cart = getGuestCart(session);
@@ -226,13 +225,13 @@ public class CartApiServlet extends HttpServlet {
                 cart = cartService.getOrCreateCartForCustomer(customer);
             }
 
-            // Check cart limits
+            // Kiểm tra số lượng tối đa cho mỗi sản phẩm
             if (quantity > MAX_QUANTITY_PER_ITEM) {
                 sendError(response, 400, "Số lượng tối đa cho mỗi sản phẩm là " + MAX_QUANTITY_PER_ITEM);
                 return;
             }
 
-            // Check existing quantity in cart
+            // Kiểm tra số lượng tồn tại trong giỏ hàng
             int existingInCart = 0;
             boolean isNewItem = true;
             if (cart.getItems() != null) {
@@ -245,13 +244,13 @@ public class CartApiServlet extends HttpServlet {
                 }
             }
 
-            // Check max cart items
+            // Kiểm tra số lượng tối đa cho giỏ hàng
             if (isNewItem && cart.getItems() != null && cart.getItems().size() >= MAX_CART_ITEMS) {
                 sendError(response, 400, "Giỏ hàng đã đạt giới hạn tối đa " + MAX_CART_ITEMS + " sản phẩm");
                 return;
             }
 
-            // Check total quantity
+            // Kiểm tra tổng số lượng
             int totalQuantity = existingInCart + quantity;
             if (totalQuantity > MAX_QUANTITY_PER_ITEM) {
                 sendError(response, 400, "Tổng số lượng không được vượt quá " + MAX_QUANTITY_PER_ITEM + " (hiện có: "
@@ -264,18 +263,18 @@ public class CartApiServlet extends HttpServlet {
                 return;
             }
 
-            // Add to cart
+            // Thêm vào giỏ hàng
             cartService.addItemToCart(cart, bookId, quantity);
 
-            // Save guest cart to session
+            // Lưu giỏ hàng khách hàng vào session
             if (customer == null) {
                 session.setAttribute(GUEST_CART_KEY, cart);
             }
 
-            // Recalculate totals
+            // Tính toán tổng số lượng
             cartService.calculateCartTotals(cart);
 
-            // Return success with updated cart info
+            // Trả về thông tin giỏ hàng
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Đã thêm \"" + book.getTitle() + "\" vào giỏ hàng");
@@ -290,7 +289,7 @@ public class CartApiServlet extends HttpServlet {
     }
 
     /**
-     * Get cart for current user
+     * Lấy giỏ hàng cho khách hàng hiện tại
      */
     private ShoppingCart getCart(HttpSession session, Customer customer) {
         if (customer == null) {
@@ -305,7 +304,7 @@ public class CartApiServlet extends HttpServlet {
     }
 
     /**
-     * Get guest cart from session
+     * Lấy giỏ hàng khách hàng từ session
      */
     private ShoppingCart getGuestCart(HttpSession session) {
         ShoppingCart guestCart = (ShoppingCart) session.getAttribute(GUEST_CART_KEY);

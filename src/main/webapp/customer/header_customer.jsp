@@ -279,12 +279,12 @@
 const headerContextPath = '${pageContext.request.contextPath}';
 let miniCartLoaded = false;
 
-// Load cart count on page load
+// Load cart count khi page load
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
 });
 
-// Update cart badge with count
+// Cập nhật số lượng item trên cart badge
 function updateCartBadge() {
     fetch(headerContextPath + '/api/cart/count')
         .then(res => res.json())
@@ -302,7 +302,7 @@ function updateCartBadge() {
         .catch(err => console.log('Failed to load cart count'));
 }
 
-// Load mini-cart items on hover
+// Load mini-cart items khi hover
 const cartWrapper = document.querySelector('.cart-wrapper');
 if (cartWrapper) {
     cartWrapper.addEventListener('mouseenter', function() {
@@ -321,21 +321,21 @@ function loadMiniCartItems() {
         .then(data => {
             if (data.success) {
                 if (data.items && data.items.length > 0) {
-                    // Clear container
+                    // Clear nội dung container
                     itemsContainer.innerHTML = '';
                     
-                    // Build DOM elements safely
+                    // Build DOM elements an toàn
                     data.items.forEach(function(item) {
-                        // Create main item container
+                        // Tạo main item container
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'mini-cart-item';
                         
-                        // Create and configure image
+                        // Tạo và cấu hình image
                         const img = document.createElement('img');
                         const fallbackImg = 'https://placehold.co/50x70/e9ecef/6c757d?text=No+Image';
                         let imgUrl = item.imageUrl;
                         
-                        // Check if imageUrl is valid
+                        // Kiểm tra nếu imageUrl không hợp lệ
                         if (!imgUrl || imgUrl === 'null' || imgUrl.trim() === '') {
                             imgUrl = fallbackImg;
                         } else if (imgUrl.startsWith('/')) {
@@ -352,26 +352,26 @@ function loadMiniCartItems() {
                             }
                         };
                         
-                        // Create info container
+                        // Tạo info container
                         const infoDiv = document.createElement('div');
                         infoDiv.className = 'mini-cart-item-info';
                         
-                        // Create title
+                        // Tạo title
                         const titleDiv = document.createElement('div');
                         titleDiv.className = 'mini-cart-item-title';
                         titleDiv.textContent = item.title; // Safe: textContent escapes HTML
                         
-                        // Create price
+                        // Tạo price
                         const priceDiv = document.createElement('div');
                         priceDiv.className = 'mini-cart-item-price';
                         priceDiv.textContent = formatCartCurrency(item.price);
                         
-                        // Create quantity
+                        // Tạo quantity
                         const qtyDiv = document.createElement('div');
                         qtyDiv.className = 'mini-cart-item-qty';
                         qtyDiv.textContent = 'Số lượng: ' + item.quantity;
                         
-                        // Assemble the DOM tree
+                        // ráp DOM tree
                         infoDiv.appendChild(titleDiv);
                         infoDiv.appendChild(priceDiv);
                         infoDiv.appendChild(qtyDiv);
@@ -400,7 +400,7 @@ function formatCartCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 }
 
-// Global function to refresh mini-cart after adding items
+// global function để refresh mini-cart sau khi add item
 function refreshMiniCart() {
     miniCartLoaded = false;
     updateCartBadge();
