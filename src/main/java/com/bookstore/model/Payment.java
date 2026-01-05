@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 @Entity
 @Table(name = "payments", indexes = {
         // Tìm payment theo order (quan hệ 1-1, query thường xuyên)
@@ -90,8 +92,8 @@ public class Payment implements Serializable {
     private Order order;
 
     public Payment() {
-        this.paymentDate = LocalDateTime.now();
-        this.createdAt = LocalDateTime.now();
+        this.paymentDate = VietnamTimeConfig.now();
+        this.createdAt = VietnamTimeConfig.now();
         this.status = PaymentStatus.PENDING;
     }
 
@@ -162,7 +164,7 @@ public class Payment implements Serializable {
 
     public void setStatus(PaymentStatus status) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = VietnamTimeConfig.now();
     }
 
     public String getPaymentGateway() {
@@ -215,8 +217,8 @@ public class Payment implements Serializable {
 
     @PrePersist
     public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = VietnamTimeConfig.now();
+        this.updatedAt = VietnamTimeConfig.now();
         if (this.status == null) {
             this.status = PaymentStatus.PENDING;
         }
@@ -224,7 +226,7 @@ public class Payment implements Serializable {
 
     @PreUpdate
     public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = VietnamTimeConfig.now();
     }
 
     @Override
