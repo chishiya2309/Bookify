@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 @Entity
 @Table(name = "reviews", indexes = {
         @Index(name = "idx_reviews_book_id", columnList = "book_id"),
@@ -54,20 +56,20 @@ public class Review implements Serializable {
 
     // Constructors
     public Review() {
-        this.reviewDate = LocalDateTime.now();
+        this.reviewDate = VietnamTimeConfig.now();
     }
 
     public Review(Integer rating, String comment) {
         this.rating = rating;
         this.comment = comment;
-        this.reviewDate = LocalDateTime.now();
+        this.reviewDate = VietnamTimeConfig.now();
     }
 
     public Review(Integer rating, String headline, String comment) {
         this.rating = rating;
         this.headline = headline;
         this.comment = comment;
-        this.reviewDate = LocalDateTime.now();
+        this.reviewDate = VietnamTimeConfig.now();
     }
 
     // Getters and Setters
@@ -138,7 +140,7 @@ public class Review implements Serializable {
     // ĐẢM BẢO MẶC ĐỊNH isVerified = false KHI TẠO MỚI
     @PrePersist
     public void onCreate() {
-        this.reviewDate = LocalDateTime.now();
+        this.reviewDate = VietnamTimeConfig.now();
         if (this.isVerified == null) {
             this.isVerified = false; // ← Quan trọng: mặc định chưa duyệt
         }

@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 @Entity
 @Table(name = "orders", indexes = {
         // Lấy tất cả đơn hàng của 1 customer
@@ -46,7 +48,7 @@ public class Order implements Serializable {
 
     @NotNull(message = "Ngày đặt hàng không được để trống")
     @Column(name = "order_date", nullable = false)
-    private LocalDateTime orderDate = LocalDateTime.now();
+    private LocalDateTime orderDate = VietnamTimeConfig.now();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false, length = 20)
@@ -109,13 +111,13 @@ public class Order implements Serializable {
     }
 
     public Order() {
-        this.orderDate = LocalDateTime.now();
+        this.orderDate = VietnamTimeConfig.now();
     }
 
     public Order(Customer customer, Address shippingAddress) {
         this.customer = customer;
         this.shippingAddress = shippingAddress;
-        this.orderDate = LocalDateTime.now();
+        this.orderDate = VietnamTimeConfig.now();
     }
 
     public Integer getOrderId() {

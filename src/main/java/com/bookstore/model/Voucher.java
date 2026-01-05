@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 /**
  * Voucher - Mã giảm giá
  */
@@ -75,7 +77,7 @@ public class Voucher implements Serializable {
     private Boolean isActive = true;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = VietnamTimeConfig.now();
 
     // Constructors
     public Voucher() {
@@ -196,7 +198,7 @@ public class Voucher implements Serializable {
 
     // Helper methods
     public boolean isValid() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = VietnamTimeConfig.now();
         return isActive != null && isActive
                 && now.isAfter(startDate)
                 && now.isBefore(endDate)
@@ -204,11 +206,11 @@ public class Voucher implements Serializable {
     }
 
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(endDate);
+        return VietnamTimeConfig.now().isAfter(endDate);
     }
 
     public boolean isNotStarted() {
-        return LocalDateTime.now().isBefore(startDate);
+        return VietnamTimeConfig.now().isBefore(startDate);
     }
 
     @Override
@@ -230,7 +232,7 @@ public class Voucher implements Serializable {
     }
 
     public boolean isCurrentlyValid() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = VietnamTimeConfig.now();
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
 }

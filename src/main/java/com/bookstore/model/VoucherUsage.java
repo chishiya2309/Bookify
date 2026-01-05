@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 /**
  * VoucherUsage - Tracking việc sử dụng voucher
  */
@@ -36,7 +38,7 @@ public class VoucherUsage implements Serializable {
     private BigDecimal discountAmount;
 
     @Column(name = "used_at")
-    private LocalDateTime usedAt = LocalDateTime.now();
+    private LocalDateTime usedAt = VietnamTimeConfig.now();
 
     // Constructors
     public VoucherUsage() {
@@ -47,7 +49,7 @@ public class VoucherUsage implements Serializable {
         this.customer = customer;
         this.order = order;
         this.discountAmount = discountAmount;
-        this.usedAt = LocalDateTime.now();
+        this.usedAt = VietnamTimeConfig.now();
     }
 
     // Getters and Setters
