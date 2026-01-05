@@ -307,19 +307,24 @@ function loadMiniCartItems() {
                         
                         // Create and configure image
                         var img = document.createElement('img');
-                        var imgUrl = item.imageUrl || '';
+                        var fallbackImg = 'https://placehold.co/50x70/e9ecef/6c757d?text=No+Image';
+                        var imgUrl = item.imageUrl;
                         
-                        // Ensure imgUrl starts with / or http(s)://
-                        if (!imgUrl.startsWith('/') && !imgUrl.match(/^https?:\/\//i)) {
-                            imgUrl = headerContextPath + '/images/no-image.jpg';
+                        // Check if imageUrl is valid
+                        if (!imgUrl || imgUrl === 'null' || imgUrl.trim() === '') {
+                            imgUrl = fallbackImg;
                         } else if (imgUrl.startsWith('/')) {
                             imgUrl = headerContextPath + imgUrl;
+                        } else if (!imgUrl.match(/^https?:\/\//i)) {
+                            imgUrl = fallbackImg;
                         }
                         
                         img.setAttribute('src', imgUrl);
                         img.setAttribute('alt', item.title || '');
                         img.onerror = function() {
-                            this.src = headerContextPath + '/images/no-image.jpg';
+                            if (this.src !== fallbackImg) {
+                                this.src = fallbackImg;
+                            }
                         };
                         
                         // Create info container
