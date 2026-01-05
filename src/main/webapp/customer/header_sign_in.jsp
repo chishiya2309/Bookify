@@ -240,16 +240,16 @@
 var headerContextPath = '${pageContext.request.contextPath}';
 var miniCartLoaded = false;
 
-// Load cart count on page load
+// Load cart count khi page load
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
     
-    // Login link redirect
+    // Redirect link login
     var loginLink = document.getElementById('loginLink');
     if (loginLink) {
         var currentPath = window.location.pathname + window.location.search;
         var contextPath = headerContextPath;
-        // Skip adding redirect if already on login or register pages
+        // Skip redirect nếu đang ở trang login hoặc register
         if (currentPath !== contextPath + '/' &&
             currentPath !== contextPath &&
             currentPath.indexOf('login.jsp') === -1 &&
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Update cart badge with count
+// Cập nhật số lượng item trên cart badge
 function updateCartBadge() {
     fetch(headerContextPath + '/api/cart/count')
         .then(function(res) { return res.json(); })
@@ -274,10 +274,10 @@ function updateCartBadge() {
                 }
             }
         })
-        .catch(function(err) { console.log('Failed to load cart count'); });
+        .catch(function(err) { console.log('Không load được cart count'); });
 }
 
-// Load mini-cart items on hover
+// Load mini-cart items khi hover
 var cartWrapper = document.querySelector('.cart-wrapper');
 if (cartWrapper) {
     cartWrapper.addEventListener('mouseenter', function() {
@@ -296,52 +296,57 @@ function loadMiniCartItems() {
         .then(function(data) {
             if (data.success) {
                 if (data.items && data.items.length > 0) {
-                    // Clear container
+                    // Clear nội dung container
                     itemsContainer.innerHTML = '';
                     
-                    // Build DOM elements safely
+                    // Build DOM elements an toàn
                     data.items.forEach(function(item) {
-                        // Create main item container
+                        // Tạo main item container
                         var itemDiv = document.createElement('div');
                         itemDiv.className = 'mini-cart-item';
                         
-                        // Create and configure image
+                        // Tạo và cấu hình image
                         var img = document.createElement('img');
-                        var imgUrl = item.imageUrl || '';
+                        var fallbackImg = 'https://placehold.co/50x70/e9ecef/6c757d?text=No+Image';
+                        var imgUrl = item.imageUrl;
                         
-                        // Ensure imgUrl starts with / or http(s)://
-                        if (!imgUrl.startsWith('/') && !imgUrl.match(/^https?:\/\//i)) {
-                            imgUrl = headerContextPath + '/images/no-image.jpg';
+                        // Kiểm tra imageUrl có hợp lệ hay không
+                        if (!imgUrl || imgUrl === 'null' || imgUrl.trim() === '') {
+                            imgUrl = fallbackImg;
                         } else if (imgUrl.startsWith('/')) {
                             imgUrl = headerContextPath + imgUrl;
+                        } else if (!imgUrl.match(/^https?:\/\//i)) {
+                            imgUrl = fallbackImg;
                         }
                         
                         img.setAttribute('src', imgUrl);
                         img.setAttribute('alt', item.title || '');
                         img.onerror = function() {
-                            this.src = headerContextPath + '/images/no-image.jpg';
+                            if (this.src !== fallbackImg) {
+                                this.src = fallbackImg;
+                            }
                         };
                         
-                        // Create info container
+                        // Tạo info container
                         var infoDiv = document.createElement('div');
                         infoDiv.className = 'mini-cart-item-info';
                         
-                        // Create title
+                        // Tạo title
                         var titleDiv = document.createElement('div');
                         titleDiv.className = 'mini-cart-item-title';
-                        titleDiv.textContent = item.title; // Safe: textContent escapes HTML
+                        titleDiv.textContent = item.title; // Safe: textContent đã xử lý escape HTML (chống XSS)
                         
-                        // Create price
+                        // Tạo price
                         var priceDiv = document.createElement('div');
                         priceDiv.className = 'mini-cart-item-price';
                         priceDiv.textContent = formatCartCurrency(item.price);
                         
-                        // Create quantity
+                        // Tạo quantity
                         var qtyDiv = document.createElement('div');
                         qtyDiv.className = 'mini-cart-item-qty';
                         qtyDiv.textContent = 'Số lượng: ' + item.quantity;
                         
-                        // Assemble the DOM tree
+                        // ráp DOM tree
                         infoDiv.appendChild(titleDiv);
                         infoDiv.appendChild(priceDiv);
                         infoDiv.appendChild(qtyDiv);
@@ -370,7 +375,7 @@ function formatCartCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 }
 
-// Global function to refresh mini-cart after adding items
+// global function để refresh mini-cart sau khi add item
 function refreshMiniCart() {
     miniCartLoaded = false;
     updateCartBadge();

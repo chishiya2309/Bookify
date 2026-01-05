@@ -92,8 +92,6 @@ public class ShoppingCartServices {
     }
 
     public void addItemToCart(ShoppingCart cart, Integer bookId, Integer quantity) {
-        // Use getBookById to eagerly fetch images (prevents
-        // LazyInitializationException)
         Book book = BookDAO.getBookById(bookId);
 
         if (book == null) {
@@ -104,7 +102,7 @@ public class ShoppingCartServices {
             throw new IllegalArgumentException("Không đủ hàng");
         }
 
-        // Check if this is a guest cart (not persisted in DB)
+        // Kiểm tra xem đây là giỏ hàng của khách vãng lai (chưa được lưu vào DB)
         boolean isGuestCart = (cart.getCartId() == null);
 
         // Kiểm tra sách đã có trong giỏ hàng chưa?
@@ -115,14 +113,14 @@ public class ShoppingCartServices {
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + quantity);
-            // Only persist to DB if it's a user cart (not guest)
+            // Chỉ lưu vào DB nếu đây là giỏ hàng của khách hàng (không phải khách vãng lai)
             if (!isGuestCart) {
                 cartItemDAO.update(item);
             }
         } else {
             CartItem newItem = new CartItem(cart, book, quantity);
             cart.getItems().add(newItem);
-            // Only persist to DB if it's a user cart (not guest)
+            // Chỉ lưu vào DB nếu đây là giỏ hàng của khách hàng (không phải khách vãng lai)
             if (!isGuestCart) {
                 cartItemDAO.save(newItem);
             }
@@ -130,7 +128,8 @@ public class ShoppingCartServices {
 
         calculateCartTotals(cart);
 
-        // Only update cart in DB if it's a user cart (not guest)
+        // Chỉ cập nhật giỏ hàng trong DB nếu đây là giỏ hàng của khách hàng (không phải
+        // khách vãng lai)
         if (!isGuestCart) {
             cartDAO.update(cart);
         }
@@ -270,7 +269,7 @@ public class ShoppingCartServices {
                     .findFirst();
 
             if (existingItem.isPresent()) {
-                // TRƯỜNG HỢP 2: Sản phẩm trùng lặp - Cộng dồn số lượng
+                // TRƯỜNG HỢP 1: Sản phẩm trùng lặp - Cộng dồn số lượng
                 CartItem userItem = existingItem.get();
                 int currentQty = userItem.getQuantity();
                 int requestedQty = currentQty + guestQuantity;
@@ -288,7 +287,7 @@ public class ShoppingCartServices {
                     result.addLimitedItem(book.getTitle(), requestedQty, availableStock);
                 }
             } else {
-                // TRƯỜNG HỢP 1: Sản phẩm mới - Thêm vào giỏ hàng user
+                // TRƯỜNG HỢP 2: Sản phẩm mới - Thêm vào giỏ hàng user
                 if (guestQuantity <= book.getQuantityInStock()) {
                     CartItem newItem = new CartItem(userCart, book, guestQuantity);
                     userCart.getItems().add(newItem);

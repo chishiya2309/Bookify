@@ -75,6 +75,15 @@ public class PaymentService {
         }
 
         try {
+            // Xử lý đặc biệt: Nếu số tiền = 0đ, tự động hoàn tất payment
+            if (payment.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                payment.setStatus(PaymentStatus.COMPLETED);
+                paymentDAO.update(payment);
+                LOGGER.log(Level.INFO, "Zero amount payment auto-completed: {0}", payment.getTransactionId());
+                return new PaymentResult(true, "Đơn hàng miễn phí - không cần thanh toán",
+                        PaymentStatus.COMPLETED, null);
+            }
+
             switch (payment.getMethod()) {
                 case COD:
                     return processCODPayment(payment);
@@ -214,8 +223,9 @@ public class PaymentService {
      * @param amount Amount to validate
      */
     public void validatePaymentAmount(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Payment amount must be greater than 0");
+        // Cho phép số tiền = 0 (khi áp voucher 100%)
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Payment amount cannot be negative");
         }
 
         // Optional: Add maximum amount validation

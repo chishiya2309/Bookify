@@ -333,14 +333,14 @@ a[href*="Cart"] {
 
 /* Style cho placeholder khi không có ảnh */
 .book-img.no-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f0f0f0;
-    color: #999;
-    font-size: 16px;
-    font-weight: 500;
-    border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  color: #999;
+  font-size: 16px;
+  font-weight: 500;
+  border: 1px solid #ddd;
 }
 
 .book-title {
@@ -573,14 +573,12 @@ a[href*="Cart"] {
 }
 
 /* Lưới hiển thị sách (Grid Layout) */
-/* Nếu bạn chưa có class .book-grid này trong file css cũ thì hãy thêm vào, nếu có rồi thì thôi */
+/* Sử dụng flexbox để căn giữa khi số sách lẻ */
 .book-grid {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(200px, 1fr)
-  ); /* Tự động chia cột */
-  gap: 25px; /* Khoảng cách giữa các ô */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Căn giữa các items */
+  gap: 25px;
   padding: 10px;
 }
 
@@ -866,28 +864,28 @@ a[href*="Cart"] {
    ALERT STYLES (Thông báo)
    ========================================================================== */
 .alert {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin: 15px auto;
-    max-width: 800px;
-    font-weight: 500;
-    text-align: center;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 15px auto;
+  max-width: 800px;
+  font-weight: 500;
+  text-align: center;
 }
 
 .alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 .alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
 }
