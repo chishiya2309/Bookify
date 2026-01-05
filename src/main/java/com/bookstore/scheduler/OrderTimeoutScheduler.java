@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.bookstore.config.VietnamTimeConfig;
+
 /**
  * OrderTimeoutScheduler - Automatically cancels expired pending orders
  * 
@@ -94,8 +96,8 @@ public class OrderTimeoutScheduler implements ServletContextListener {
         try {
             LOGGER.log(Level.FINE, "Checking for expired pending orders...");
 
-            // Calculate cutoff time
-            LocalDateTime cutoffTime = LocalDateTime.now()
+            // Calculate cutoff time using Vietnam timezone
+            LocalDateTime cutoffTime = VietnamTimeConfig.now()
                     .minusMinutes(SepayConfig.PAYMENT_TIMEOUT_MINUTES);
 
             // Find expired BANK_TRANSFER orders

@@ -20,7 +20,6 @@ import java.util.Optional;
  * to a proper logging framework like SLF4J.
  */
 public class JwtAuthHelper {
-
     /**
      * Kiểm tra JWT token từ request cookies hoặc Authorization header.
      * 
@@ -34,7 +33,6 @@ public class JwtAuthHelper {
             return bearerToken.substring(7);
         }
 
-        // Kiểm tra cookies
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -55,6 +53,7 @@ public class JwtAuthHelper {
      * @param emf     EntityManagerFactory for database access
      * @return Customer object if successfully restored, null otherwise
      */
+
     public static Customer restoreCustomerFromJwt(HttpServletRequest request, HttpSession session,
             EntityManagerFactory emf) {
         String token = extractJwtToken(request);
@@ -66,12 +65,10 @@ public class JwtAuthHelper {
         try {
             String email = JwtUtil.extractEmail(token);
             String role = JwtUtil.extractRole(token);
-
             // Only restore for CUSTOMER, not ADMIN
             if (!"CUSTOMER".equals(role)) {
                 return null;
             }
-
             // Find customer from database
             EntityManager em = emf.createEntityManager();
             try {
@@ -80,14 +77,13 @@ public class JwtAuthHelper {
 
                 if (optionalUser.isPresent() && optionalUser.get() instanceof Customer) {
                     Customer customer = (Customer) optionalUser.get();
-
                     // Restore session attributes
                     session.setAttribute("customer", customer);
                     session.setAttribute("userEmail", email);
                     session.setAttribute("userRole", role);
                     session.setAttribute("userName", customer.getFullName());
-
-                    System.out.println("[DEBUG] Restored customer from JWT: " + email);
+                    System.out.println(
+                            "[DEBUG] Restored customer from JWT: " + email + ", userId: " + customer.getUserId());
                     return customer;
                 }
             } finally {
@@ -98,6 +94,7 @@ public class JwtAuthHelper {
         }
 
         return null;
+
     }
 
     /**
@@ -114,7 +111,9 @@ public class JwtAuthHelper {
         // Default to false
         request.setAttribute("isLoggedIn", Boolean.FALSE);
 
-        if (token == null || !JwtUtil.validateToken(token)) {
+        if (token == null || !JwtUtil.validateToken(token))
+
+        {
             return;
         }
 

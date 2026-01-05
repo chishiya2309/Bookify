@@ -5,65 +5,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books Management - Admin</title>
-    <link rel="stylesheet" href="../../css/styles.css" type="text/css"/>
+    <title>Quản lý Sách - Admin</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css" type="text/css"/>
 </head>
 <body>
-<h2>Books Management</h2>
-<a href="${pageContext.request.contextPath}/admin/books?action=showCreate">Create New Book</a>
-<br>
-<table>
-    <tr>
-        <th>Index</th>
-        <th>ID</th>
-        <th>Title</th>
-        <th>Author</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Last Updated</th>
-        <th>Actions</th>
-    </tr>
-    <c:forEach var="book" items="${books}" varStatus="status">
+<jsp:include page="../header_admin.jsp" />
+
+<div class="container">
+    <h2>Quản lý Sách</h2>
+
+    <c:if test="${not empty errorMessage}">
+        <div class="error-banner">${errorMessage}</div>
+    </c:if>
+    
+    <c:if test="${not empty message}">
+        <div class="success-banner" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin-bottom: 15px;">${message}</div>
+    </c:if>
+
+    <div class="actions-bar" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+        <a href="${pageContext.request.contextPath}/admin/books?action=showCreate" class="btn-create">
+            + Thêm sách
+        </a>
+        
+        <form action="${pageContext.request.contextPath}/admin/books" method="get" 
+              style="display: flex; gap: 8px; flex: 1; max-width: 400px;">
+            <input type="text" name="keyword" value="${keyword}" placeholder="Tìm theo tên sách, ISBN hoặc tác giả..."
+                   style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <button type="submit" class="btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                🔍 Tìm
+            </button>
+            <c:if test="${not empty keyword}">
+                <a href="${pageContext.request.contextPath}/admin/books" class="btn" 
+                   style="padding: 8px 12px; background: #6c757d; color: white; border-radius: 4px; text-decoration: none;">
+                    ✕
+                </a>
+            </c:if>
+        </form>
+        
+        <span style="margin-left: auto; color: #666;">
+            <c:choose>
+                <c:when test="${not empty keyword}">
+                    Tìm thấy: <strong>${totalBooks}</strong> sách cho "<em>${keyword}</em>"
+                </c:when>
+                <c:otherwise>
+                    Tổng cộng: ${totalBooks} sách
+                </c:otherwise>
+            </c:choose>
+        </span>
+    </div>
+
+    <table>
+        <thead>
         <tr>
-            <td>${status.index + 1}</td>
-            <td>${book.bookId}</td>
-            <td>${book.title}</td>
-            <td>
-                <c:if test="${not empty book.authors}">
-                    <c:forEach var="author" items="${book.authors}" varStatus="authorStatus">
-                        ${author.name}
-                        <c:if test="${!authorStatus.last}">, </c:if>
-                    </c:forEach>
-                </c:if>
-            </td>
-            <td>
-                <c:if test="${not empty book.category}">
-                    ${book.category.name}
-                </c:if>
-            </td>
-            <td>
-                <c:if test="${not empty book.price}">
-                    $${book.price}
-                </c:if>
-                <c:if test="${empty book.price}">
-                    N/A
-                </c:if>
-            </td>
-            <td>
-                <c:if test="${not empty book.lastUpdated}">
-                    ${book.lastUpdated}
-                </c:if>
-            </td>
-            <td>
-                <a href="${pageContext.request.contextPath}/admin/books?action=showUpdate&bookId=${book.bookId}">Edit</a>
-                <br>
-                <a href="${pageContext.request.contextPath}/admin/books?action=delete&bookId=${book.bookId}"
-                                 onclick="return confirm('Are you sure you want to delete the book with ID= ${book.bookId}?')">
-                Delete
-            </a>
-            </td>
+            <th>STT</th>
+            <th>ID</th>
+            <th>Hình ảnh</th>
+            <th>Tiêu đề</th>
+            <th>Tác giả</th>
+            <th>Danh mục</th>
+            <th>NXB</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Cập nhật</th>
+            <th>Hành động</th>
         </tr>
-    </c:forEach>
-</table>
+        </thead>
+        <tbody>
+        <c:if test="${empty books}">
+            <tr>
+                <td colspan="11" style="text-align: center;">Không có dữ liệu.</td>
+            </tr>
+        </c:if>
+
+        <c:forEach var="book" items="${books}" varStatus="status">
+            <tr>
+                <td>${currentPage * pageSize + status.index + 1}</td>
+                <td>${book.bookId}</td>
+                <td>
+                    <c:if test="${not empty book.images}">
+                        <img src="${book.images[0].url}" alt="${book.title}" style="width: 50px; height: 70px; object-fit: cover;">
+                    </c:if>
+                    <c:if test="${empty book.images}">
+                        <span style="color: #999;">Không có ảnh</span>
+                    </c:if>
+                </td>
+                <td>${book.title}</td>
+                <td>
+                    <c:if test="${not empty book.authors}">
+                        <c:forEach var="author" items="${book.authors}" varStatus="authorStatus">
+                            ${author.name}<c:if test="${!authorStatus.last}">, </c:if>
+                        </c:forEach>
+                    </c:if>
+                </td>
+                <td>
+                    <c:if test="${not empty book.category}">
+                        ${book.category.name}
+                    </c:if>
+                </td>
+                <td>
+                    <c:if test="${not empty book.publisher}">
+                        ${book.publisher.name}
+                    </c:if>
+                </td>
+                <td>
+                    <c:if test="${not empty book.price}">
+                        ${book.price} VND
+                    </c:if>
+                    <c:if test="${empty book.price}">
+                        N/A
+                    </c:if>
+                </td>
+                <td>${book.quantityInStock}</td>
+                <td>
+                    <c:if test="${not empty book.lastUpdated}">
+                        ${book.lastUpdated}
+                    </c:if>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="btn-action edit" href="${pageContext.request.contextPath}/admin/books?action=showUpdate&bookId=${book.bookId}">Sửa</a>
+                        <a class="btn-action delete" href="${pageContext.request.contextPath}/admin/books?action=delete&bookId=${book.bookId}"
+                           data-id="${book.bookId}">
+                            Xoá
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
+
+    <!-- Phân trang -->
+    <c:if test="${totalPages > 1}">
+        <c:set var="keywordParam" value="${not empty keyword ? '&keyword='.concat(keyword) : ''}" />
+        <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 20px 0; flex-wrap: wrap;">
+            <c:if test="${currentPage > 0}">
+                <a href="${pageContext.request.contextPath}/admin/books?page=0&size=${pageSize}${keywordParam}" 
+                   class="btn" style="padding: 8px 12px;">Đầu</a>
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage - 1}&size=${pageSize}${keywordParam}" 
+                   class="btn" style="padding: 8px 12px;">« Trước</a>
+            </c:if>
+            
+            <c:forEach begin="${currentPage > 2 ? currentPage - 2 : 0}" 
+                       end="${currentPage + 2 < totalPages - 1 ? currentPage + 2 : totalPages - 1}" 
+                       var="i">
+                <c:choose>
+                    <c:when test="${i == currentPage}">
+                        <span class="btn" style="padding: 8px 12px; background: #007bff; color: white;">${i + 1}</span>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/admin/books?page=${i}&size=${pageSize}${keywordParam}" 
+                           class="btn" style="padding: 8px 12px;">${i + 1}</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+            
+            <c:if test="${currentPage < totalPages - 1}">
+                <a href="${pageContext.request.contextPath}/admin/books?page=${currentPage + 1}&size=${pageSize}${keywordParam}" 
+                   class="btn" style="padding: 8px 12px;">Sau »</a>
+                <a href="${pageContext.request.contextPath}/admin/books?page=${totalPages - 1}&size=${pageSize}${keywordParam}" 
+                   class="btn" style="padding: 8px 12px;">Cuối</a>
+            </c:if>
+        </div>
+        
+        <div style="text-align: center; color: #666; margin-bottom: 20px;">
+            Trang ${currentPage + 1} / ${totalPages}
+        </div>
+    </c:if>
+
+    <div id="confirmModal" class="modal-backdrop">
+        <div class="modal-box">
+            <h3>Xác nhận xoá</h3>
+            <p id="confirmText">Bạn có chắc chắn muốn xoá?</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn cancel" id="btnCancel">Huỷ</button>
+                <button type="button" class="modal-btn confirm" id="btnConfirm">Xoá</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<jsp:include page="../footer_admin.jsp" />
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>const contextPath = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/js/script.js"></script>
 </body>
 </html>

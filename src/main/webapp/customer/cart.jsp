@@ -281,6 +281,7 @@
             body {
                 padding: 12px;
             }
+
             .cart-page-badge {
                 font-size: 12px;
                 padding: 3px 10px;
@@ -688,13 +689,26 @@
                                             </figure>
                                         </td>
                                         <td class="text-center" data-label="Số lượng">
-                                            <input type="number" 
-                                                   name="quantity_${item.cartItemId}" 
-                                                   value="${item.quantity}" 
-                                                   min="1" 
-                                                   max="${book.quantityInStock}"
-                                                   class="quantity-input"
-                                                   inputmode="numeric">
+                                            <c:choose>
+                                                <c:when test="${not empty item.cartItemId}">
+                                                    <input type="number" 
+                                                           name="quantity_${item.cartItemId}" 
+                                                           value="${item.quantity}" 
+                                                           min="1" 
+                                                           max="${book.quantityInStock}"
+                                                           class="quantity-input"
+                                                           inputmode="numeric">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <input type="number" 
+                                                           name="quantity_book_${book.bookId}" 
+                                                           value="${item.quantity}" 
+                                                           min="1" 
+                                                           max="${book.quantityInStock}"
+                                                           class="quantity-input"
+                                                           inputmode="numeric">
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
                                         <td class="text-right" data-label="Đơn giá">
                                             <data value="${book.price}" class="price-tag">
@@ -710,7 +724,7 @@
                                         </td>
                                         <td class="text-center" data-label="">
                                             <button type="button" class="btn-remove" 
-                                                    onclick="removeItem(${item.cartItemId})"
+                                                    onclick="removeItem(${not empty item.cartItemId ? item.cartItemId : 0}, ${book.bookId})"
                                                     title="Xoá khỏi giỏ hàng">
                                                 <i class="fas fa-times"></i> Xoá
                                             </button>
@@ -794,7 +808,7 @@
             }
         })();
         
-        function removeItem(itemId) {
+        function removeItem(itemId, bookId) {
             if (confirm('Bạn có chắc muốn xoá sản phẩm này khỏi giỏ hàng?')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -804,14 +818,19 @@
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
                 actionInput.value = 'remove';
-                
                 const itemIdInput = document.createElement('input');
                 itemIdInput.type = 'hidden';
                 itemIdInput.name = 'itemId';
                 itemIdInput.value = itemId;
+
+                const bookIdInput = document.createElement('input');
+                bookIdInput.type = 'hidden';
+                bookIdInput.name = 'bookId';
+                bookIdInput.value = bookId;
                 
                 form.appendChild(actionInput);
                 form.appendChild(itemIdInput);
+                form.appendChild(bookIdInput);
                 document.body.appendChild(form);
                 form.submit();
             }

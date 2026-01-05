@@ -1,4 +1,4 @@
-package com.bookstore.controller;
+package com.bookstore.controller.client;
 
 import com.bookstore.model.Book;
 import com.bookstore.model.Category;
@@ -18,7 +18,6 @@ import java.util.List;
 public class CustomerHomeServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    // Gọi Service (đã khớp tên file CustomerServices.java trong project của bạn)
     private CustomerServices customerService;
 
     public CustomerHomeServlet() {
@@ -33,8 +32,7 @@ public class CustomerHomeServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        // If CustomerServices needs explicit cleanup, do it here.
-        // For example: customerService.close(); if such a method exists.
+
         customerService = null;
         super.destroy();
     }
@@ -42,8 +40,6 @@ public class CustomerHomeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // 0. Kiểm tra trạng thái đăng nhập từ JWT token
         JwtAuthHelper.checkLoginStatus(request);
 
         // 0.1 Khôi phục customer từ JWT vào session nếu chưa có
@@ -73,8 +69,6 @@ public class CustomerHomeServlet extends HttpServlet {
         request.setAttribute("listFavoredBooks", listFavoredBooks);
         request.setAttribute("listCategories", listCategories);
 
-        // 3. Forward sang trang JSP
-        // ĐƯỜNG DẪN QUAN TRỌNG: Phải khớp với thư mục 'customer' trong ảnh bạn gửi
         String homepage = "customer/CustomerHomePage.jsp";
 
         RequestDispatcher dispatcher = request.getRequestDispatcher(homepage);

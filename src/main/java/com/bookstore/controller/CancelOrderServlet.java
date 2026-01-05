@@ -27,10 +27,37 @@ public class CancelOrderServlet extends HttpServlet {
     private final OrderService orderService = new OrderService();
 
     /**
+     * Handle GET request to cancel an order (from link click)
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Get orderId from 'id' parameter (from link) or 'orderId' parameter
+        String orderIdStr = request.getParameter("id");
+        if (orderIdStr == null) {
+            orderIdStr = request.getParameter("orderId");
+        }
+
+        // Forward to doPost logic by setting the parameter
+        if (orderIdStr != null) {
+            request.setAttribute("orderIdFromGet", orderIdStr);
+        }
+        processCancel(request, response);
+    }
+
+    /**
      * Handle POST request to cancel an order
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processCancel(request, response);
+    }
+
+    /**
+     * Common cancel logic for both GET and POST
+     */
+    private void processCancel(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
@@ -43,6 +70,14 @@ public class CancelOrderServlet extends HttpServlet {
         }
 
         String orderIdStr = request.getParameter("orderId");
+        // Also check 'id' parameter for GET requests
+        if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
+            orderIdStr = request.getParameter("id");
+        }
+        // Also check attribute from doGet
+        if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
+            orderIdStr = (String) request.getAttribute("orderIdFromGet");
+        }
         String reason = request.getParameter("reason");
 
         // Validate orderId
@@ -112,7 +147,8 @@ public class CancelOrderServlet extends HttpServlet {
     }
 
     /**
-     * Safely parse the orderId string to Integer without throwing NumberFormatException.
+     * Safely parse the orderId string to Integer without throwing
+     * NumberFormatException.
      * Returns null if the input is null or not a valid integer.
      */
     private Integer safelyParseOrderId(String orderIdStr) {

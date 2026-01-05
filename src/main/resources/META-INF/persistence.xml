@@ -20,9 +20,16 @@
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
 
-            <!-- Connection Pool (optional but recommended) -->
-            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <!-- Connection Pool - optimized for Render free tier -->
+            <property name="hibernate.hikari.maximumPoolSize" value="3"/>
+            <property name="hibernate.hikari.minimumIdle" value="1"/>
             <property name="hibernate.hikari.idleTimeout" value="30000"/>
+            <property name="hibernate.hikari.connectionTimeout" value="20000"/>
+            <property name="hibernate.hikari.maxLifetime" value="180000"/>
+            
+            <!-- Connection validation - fix "terminating connection" error from Aiven -->
+            <property name="hibernate.hikari.keepaliveTime" value="60000"/>
+            <property name="hibernate.hikari.connectionTestQuery" value="SELECT 1"/>
         </properties>
     </persistence-unit>
 </persistence>

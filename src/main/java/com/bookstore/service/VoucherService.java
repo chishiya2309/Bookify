@@ -81,7 +81,7 @@ public class VoucherService {
             return new ValidationResult(false, "Mã giảm giá đã bị vô hiệu hóa");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = com.bookstore.config.VietnamTimeConfig.now();
         if (now.isBefore(voucher.getStartDate())) {
             return new ValidationResult(false, "Mã giảm giá chưa có hiệu lực");
         }

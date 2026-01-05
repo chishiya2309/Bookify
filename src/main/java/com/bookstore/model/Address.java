@@ -17,17 +17,14 @@ import java.io.Serializable;
         @Index(name = "idx_addresses_province", columnList = "province")
 })
 public class Address implements Serializable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "address_id")
     private Integer addressId;
-
     @NotBlank(message = "Địa chỉ đường không được để trống")
     @Size(max = 255, message = "Địa chỉ đường tối đa 255 ký tự")
     @Column(name = "street_line", nullable = false, length = 255)
     private String street;
-
     @NotBlank(message = "Phường/Xã không được để trống")
     @Size(max = 255, message = "Phường/Xã tối đa 100 ký tự")
     @Column(nullable = false, length = 100)
@@ -37,7 +34,6 @@ public class Address implements Serializable {
     @Size(max = 255, message = "Quận/Huyện tối đa 100 ký tự")
     @Column(nullable = false, length = 100)
     private String district;
-
     @NotBlank(message = "Tỉnh/Thành phố không được để trống")
     @Size(max = 100, message = "Tỉnh/Thành phố tối đa 100 ký tự")
     @Column(nullable = false, length = 100)
@@ -48,7 +44,6 @@ public class Address implements Serializable {
     @Pattern(regexp = "^[a-zA-Z0-9 -]*$", message = "Mã bưu điện chỉ chứa chữ cái, số, dấu gạch ngang và khoảng trắng")
     @Column(name = "zip_code", length = 20)
     private String zipCode;
-
     @NotBlank(message = "Quốc gia không được để trống")
     @Size(max = 100, message = "Quốc gia tối đa 100 ký tự")
     @Column(nullable = false, length = 100)
@@ -65,7 +60,6 @@ public class Address implements Serializable {
     @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Số điện thoại không hợp lệ")
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     @NotNull(message = "Địa chỉ phải thuộc về một khách hàng")

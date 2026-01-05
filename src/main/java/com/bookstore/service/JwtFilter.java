@@ -29,12 +29,15 @@ public class JwtFilter implements Filter {
             "/", // Root path
             "/customer/CustomerHomePage.jsp", // Trang chủ customer (không cần đăng nhập)
             "/customer/book_detail.jsp", // Trang chi tiết sách (không cần đăng nhập)
+            "/customer/search_result.jsp", // Trang kết quả tìm kiếm (không cần đăng nhập)
             "/customer/login.jsp",
             "/customer/register.jsp",
+            "/customer/forgotpassword.jsp", // Trang quên mật khẩu
             "/customer/cart.jsp", // Giỏ hàng JSP (khách có thể xem)
             "/customer/cart", // Giỏ hàng Servlet (query database)
             "/css/auth-style.css",
-            "/admin/AdminLogin.jsp");
+            "/admin/AdminLogin.jsp",
+            "/view_category");
 
     // 2. Cập nhật đường dẫn cho Servlet (API) ko cần đăng nhập
     private static final List<String> EXCLUDED_SERVLETS = Arrays.asList(
@@ -42,8 +45,10 @@ public class JwtFilter implements Filter {
             "/auth/register",
             "/auth/logout",
             "/auth/refresh",
+            "/auth/forgot-password", // API quên mật khẩu
             "/customer/cart", // Cart servlet cho guest
             "/view_book", // Xem chi tiết sách (không cần đăng nhập)
+            "/search_book", // Tìm kiếm sách (không cần đăng nhập)
             "/api/" // API endpoints (webhooks, payment status, etc.)
     );
 
@@ -59,6 +64,14 @@ public class JwtFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String path = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
+        
+        // DEBUG: Log path để kiểm tra
+        System.out.println("[JwtFilter] Path: " + path + " | shouldExclude: " + shouldExclude(path));
+        
+        // DEBUG: Log thêm cho forgotpassword
+        if (path.contains("forgot")) {
+            System.out.println("[JwtFilter] FORGOTPASSWORD detected! Path: " + path);
+        }
 
         // Bỏ qua các static resources
         if (path.startsWith("/css/") || path.startsWith("/js/") ||
@@ -70,9 +83,16 @@ public class JwtFilter implements Filter {
         // Bỏ qua các URL không cần xác thực (kiểm tra TRƯỚC khi kiểm tra token)
         // Đảm bảo path "/" luôn được phép truy cập để hiển thị CustomerHomePage
         if (shouldExclude(path)) {
+            // Trang forgotpassword và auth-related pages KHÔNG cần kiểm tra token
+            // Cho phép truy cập trực tiếp mà không redirect
+            if (path.contains("forgotpassword") || path.contains("login") || 
+                path.contains("register") || path.contains("forgot-password")) {
+                chain.doFilter(request, response);
+                return;
+            }
+            
             // Lấy token để kiểm tra nếu là ADMIN thì redirect
             String token = extractToken(httpRequest);
-
             // Kiểm tra nếu là ADMIN cố vào trang customer hoặc trang chủ
             if (token != null && JwtUtil.validateToken(token)) {
                 String role = JwtUtil.extractRole(token);
@@ -82,7 +102,6 @@ public class JwtFilter implements Filter {
                     return;
                 }
             }
-
             chain.doFilter(request, response);
             return;
         }
@@ -122,7 +141,6 @@ public class JwtFilter implements Filter {
                 chain.doFilter(request, response);
             } else {
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
                 // Redirect về trang phù hợp với role của user
                 if (isAdmin) {
                     // Admin cố vào trang customer -> về dashboard admin
@@ -191,6 +209,7 @@ public class JwtFilter implements Filter {
         }
 
         return false;
+
     }
 
     private String extractToken(HttpServletRequest request) {
@@ -211,6 +230,7 @@ public class JwtFilter implements Filter {
         }
 
         return null;
+
     }
 
     /**
@@ -221,6 +241,7 @@ public class JwtFilter implements Filter {
      * - Starts with the application context path or is root
      * 
      * @param url         The URL to validate
+     * 
      * @param contextPath The application context path
      * @return true if the URL is a valid internal redirect, false otherwise
      */
@@ -228,14 +249,11 @@ public class JwtFilter implements Filter {
         if (url == null || url.isEmpty()) {
             return false;
         }
-
         // Must be a relative URL (starts with / but not //)
         if (!url.startsWith("/") || url.startsWith("//")) {
             return false;
         }
 
-        // Must not contain protocol scheme at the beginning (http://, https://,
-        // javascript:, etc.)
         // Use precompiled pattern for efficiency
         if (PROTOCOL_PATTERN.matcher(url).matches()) {
             return false;
@@ -272,7 +290,6 @@ public class JwtFilter implements Filter {
                 return false;
             }
         }
-
         return true;
     }
 
