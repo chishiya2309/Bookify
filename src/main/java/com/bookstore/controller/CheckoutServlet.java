@@ -251,6 +251,20 @@ public class CheckoutServlet extends HttpServlet {
                     paymentMethodStr,
                     voucherCode);
 
+            // Xử lý case: Nếu tổng đơn hàng = 0đ (sau khi áp voucher)
+            // và phương thức là BANK_TRANSFER -> tự động chuyển sang COD
+            boolean isZeroAmountOrder = order.getTotalAmount().compareTo(java.math.BigDecimal.ZERO) == 0;
+            if (isZeroAmountOrder) {
+                if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER) {
+                    paymentMethod = Payment.PaymentMethod.COD;
+                    order.setPaymentMethod("COD");
+                }
+                // Đánh dấu đã thanh toán vì số tiền = 0
+                order.setPaymentStatus(Order.PaymentStatus.PAID);
+                // Cập nhật trạng thái đơn hàng trong database
+                orderService.updatePaymentStatus(order.getOrderId(), Order.PaymentStatus.PAID);
+            }
+
             // Tạo thanh toán
             String gateway = paymentMethod == Payment.PaymentMethod.SEPAY ? "Sepay" : null;
             Payment payment = paymentService.createPayment(order, paymentMethod, gateway);
@@ -259,9 +273,8 @@ public class CheckoutServlet extends HttpServlet {
             PaymentService.PaymentResult result = paymentService.processPayment(payment, new java.util.HashMap<>());
 
             if (result.isSuccess()) {
-                // Chỉ xóa cart ngay cho COD (thanh toán được coi là "hoàn tất" về mặt logic)
-                // BANK_TRANSFER: cart sẽ được xóa khi webhook xác nhận đã nhận tiền
-                if (paymentMethod == Payment.PaymentMethod.COD) {
+                // Xóa cart cho COD hoặc đơn hàng 0đ (thanh toán hoàn tất ngay)
+                if (paymentMethod == Payment.PaymentMethod.COD || isZeroAmountOrder) {
                     cartService.clearCart(cart);
                     session.setAttribute("cart", cart);
                 }
@@ -269,7 +282,7 @@ public class CheckoutServlet extends HttpServlet {
                 if (result.requiresRedirect()) {
                     // Redirect đến cổng thanh toán
                     response.sendRedirect(result.getRedirectUrl());
-                } else if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER) {
+                } else if (paymentMethod == Payment.PaymentMethod.BANK_TRANSFER && !isZeroAmountOrder) {
                     // Chuyển khoản ngân hàng - redirect đến trang thanh toán QRCode
                     // Cart sẽ được xóa khi webhook xác nhận đã nhận tiền
                     session.setAttribute("orderConfirmation",
@@ -277,12 +290,15 @@ public class CheckoutServlet extends HttpServlet {
                     response.sendRedirect(
                             request.getContextPath() + "/customer/bank-transfer-payment?orderId=" + order.getOrderId());
                 } else {
-                    // Thanh toán thành công (COD) - redirect đến trang xác nhận
-                    session.setAttribute("orderConfirmation",
-                            "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderId());
+                    // Thanh toán thành công (COD hoặc 0đ) - redirect đến trang xác nhận
+                    String message = isZeroAmountOrder
+                            ? "Đặt hàng thành công! Đơn hàng miễn phí #" + order.getOrderId()
+                            : "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderId();
+                    session.setAttribute("orderConfirmation", message);
                     response.sendRedirect(
                             request.getContextPath() + "/customer/order-confirmation?orderId=" + order.getOrderId());
                 }
+
             } else {
                 // Thanh toán thất bại
                 request.setAttribute("error", "Thanh toán thất bại: " + result.getMessage());
