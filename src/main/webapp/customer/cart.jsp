@@ -580,10 +580,10 @@
         <c:if test="${isGuest and not empty cart and not empty cart.items}">
             <article style="margin-bottom: 20px; background: #cfe2ff; border-left: 4px solid var(--color-primary); border-radius: 8px; padding: 16px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                    <section style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-user-clock" style="color: var(--color-primary); font-size: 20px; margin-top: 2px;"></i>
+                    <section style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-user-clock" style="color: var(--color-primary); font-size: 24px;"></i>
                         <div>
-                            <h2 style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">
+                            <h2 style="font-size: 16px; font-weight: 600; color: var(--text-main); margin: 0 0 4px 0;">
                                 Đang mua với tư cách khách
                             </h2>
                             <p style="font-size: 14px; color: var(--text-main); margin: 0;">
@@ -633,12 +633,36 @@
                         <p style="font-size: 20px; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Giỏ hàng trống</p>
                         <p style="margin-bottom: 24px; color: var(--text-light);">Hãy thêm sách vào giỏ hàng để bắt đầu!</p>
                         <a href="${pageContext.request.contextPath}/" class="btn btn-primary">
-                            <i class="fas fa-book"></i>
-                            Xem sách
+                            📚 Xem sách
                         </a>
                     </section>
                 </c:when>
                 <c:otherwise>
+                    <%-- Check if any item is out of stock --%>
+                    <c:set var="hasOutOfStock" value="false" />
+                    <c:forEach var="item" items="${cart.items}">
+                        <c:if test="${item.book.quantityInStock <= 0}">
+                            <c:set var="hasOutOfStock" value="true" />
+                        </c:if>
+                    </c:forEach>
+                    
+                    <%-- Warning banner for out-of-stock items --%>
+                    <c:if test="${hasOutOfStock}">
+                        <article style="margin: 16px; background: #f8d7da; border-left: 4px solid var(--color-error); border-radius: 8px; padding: 16px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--color-error); font-size: 24px;"></i>
+                                <div>
+                                    <h2 style="font-size: 16px; font-weight: 600; color: var(--color-error); margin: 0 0 4px 0;">
+                                        ⚠️ Một số sản phẩm đã hết hàng
+                                    </h2>
+                                    <p style="font-size: 14px; color: var(--text-main); margin: 0;">
+                                        Vui lòng xoá các sản phẩm hết hàng khỏi giỏ trước khi thanh toán.
+                                    </p>
+                                </div>
+                            </div>
+                        </article>
+                    </c:if>
+                    
                     <form action="cart" method="post" id="cartForm">
                         <input type="hidden" name="action" value="update">
                         <table>
@@ -683,6 +707,9 @@
                                                             <c:when test="${book.quantityInStock > 0}">
                                                                 <span class="stock-badge low-stock">Còn ${book.quantityInStock}</span>
                                                             </c:when>
+                                                            <c:otherwise>
+                                                                <span class="stock-badge out-of-stock" style="background: #f8d7da; color: #dc3545;">⚠️ Hết hàng</span>
+                                                            </c:otherwise>
                                                         </c:choose>
                                                     </div>
                                                 </div>
@@ -766,11 +793,22 @@
                                     <i class="fas fa-arrow-left"></i>
                                     Tiếp tục mua sắm
                                 </a>
-                                <a href="checkout" class="btn btn-success">
-                                    <i class="fas fa-lock"></i>
-                                    Tiến hành thanh toán
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
+                                <c:choose>
+                                    <c:when test="${hasOutOfStock}">
+                                        <span class="btn btn-success" style="opacity: 0.5; cursor: not-allowed;" title="Vui lòng xoá sản phẩm hết hàng trước khi thanh toán">
+                                            <i class="fas fa-lock"></i>
+                                            Tiến hành thanh toán
+                                            <i class="fas fa-arrow-right"></i>
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="checkout" class="btn btn-success">
+                                            <i class="fas fa-lock"></i>
+                                            Tiến hành thanh toán
+                                            <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </nav>
                         </footer>
                     </form>
@@ -780,7 +818,7 @@
     </main>
 
     <script>
-        // Toast notification functions
+        // Các hàm thông báo Toast
         function closeToast(toastId) {
             const toast = document.getElementById(toastId);
             if (toast) {
@@ -789,11 +827,11 @@
             }
         }
         
-        // Auto-dismiss success toast after 5 seconds
+        // Tự động ẩn thông báo thành công sau 5 giây
         (function() {
             const successToast = document.getElementById('successToast');
             if (successToast) {
-                // Pause animation on hover
+                // Tạm dừng animation khi di chuột vào
                 successToast.addEventListener('mouseenter', function() {
                     const progress = this.querySelector('.toast-progress');
                     if (progress) progress.style.animationPlayState = 'paused';
@@ -803,7 +841,7 @@
                     if (progress) progress.style.animationPlayState = 'running';
                 });
                 
-                // Auto close after 5 seconds
+                // Tự động đóng sau 5 giây
                 setTimeout(() => closeToast('successToast'), 5000);
             }
         })();
@@ -836,7 +874,7 @@
             }
         }
 
-        // Validate quantity before submit
+        // Xác thực số lượng trước khi gửi yêu cầu
         document.getElementById('cartForm')?.addEventListener('submit', function(e) {
             const inputs = this.querySelectorAll('.quantity-input');
             let valid = true;
@@ -858,11 +896,29 @@
             }
         });
         
-        // Highlight invalid inputs
+        // Highlight invalid inputs và đặt thông báo tiếng Việt
         document.querySelectorAll('.quantity-input').forEach(input => {
+            // Set custom validation message on load
+            input.addEventListener('invalid', function() {
+                const max = parseInt(this.max);
+                const min = parseInt(this.min) || 1;
+                const value = parseInt(this.value);
+                
+                if (value > max) {
+                    this.setCustomValidity('Số lượng phải nhỏ hơn hoặc bằng ' + max + ' (tồn kho)');
+                } else if (value < min) {
+                    this.setCustomValidity('Số lượng phải lớn hơn hoặc bằng ' + min);
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
             input.addEventListener('input', function() {
                 const value = parseInt(this.value);
                 const max = parseInt(this.max);
+                
+                // Clear custom validity khi user đang nhập
+                this.setCustomValidity('');
                 
                 if (value < 1 || value > max) {
                     this.style.borderColor = 'var(--color-error)';

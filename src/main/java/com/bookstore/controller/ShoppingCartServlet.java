@@ -25,9 +25,9 @@ public class ShoppingCartServlet extends HttpServlet {
     private static final String MERGE_MESSAGE_KEY = "mergeMessage";
     private static final String SUCCESS_MESSAGE_KEY = "successMessage";
 
-    // Cart limits to prevent abuse and memory bloat
-    private static final int MAX_CART_ITEMS = 50; // Max unique products in cart
-    private static final int MAX_QUANTITY_PER_ITEM = 10; // Max quantity per product
+    // Giới hạn giỏ hàng để ngăn chặn hành vi lạm dụng và tình trạng phình bộ nhớ.
+    private static final int MAX_CART_ITEMS = 50; // Số lượng sản phẩm tối đa trong giỏ hàng
+    private static final int MAX_QUANTITY_PER_ITEM = 10; // Số lượng tối đa cho mỗi sản phẩm
 
     @Override
     public void init() throws ServletException {
@@ -98,9 +98,9 @@ public class ShoppingCartServlet extends HttpServlet {
         request.setAttribute("cart", cart);
         request.setAttribute("isGuest", customer == null);
 
-        // Set userEmail cho header nếu đã đăng nhập
+        // Set userName cho header nếu đã đăng nhập
         if (customer != null) {
-            request.setAttribute("userEmail", customer.getEmail());
+            request.setAttribute("userName", customer.getFullName());
         }
         // Hiển thị thông báo merge nếu có
         String mergeMessage = (String) session.getAttribute(MERGE_MESSAGE_KEY);
@@ -205,7 +205,7 @@ public class ShoppingCartServlet extends HttpServlet {
                 session.setAttribute(SUCCESS_MESSAGE_KEY, successMessage);
             }
 
-            // Check for redirect parameter (for Buy Now functionality)
+            // Kiểm tra tham số chuyển hướng (dành cho tính năng Mua Ngay)
             String redirect = request.getParameter("redirect");
             if ("checkout".equals(redirect)) {
                 response.sendRedirect(request.getContextPath() + "/customer/checkout");
@@ -268,17 +268,17 @@ public class ShoppingCartServlet extends HttpServlet {
         String bookIdParam = request.getParameter("bookId");
         String quantityParam = request.getParameter("quantity");
         if (bookIdParam == null) {
-            throw new IllegalArgumentException("Missing required parameter: bookId");
+            throw new IllegalArgumentException("Thiếu tham số bắt buộc: bookId");
         }
         if (quantityParam == null) {
-            throw new IllegalArgumentException("Missing required parameter: quantity");
+            throw new IllegalArgumentException("Thiếu tham số bắt buộc: quantity");
         }
 
         try {
             Integer bookId = Integer.parseInt(bookIdParam);
             Integer quantity = Integer.parseInt(quantityParam);
 
-            // ========== STOCK VALIDATION ==========
+            // ========== Kiểm tra tồn kho ==========
             BookDAO bookDAO = new BookDAO();
             Book book = bookDAO.findById(bookId);
 
@@ -286,21 +286,21 @@ public class ShoppingCartServlet extends HttpServlet {
                 throw new IllegalArgumentException("Sách không tồn tại");
             }
 
-            // Check current stock
+            // Kiểm tra tồn kho
             int currentStock = book.getQuantityInStock();
             if (currentStock <= 0) {
                 throw new IllegalArgumentException("Sách '" + book.getTitle() + "' đã hết hàng");
             }
 
-            // ========== CART LIMITS VALIDATION ==========
-            // Check max quantity per item
+            // ========== Kiểm tra giới hạn giỏ hàng ==========
+            // Kiểm tra số lượng tối đa cho mỗi sản phẩm
             if (quantity > MAX_QUANTITY_PER_ITEM) {
                 throw new IllegalArgumentException(
                         String.format("Số lượng tối đa cho mỗi sản phẩm là %d", MAX_QUANTITY_PER_ITEM));
             }
 
-            // Check if requested quantity exceeds available stock
-            // Also consider items already in cart
+            // Kiểm tra số lượng tối đa trong giỏ hàng
+            // Tính đến cả các sản phẩm đã có trong giỏ hàng
             int existingInCart = 0;
             boolean isNewItem = true;
             if (cart.getItems() != null) {
@@ -313,13 +313,14 @@ public class ShoppingCartServlet extends HttpServlet {
                 }
             }
 
-            // Check max cart items (only for new items)
+            // Kiểm tra số lượng tối đa trong giỏ hàng (chỉ áp dụng cho sản phẩm mới)
             if (isNewItem && cart.getItems() != null && cart.getItems().size() >= MAX_CART_ITEMS) {
                 throw new IllegalArgumentException(
                         String.format("Giỏ hàng đã đạt giới hạn tối đa %d sản phẩm", MAX_CART_ITEMS));
             }
 
-            // Check max quantity per item including existing
+            // Kiểm tra số lượng tối đa cho mỗi sản phẩm bao gồm các sản phẩm đã có trong
+            // giỏ hàng
             int totalQuantity = existingInCart + quantity;
             if (totalQuantity > MAX_QUANTITY_PER_ITEM) {
                 throw new IllegalArgumentException(
@@ -328,7 +329,7 @@ public class ShoppingCartServlet extends HttpServlet {
             }
             // ========== END CART LIMITS VALIDATION ==========
 
-            // Also check stock availability
+            // Kiểm tra tồn kho
             int totalRequested = existingInCart + quantity;
             if (totalRequested > currentStock) {
                 if (existingInCart > 0) {
@@ -344,7 +345,7 @@ public class ShoppingCartServlet extends HttpServlet {
 
             cartService.addItemToCart(cart, bookId, quantity);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Định dạng tham số không hợp lệ: " + e.getMessage(), e);
         }
     }
 
@@ -393,16 +394,26 @@ public class ShoppingCartServlet extends HttpServlet {
                         }
                         removedCount++;
                         System.out.println("[UPDATE CART] Removed item: " + item.getBook().getTitle());
-                    } else if (newQuantity != currentQuantity) {
-                        // Chỉ update nếu quantity thực sự thay đổi
-                        if (isGuestCart) {
-                            // Guest cart: update trực tiếp trong memory
-                            item.setQuantity(newQuantity);
-                        } else {
-                            // User cart: persist vào DB
-                            cartService.updateItemQuantity(cart, item.getCartItemId(), newQuantity);
+                    } else {
+                        // Validate: cap quantity về max stock nếu vượt quá
+                        int maxStock = item.getBook().getQuantityInStock();
+                        if (newQuantity > maxStock) {
+                            System.out.println("[UPDATE CART] WARNING: Quantity " + newQuantity +
+                                    " exceeds stock " + maxStock + ", capping to " + maxStock);
+                            newQuantity = maxStock;
                         }
-                        updatedCount++;
+
+                        if (newQuantity != currentQuantity) {
+                            // Chỉ update nếu quantity thực sự thay đổi
+                            if (isGuestCart) {
+                                // Guest cart: update trực tiếp trong memory
+                                item.setQuantity(newQuantity);
+                            } else {
+                                // User cart: persist vào DB
+                                cartService.updateItemQuantity(cart, item.getCartItemId(), newQuantity);
+                            }
+                            updatedCount++;
+                        }
                     }
                 } catch (
 
@@ -433,24 +444,24 @@ public class ShoppingCartServlet extends HttpServlet {
         if (isGuestCart) {
             // Guest cart - xóa theo bookId
             if (bookIdParam == null || bookIdParam.isEmpty() || "undefined".equals(bookIdParam)) {
-                throw new IllegalArgumentException("Missing required parameter: bookId for guest cart");
+                throw new IllegalArgumentException("Thiếu tham số bắt buộc: bookId cho giỏ hàng khách");
             }
             try {
                 Integer bookId = Integer.parseInt(bookIdParam);
                 cartService.removeItemByBookId(cart, bookId);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid bookId format: " + e.getMessage(), e);
+                throw new IllegalArgumentException("Định dạng bookId không hợp lệ: " + e.getMessage(), e);
             }
         } else {
             // User cart - xóa theo cartItemId
             if (itemIdParam == null || itemIdParam.isEmpty() || "undefined".equals(itemIdParam)) {
-                throw new IllegalArgumentException("Missing required parameter: itemId");
+                throw new IllegalArgumentException("Thiếu tham số bắt buộc: itemId");
             }
             try {
                 Integer itemId = Integer.parseInt(itemIdParam);
                 cartService.removeItemFromCart(cart, itemId);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid itemId format: " + e.getMessage(), e);
+                throw new IllegalArgumentException("Định dạng itemId không hợp lệ: " + e.getMessage(), e);
             }
         }
     }
@@ -460,17 +471,17 @@ public class ShoppingCartServlet extends HttpServlet {
         String quantityParam = request.getParameter("quantity");
 
         if (itemIdParam == null) {
-            throw new IllegalArgumentException("Missing required parameter: itemId");
+            throw new IllegalArgumentException("Thiếu tham số bắt buộc: itemId");
         }
         if (quantityParam == null) {
-            throw new IllegalArgumentException("Missing required parameter: quantity");
+            throw new IllegalArgumentException("Thiếu tham số bắt buộc: quantity");
         }
         try {
             Integer itemId = Integer.parseInt(itemIdParam);
             Integer quantity = Integer.parseInt(quantityParam);
             cartService.updateItemQuantity(cart, itemId, quantity);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid parameter format: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Định dạng tham số không hợp lệ: " + e.getMessage(), e);
         }
     }
 }

@@ -9,6 +9,7 @@
     <title>Bookify - Online Bookstore</title>
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/DuyHung.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <%-- Hiển thị header phù hợp với trạng thái đăng nhập (kiểm tra session) --%>
