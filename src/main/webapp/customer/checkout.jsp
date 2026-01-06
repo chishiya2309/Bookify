@@ -837,8 +837,8 @@
                     <i class="fas fa-shopping-cart"></i>
                     <h2>Giỏ hàng của bạn đang trống</h2>
                     <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
-                    <a href="${pageContext.request.contextPath}/" class="btn-place-order" style="display:inline-block; margin-top:20px; text-decoration:none;">
-                        <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                    <a href="${pageContext.request.contextPath}/" class="btn-place-order" style="display:inline-block; margin-top:20px; text-decoration:none; color: white;">
+                        📚 Mua sắm ngay
                     </a>
                 </section>
             </c:when>
@@ -991,7 +991,7 @@
                                                 </c:forEach>
                                             </div>
                                             <div class="order-item-quantity">
-                                                Số lượng: ${item.quantity}
+                                                Đơn giá: <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫ × ${item.quantity}
                                             </div>
                                         </div>
                                         
