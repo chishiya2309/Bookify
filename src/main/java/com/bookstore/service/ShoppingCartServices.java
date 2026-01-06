@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- *
- * @author lequa
- */
 public class ShoppingCartServices {
     private ShoppingCartDAO cartDAO;
     private CartItemDAO cartItemDAO;

@@ -33,7 +33,6 @@ public class CartItem implements Serializable {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    // Constructors
     public CartItem() {
     }
 
@@ -43,7 +42,6 @@ public class CartItem implements Serializable {
         this.quantity = quantity;
     }
 
-    // Getters and Setters
     public Integer getCartItemId() {
         return cartItemId;
     }
