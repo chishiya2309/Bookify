@@ -487,6 +487,94 @@
                 justify-content: center;
             }
         }
+
+        /* ==================== CANCEL MODAL ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            color: #DC3545;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .reason-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+
+        .reason-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-footer .btn {
+            padding: 12px 24px;
+            font-size: 14px;
+            width: auto;
+        }
     </style>
 </head>
 <body>
@@ -777,18 +865,87 @@
             <i class="fas fa-book"></i>
             Tiếp tục mua sắm
         </a>
-        <c:if test="${order.orderStatus == 'PENDING'}">
-            <a href="${pageContext.request.contextPath}/customer/cancel-order?id=${order.orderId}" 
-               class="btn btn-danger"
-               onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+        <c:if test="${order.orderStatus == 'PENDING' && (order.paymentMethod == 'COD' || (order.paymentMethod == 'BANK_TRANSFER' && (order.paymentStatus.name() == 'UNPAID' || order.paymentStatus == null)))}">
+            <button type="button" class="btn btn-danger" onclick="showCancelModal()">
                 <i class="fas fa-times"></i>
                 Hủy đơn hàng
-            </a>
+            </button>
         </c:if>
     </nav>
+
+    <%-- Cancel Order Modal --%>
+    <c:if test="${order.orderStatus == 'PENDING' && (order.paymentMethod == 'COD' || (order.paymentMethod == 'BANK_TRANSFER' && (order.paymentStatus.name() == 'UNPAID' || order.paymentStatus == null)))}">
+        <div id="cancelModal" class="modal-overlay">
+            <article class="modal-content">
+                <header class="modal-header">
+                    <div class="modal-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="modal-title">Xác nhận huỷ đơn hàng</h3>
+                    <p class="modal-subtitle">Bạn có chắc chắn muốn huỷ đơn hàng #${order.orderId}?</p>
+                </header>
+                <form action="${pageContext.request.contextPath}/customer/cancel-order" method="post">
+                    <input type="hidden" name="orderId" value="${order.orderId}">
+                    <section class="modal-body">
+                        <label for="cancelReason" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Lý do huỷ:</label>
+                        <select name="reason" id="cancelReason" class="reason-select" required>
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="Đổi ý, không muốn mua nữa">Đổi ý, không muốn mua nữa</option>
+                            <option value="Đặt nhầm sản phẩm">Đặt nhầm sản phẩm</option>
+                            <option value="Muốn thay đổi địa chỉ giao hàng">Muốn thay đổi địa chỉ giao hàng</option>
+                            <option value="Tìm được giá rẻ hơn ở nơi khác">Tìm được giá rẻ hơn ở nơi khác</option>
+                            <option value="Thời gian giao hàng quá lâu">Thời gian giao hàng quá lâu</option>
+                            <option value="Lý do khác">Lý do khác</option>
+                        </select>
+                    </section>
+                    <footer class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="hideCancelModal()">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Xác nhận huỷ
+                        </button>
+                    </footer>
+                </form>
+            </article>
+        </div>
+    </c:if>
 </main>
 
 <jsp:include page="/customer/footer_customer.jsp" />
 
+<script>
+    // Cancel modal functions
+    function showCancelModal() {
+        var modal = document.getElementById('cancelModal');
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+    }
+
+    function hideCancelModal() {
+        var modal = document.getElementById('cancelModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scroll
+        }
+    }
+
+    // Close modal on ESC key or clicking outside
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideCancelModal();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            hideCancelModal();
+        }
+    });
+</script>
+
 </body>
 </html>
+

@@ -17,8 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * CancelOrderServlet - Handles order cancellation requests from customers
- * Only allows cancellation for COD orders in PENDING or PROCESSING status
+ * CancelOrderServlet - Xử lý yêu cầu hủy đơn hàng từ khách hàng
+ * Chỉ cho phép hủy đơn hàng cho đơn hàng COD hoặc Bank Transfer ở trạng thái
+ * PENDING
  */
 @WebServlet(name = "CancelOrderServlet", urlPatterns = { "/customer/cancel-order" })
 public class CancelOrderServlet extends HttpServlet {
@@ -27,18 +28,17 @@ public class CancelOrderServlet extends HttpServlet {
     private final OrderService orderService = new OrderService();
 
     /**
-     * Handle GET request to cancel an order (from link click)
+     * Xử lý yêu cầu hủy đơn hàng từ link click
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Get orderId from 'id' parameter (from link) or 'orderId' parameter
+        // Lấy orderId từ tham số 'id' (từ link) hoặc 'orderId'
         String orderIdStr = request.getParameter("id");
         if (orderIdStr == null) {
             orderIdStr = request.getParameter("orderId");
         }
 
-        // Forward to doPost logic by setting the parameter
         if (orderIdStr != null) {
             request.setAttribute("orderIdFromGet", orderIdStr);
         }
@@ -46,7 +46,7 @@ public class CancelOrderServlet extends HttpServlet {
     }
 
     /**
-     * Handle POST request to cancel an order
+     * Xử lý yêu cầu hủy đơn hàng từ form submit
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -55,7 +55,7 @@ public class CancelOrderServlet extends HttpServlet {
     }
 
     /**
-     * Common cancel logic for both GET and POST
+     * Xử lý logic hủy đơn hàng cho cả GET và POST
      */
     private void processCancel(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -63,24 +63,24 @@ public class CancelOrderServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         Customer customer = (Customer) (session != null ? session.getAttribute("customer") : null);
 
-        // Check if customer is logged in
+        // Kiểm tra nếu khách hàng đã đăng nhập
         if (customer == null) {
             response.sendRedirect(request.getContextPath() + "/login?redirect=customer/orders");
             return;
         }
 
         String orderIdStr = request.getParameter("orderId");
-        // Also check 'id' parameter for GET requests
+        // Kiểm tra tham số 'id' cho GET requests
         if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
             orderIdStr = request.getParameter("id");
         }
-        // Also check attribute from doGet
+        // Kiểm tra tham số 'orderIdFromGet' từ doGet
         if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
             orderIdStr = (String) request.getAttribute("orderIdFromGet");
         }
         String reason = request.getParameter("reason");
 
-        // Validate orderId
+        // Kiểm tra orderId
         if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
             redirectWithError(request, response, null, "Mã đơn hàng không hợp lệ");
             return;
@@ -89,14 +89,14 @@ public class CancelOrderServlet extends HttpServlet {
         try {
             int orderId = Integer.parseInt(orderIdStr);
 
-            // Get order and verify ownership
+            // Lấy đơn hàng và xác nhận quyền sở hữu
             Order order = orderService.getOrderByIdWithDetails(orderId);
             if (order == null) {
                 redirectWithError(request, response, orderId, "Không tìm thấy đơn hàng");
                 return;
             }
 
-            // Verify customer owns this order
+            // Kiểm tra khách hàng có quyền sở hữu đơn hàng không
             if (!order.getCustomer().getUserId().equals(customer.getUserId())) {
                 LOGGER.log(Level.WARNING, "Customer {0} tried to cancel order {1} that belongs to customer {2}",
                         new Object[] { customer.getUserId(), orderId, order.getCustomer().getUserId() });
@@ -104,20 +104,22 @@ public class CancelOrderServlet extends HttpServlet {
                 return;
             }
 
-            // Check if order can be cancelled
+            // Kiểm tra đơn hàng có thể hủy không
             if (!orderService.canCancelOrder(order)) {
                 String message;
-                if (!"COD".equalsIgnoreCase(order.getPaymentMethod())) {
-                    message = "Chỉ có thể huỷ đơn hàng thanh toán khi nhận hàng (COD). " +
-                            "Vui lòng liên hệ hotline để được hỗ trợ.";
+                if ("BANK_TRANSFER".equalsIgnoreCase(order.getPaymentMethod())
+                        && order.getPaymentStatus() == com.bookstore.model.Order.PaymentStatus.PAID) {
+                    message = "Không thể huỷ đơn hàng đã thanh toán. Vui lòng liên hệ hotline để được hỗ trợ.";
+                } else if (order.getOrderStatus() != null && !"PENDING".equals(order.getOrderStatus().name())) {
+                    message = "Không thể huỷ đơn hàng ở trạng thái hiện tại. Vui lòng liên hệ hotline để được hỗ trợ.";
                 } else {
-                    message = "Không thể huỷ đơn hàng ở trạng thái hiện tại";
+                    message = "Không thể huỷ đơn hàng này. Vui lòng liên hệ hotline để được hỗ trợ.";
                 }
                 redirectWithError(request, response, orderId, message);
                 return;
             }
 
-            // Cancel the order
+            // Hủy đơn hàng
             if (reason == null || reason.trim().isEmpty()) {
                 reason = "Khách hàng yêu cầu huỷ";
             }
@@ -127,7 +129,7 @@ public class CancelOrderServlet extends HttpServlet {
             LOGGER.log(Level.INFO, "Order {0} cancelled by customer {1}. Reason: {2}",
                     new Object[] { orderId, customer.getUserId(), reason });
 
-            // Redirect with success message
+            // Redirect với thông báo thành công
             String successMessage = URLEncoder.encode("Đơn hàng #" + orderId + " đã được huỷ thành công",
                     StandardCharsets.UTF_8);
             response.sendRedirect(request.getContextPath() +
@@ -136,7 +138,6 @@ public class CancelOrderServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             redirectWithError(request, response, null, "Mã đơn hàng không hợp lệ");
         } catch (IllegalStateException e) {
-            // Order cannot be cancelled (status or payment method restrictions)
             redirectWithError(request, response, safelyParseOrderId(orderIdStr), e.getMessage());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error cancelling order", e);
@@ -147,9 +148,9 @@ public class CancelOrderServlet extends HttpServlet {
     }
 
     /**
-     * Safely parse the orderId string to Integer without throwing
+     * An toàn khi phân tích chuỗi orderId thành số nguyên không ném
      * NumberFormatException.
-     * Returns null if the input is null or not a valid integer.
+     * Trả về null nếu đầu vào là null hoặc không hợp lệ.
      */
     private Integer safelyParseOrderId(String orderIdStr) {
         if (orderIdStr == null) {
@@ -164,7 +165,7 @@ public class CancelOrderServlet extends HttpServlet {
     }
 
     /**
-     * Redirect with error message
+     * Redirect với thông báo lỗi
      */
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response,
             Integer orderId, String message) throws IOException {

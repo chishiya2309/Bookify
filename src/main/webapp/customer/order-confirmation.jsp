@@ -624,7 +624,6 @@
 </head>
 <body>
     
-    <!-- Reuse Header Logic -->
     <c:choose>
         <c:when test="${isGuest}">
             <jsp:include page="/customer/header_sign_in.jsp"/>
@@ -650,10 +649,10 @@
                 </section>
             </c:when>
             <c:otherwise>
-                <!-- Banner - Changes based on order status -->
+                <!-- Banner - thay đổi dựa trên trạng thái đơn hàng -->
                 <c:choose>
                     <c:when test="${param.cancelled == 'true' || order.orderStatus == 'CANCELLED'}">
-                        <!-- Cancelled Order Banner -->
+                        <!-- Banner huỷ đơn hàng -->
                         <header class="success-banner" style="background: linear-gradient(135deg, #6C757D 0%, #495057 100%);">
                             <div class="success-icon">
                                 <i class="fas fa-ban"></i>
@@ -807,8 +806,8 @@
                     </div>
                 </section>
 
-                <!-- VietQR Payment Section (for BANK_TRANSFER) -->
-                <c:if test="${showPaymentQR}">
+                <!-- VietQR Payment Section (for BANK_TRANSFER) - chỉ show nếu không huỷ -->
+                <c:if test="${showPaymentQR && order.orderStatus != 'CANCELLED'}">
                     <section class="info-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%); border: 2px solid #ffc107;">
                         <header class="card-title" style="color: #856404;">
                             <i class="fas fa-qrcode"></i>
@@ -999,8 +998,8 @@
                     <a href="${pageContext.request.contextPath}/customer/orders" class="btn btn-primary">
                         <i class="fas fa-history"></i> Xem đơn hàng của tôi
                     </a>
-                    <%-- Cancel button: Only for COD orders in PENDING or PROCESSING status --%>
-                    <c:if test="${order.paymentMethod == 'COD' && (order.orderStatus == 'PENDING' || order.orderStatus == 'PROCESSING')}">
+                    <%-- Cancel button: Only for PENDING orders with COD or BANK_TRANSFER payment --%>
+                    <c:if test="${order.orderStatus == 'PENDING' && (order.paymentMethod == 'COD' || order.paymentMethod == 'BANK_TRANSFER')}">
                         <button type="button" class="btn btn-danger" onclick="showCancelModal()">
                             <i class="fas fa-times-circle"></i> Huỷ đơn hàng
                         </button>
@@ -1008,7 +1007,7 @@
                 </nav>
 
                 <%-- Cancel Order Modal --%>
-                <c:if test="${order.paymentMethod == 'COD' && (order.orderStatus == 'PENDING' || order.orderStatus == 'PROCESSING')}">
+                <c:if test="${order.orderStatus == 'PENDING' && (order.paymentMethod == 'COD' || order.paymentMethod == 'BANK_TRANSFER')}">
                     <dialog id="cancelModal" class="modal-overlay">
                         <article class="modal-content">
                             <header class="modal-header">

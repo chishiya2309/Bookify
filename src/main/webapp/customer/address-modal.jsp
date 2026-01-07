@@ -3,48 +3,72 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <style>
-    .modal {
+    /* Address Modal - Fullscreen */
+    #addressModal.modal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        display: none; /* Hidden by default */
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+    
+    /* Show modal when has .show class */
+    #addressModal.modal.show {
+        display: flex !important;
+    }
+    
+    #addressModal .modal-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(6px);
     }
     
-    .modal-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-    }
-    
-    .modal-content {
+    #addressModal .modal-content {
         position: relative;
-        background: white;
-        border-radius: 12px;
-        max-width: 600px;
-        width: 90%;
-        max-height: 90vh;
+        z-index: 2;
+        background: #fff;
+        width: 100%;
+        max-width: 550px;
+        max-height: calc(100vh - 40px);
         overflow-y: auto;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        animation: modalSlideIn 0.3s ease-out;
+        border-radius: 16px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        animation: modalFadeIn 0.3s ease-out;
     }
     
-    @keyframes modalSlideIn {
+    /* Mobile: fullscreen */
+    @media (max-width: 767px) {
+        #addressModal {
+            padding: 0;
+        }
+        
+        #addressModal .modal-content {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0;
+            box-shadow: none;
+        }
+    }
+    
+    @keyframes modalFadeIn {
         from {
             opacity: 0;
-            transform: translateY(-50px);
+            transform: scale(0.95);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: scale(1);
         }
     }
     
@@ -247,15 +271,33 @@ let selectedProvinceName = '';
 let selectedDistrictName = '';
 let selectedWardName = '';
 
+// Move modal to body to avoid CSS constraints from parent elements
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('addressModal');
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+    });
+})();
+
 // Open modal
 function openAddressModal() {
-    document.getElementById('addressModal').style.display = 'flex';
+    const modal = document.getElementById('addressModal');
+    // Ensure modal is in body for proper positioning
+    if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+    }
+    // Add show class to display modal (CSS handles centering)
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
     loadProvinces();
 }
 
 // Close modal
 function closeAddressModal() {
-    document.getElementById('addressModal').style.display = 'none';
+    document.getElementById('addressModal').classList.remove('show');
+    document.body.style.overflow = ''; // Restore background scroll
     document.getElementById('addAddressForm').reset();
     document.getElementById('editAddressId').value = '';
     document.getElementById('modalTitleText').textContent = 'Thêm địa chỉ mới';
@@ -433,7 +475,8 @@ function editAddress(addressId) {
                 selectedWardName = data.ward || '';
                 
                 // Show modal
-                document.getElementById('addressModal').style.display = 'flex';
+                document.getElementById('addressModal').classList.add('show');
+                document.body.style.overflow = 'hidden';
                 
                 // Load provinces and try to select correct values
                 loadProvinces().then(() => {

@@ -214,9 +214,30 @@ public class AddressServlet extends HttpServlet {
             } else {
                 sendError(response, 404, "Endpoint not found");
             }
+        } catch (org.hibernate.exception.ConstraintViolationException | jakarta.persistence.RollbackException e) {
+            // Địa chỉ đang được sử dụng trong đơn hàng
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("error",
+                    "Không thể xóa địa chỉ này vì đã được sử dụng trong đơn hàng trước đó. Bạn có thể thêm địa chỉ mới hoặc chỉnh sửa địa chỉ hiện tại.");
+            sendJsonResponse(response, result);
         } catch (Exception e) {
             e.printStackTrace();
-            sendError(response, 500, "Server error: " + e.getMessage());
+            // Check if root cause is constraint violation
+            Throwable cause = e;
+            while (cause != null) {
+                if (cause.getMessage() != null &&
+                        cause.getMessage().contains("foreign key constraint")) {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", false);
+                    result.put("error",
+                            "Không thể xóa địa chỉ này vì đã được sử dụng trong đơn hàng trước đó. Bạn có thể thêm địa chỉ mới hoặc chỉnh sửa địa chỉ hiện tại.");
+                    sendJsonResponse(response, result);
+                    return;
+                }
+                cause = cause.getCause();
+            }
+            sendError(response, 500, "Đã xảy ra lỗi khi xóa địa chỉ. Vui lòng thử lại sau.");
         }
     }
 
@@ -497,7 +518,7 @@ public class AddressServlet extends HttpServlet {
         result.put("success", true);
         result.put("canDelete", canDelete);
         if (!canDelete) {
-            result.put("reason", "Địa chỉ đã được sử dụng trong đơn hàng");
+            result.put("reason", "Không thể xoá địa chỉ đã được sử dụng trong đơn hàng");
         }
 
         sendJsonResponse(response, result);

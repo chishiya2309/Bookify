@@ -96,6 +96,9 @@ public class CheckoutServlet extends HttpServlet {
         if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
             request.setAttribute("cart", cart);
             request.setAttribute("isGuest", false);
+            request.setAttribute("userName", customer.getFullName());
+            // Load categories cho header ngay cả khi giỏ hàng rỗng
+            request.setAttribute("listCategories", customerServices.listAllCategories());
             request.getRequestDispatcher("/customer/checkout.jsp").forward(request, response);
             return;
         }

@@ -8,8 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán - Bookify</title>
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
-    
-    <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -748,8 +746,6 @@
     </style>
 </head>
 <body>
-    
-    <!-- Reuse Header Logic -->
     <c:choose>
         <c:when test="${isGuest}">
             <jsp:include page="/customer/header_sign_in.jsp"/>
@@ -837,8 +833,8 @@
                     <i class="fas fa-shopping-cart"></i>
                     <h2>Giỏ hàng của bạn đang trống</h2>
                     <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
-                    <a href="${pageContext.request.contextPath}/" class="btn-place-order" style="display:inline-block; margin-top:20px; text-decoration:none;">
-                        <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                    <a href="${pageContext.request.contextPath}/" class="btn-place-order" style="display:inline-block; margin-top:20px; text-decoration:none; color: white;">
+                        📚 Mua sắm ngay
                     </a>
                 </section>
             </c:when>
@@ -991,7 +987,7 @@
                                                 </c:forEach>
                                             </div>
                                             <div class="order-item-quantity">
-                                                Số lượng: ${item.quantity}
+                                                Đơn giá: <fmt:formatNumber value="${book.price}" pattern="#,###"/>₫ × ${item.quantity}
                                             </div>
                                         </div>
                                         
@@ -1073,8 +1069,8 @@
 
     <!-- Voucher JavaScript -->
     <script>
-        // Store original values
-        var originalSubtotal = ${subtotal != null ? subtotal : 0};
+        // Lưu giá trị gốc
+        var originalSubtotal = ${cart.totalAmount != null ? cart.totalAmount : 0};
         var originalShippingFee = ${shippingFee != null ? shippingFee : 0};
         var currentDiscount = 0;
         var currentVoucherCode = '';
@@ -1093,7 +1089,7 @@
                 return;
             }
             
-            // Disable button during request
+            // Disable button khi đang gửi request
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
             
@@ -1112,7 +1108,7 @@
                             var response = JSON.parse(xhr.responseText);
                             
                             if (response.valid) {
-                                // Success - apply discount
+                                // Thành công - apply discount
                                 currentDiscount = response.discount;
                                 currentVoucherCode = response.voucherCode;
                                 
@@ -1183,6 +1179,73 @@
             div.style.padding = '10px';
             div.style.borderRadius = '6px';
             div.innerHTML = (isSuccess ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + msg;
+        }
+        
+        // ==================== ADDRESS CHANGE HANDLER ====================
+        // Update shipping fee when address changes
+        document.addEventListener('DOMContentLoaded', function() {
+            var addressRadios = document.querySelectorAll('input[name="selectedAddressId"]');
+            
+            addressRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    updateShippingFee(this.value);
+                });
+            });
+        });
+        
+        function updateShippingFee(addressId) {
+            // Show loading indicator
+            var shippingLabel = document.querySelector('.summary-row:nth-child(2) .summary-label');
+            var shippingValue = document.querySelector('.summary-row:nth-child(2) .summary-value');
+            
+            if (shippingValue) {
+                shippingValue.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tính...';
+            }
+            
+            // Call API to get shipping fee
+            fetch('${pageContext.request.contextPath}/api/checkout/shipping?addressId=' + addressId)
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        // Update shipping fee display
+                        originalShippingFee = data.shippingFee;
+                        
+                        if (shippingLabel) {
+                            var regionText = data.region ? ' <small style="color: #6c757d; font-weight: normal;">(' + data.region + ')</small>' : '';
+                            shippingLabel.innerHTML = 'Phí vận chuyển' + regionText;
+                        }
+                        
+                        if (shippingValue) {
+                            if (data.shippingFee === 0) {
+                                shippingValue.innerHTML = '<span style="color: #28a745; font-weight: 600;">Miễn phí</span>';
+                            } else {
+                                shippingValue.textContent = formatCurrency(data.shippingFee);
+                            }
+                        }
+                        
+                        // Update free shipping progress if exists
+                        var freeShippingDiv = document.querySelector('.order-summary-totals > div:nth-child(3)');
+                        if (data.freeShippingNeeded > 0 && freeShippingDiv) {
+                            freeShippingDiv.style.display = 'block';
+                            var neededSpan = freeShippingDiv.querySelector('strong');
+                            if (neededSpan) {
+                                neededSpan.textContent = formatCurrency(data.freeShippingNeeded);
+                            }
+                        } else if (freeShippingDiv && data.freeShippingNeeded <= 0) {
+                            freeShippingDiv.style.display = 'none';
+                        }
+                        
+                        // Update grand total
+                        var grandTotal = originalSubtotal + data.shippingFee - currentDiscount;
+                        document.getElementById('grandTotalDisplay').textContent = formatCurrency(Math.max(0, grandTotal));
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Failed to update shipping fee:', err);
+                    if (shippingValue) {
+                        shippingValue.textContent = formatCurrency(originalShippingFee);
+                    }
+                });
         }
     </script>
 
