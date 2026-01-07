@@ -1184,6 +1184,73 @@
             div.style.borderRadius = '6px';
             div.innerHTML = (isSuccess ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + msg;
         }
+        
+        // ==================== ADDRESS CHANGE HANDLER ====================
+        // Update shipping fee when address changes
+        document.addEventListener('DOMContentLoaded', function() {
+            var addressRadios = document.querySelectorAll('input[name="selectedAddressId"]');
+            
+            addressRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    updateShippingFee(this.value);
+                });
+            });
+        });
+        
+        function updateShippingFee(addressId) {
+            // Show loading indicator
+            var shippingLabel = document.querySelector('.summary-row:nth-child(2) .summary-label');
+            var shippingValue = document.querySelector('.summary-row:nth-child(2) .summary-value');
+            
+            if (shippingValue) {
+                shippingValue.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tính...';
+            }
+            
+            // Call API to get shipping fee
+            fetch('${pageContext.request.contextPath}/api/checkout/shipping?addressId=' + addressId)
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        // Update shipping fee display
+                        originalShippingFee = data.shippingFee;
+                        
+                        if (shippingLabel) {
+                            var regionText = data.region ? ' <small style="color: #6c757d; font-weight: normal;">(' + data.region + ')</small>' : '';
+                            shippingLabel.innerHTML = 'Phí vận chuyển' + regionText;
+                        }
+                        
+                        if (shippingValue) {
+                            if (data.shippingFee === 0) {
+                                shippingValue.innerHTML = '<span style="color: #28a745; font-weight: 600;">Miễn phí</span>';
+                            } else {
+                                shippingValue.textContent = formatCurrency(data.shippingFee);
+                            }
+                        }
+                        
+                        // Update free shipping progress if exists
+                        var freeShippingDiv = document.querySelector('.order-summary-totals > div:nth-child(3)');
+                        if (data.freeShippingNeeded > 0 && freeShippingDiv) {
+                            freeShippingDiv.style.display = 'block';
+                            var neededSpan = freeShippingDiv.querySelector('strong');
+                            if (neededSpan) {
+                                neededSpan.textContent = formatCurrency(data.freeShippingNeeded);
+                            }
+                        } else if (freeShippingDiv && data.freeShippingNeeded <= 0) {
+                            freeShippingDiv.style.display = 'none';
+                        }
+                        
+                        // Update grand total
+                        var grandTotal = originalSubtotal + data.shippingFee - currentDiscount;
+                        document.getElementById('grandTotalDisplay').textContent = formatCurrency(Math.max(0, grandTotal));
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Failed to update shipping fee:', err);
+                    if (shippingValue) {
+                        shippingValue.textContent = formatCurrency(originalShippingFee);
+                    }
+                });
+        }
     </script>
 
 </body>

@@ -161,8 +161,8 @@ public class AddressDAO {
     }
 
     /**
-     * Check if address is used in any order by matching addressId
-     * Since Order stores addressId, we can check directly
+     * Check if address is used in any order
+     * Order has a ManyToOne relationship with Address via shippingAddress field
      * 
      * @param addressId The address ID to check
      * @return true if address is used in any order
@@ -171,14 +171,14 @@ public class AddressDAO {
         EntityManager em = DBUtil.getEmFactory().createEntityManager();
         try {
             TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(o) FROM Order o WHERE o.addressId = :addressId",
+                    "SELECT COUNT(o) FROM Order o WHERE o.shippingAddress.addressId = :addressId",
                     Long.class);
             query.setParameter("addressId", addressId);
             return query.getSingleResult() > 0;
         } catch (Exception e) {
-            // If Order doesn't have addressId field, fall back to checking by address
-            // fields
-            return isAddressUsedInOrderByFields(addressId, em);
+            e.printStackTrace();
+            // Nếu có lỗi, giả sử địa chỉ đang được sử dụng để tránh xóa nhầm
+            return true;
         } finally {
             em.close();
         }
