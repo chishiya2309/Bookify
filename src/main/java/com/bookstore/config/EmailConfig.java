@@ -2,10 +2,6 @@ package com.bookstore.config;
 
 /**
  * EmailConfig - Configuration for Brevo HTTP API
- * Using HTTP API instead of SMTP for better cloud hosting compatibility
- * 
- * IMPORTANT: API Key should be set via environment variable BREVO_API_KEY
- * On Render: Settings > Environment > Add BREVO_API_KEY
  **/
 public class EmailConfig {
 
@@ -13,26 +9,25 @@ public class EmailConfig {
     private static final String API_URL = "https://api.brevo.com/v3/smtp/email";
 
     // Read API Key from environment variable for security
-    // Set BREVO_API_KEY in Render Dashboard: Environment > Add Environment Variable
     private static final String API_KEY = System.getenv("BREVO_API_KEY") != null
             ? System.getenv("BREVO_API_KEY")
-            : ""; // Fallback empty - will throw error if not configured
+            : ""; // Giá trị dự phòng bị trống - sẽ báo lỗi nếu chưa được cấu hình.
 
     private static final String FROM_EMAIL = "lequanghung.work@gmail.com";
     private static final String FROM_NAME = "Bookify - Nhà sách trực tuyến";
 
-    // Admin email for payment issue notifications
+    // Email quản trị viên nhận thông báo sự cố thanh toán
     private static final String ADMIN_EMAIL = "lequanghung.work@gmail.com";
 
     /**
-     * Get Brevo API URL
+     * Lấy Brevo API URL
      */
     public static String getApiUrl() {
         return API_URL;
     }
 
     /**
-     * Get Brevo API Key from environment variable
+     * Lấy Brevo API Key từ biến môi trường
      */
     public static String getApiKey() {
         if (API_KEY == null || API_KEY.isEmpty()) {

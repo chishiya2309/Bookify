@@ -14,15 +14,14 @@ import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.LockModeType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * OrderService - Business logic for Order management
- * Handles order creation from cart, status updates, and order queries
+ * OrderService - Logic nghiệp vụ quản lý đơn hàng
+ * Xử lý việc tạo đơn hàng từ giỏ hàng, cập nhật trạng thái và tra cứu đơn hàng
  */
 public class OrderService {
 
@@ -92,14 +91,19 @@ public class OrderService {
         try {
             tx.begin();
 
-            // CRITICAL FIX: Customer from session is a detached entity
-            // We must get a managed reference to ensure correct customer_id is persisted
+            // FIX QUAN TRỌNG: Customer lấy từ session đang là detached entity (bị ngắt kết
+            // nối)
+            // Phải lấy lại tham chiếu managed (được quản lý) để đảm bảo lưu đúng
+            // customer_id
             Customer managedCustomer = em.find(Customer.class, customer.getUserId());
             if (managedCustomer == null) {
                 throw new IllegalArgumentException("Customer không tồn tại trong database: " + customer.getUserId());
             }
 
-            // Also get managed Address to ensure FK is correct
+            // FIX QUAN TRỌNG: Address lấy từ session đang là detached entity (bị ngắt kết
+            // nối)
+            // Phải lấy lại tham chiếu managed (được quản lý) để đảm bảo lưu đúng
+            // address_id
             Address managedAddress = em.find(Address.class, shippingAddress.getAddressId());
             if (managedAddress == null) {
                 throw new IllegalArgumentException(
@@ -108,9 +112,10 @@ public class OrderService {
 
             // Tạo đơn hàng with managed entities
             order = new Order();
-            order.setCustomer(managedCustomer); // Use managed customer
-            order.setShippingAddress(managedAddress); // Use managed address
-            order.setOrderDate(com.bookstore.config.VietnamTimeConfig.now()); // Vietnam timezone
+            order.setCustomer(managedCustomer); // Sử dụng managed customer
+            order.setShippingAddress(managedAddress); // Sử dụng managed address
+            order.setOrderDate(com.bookstore.config.VietnamTimeConfig.now()); // Thời gian hiện tại theo múi giờ Việt
+                                                                              // Nam
             order.setOrderStatus(OrderStatus.PENDING);
             order.setPaymentStatus(PaymentStatus.UNPAID);
             order.setPaymentMethod(paymentMethod);
@@ -149,7 +154,7 @@ public class OrderService {
                 LOGGER.log(Level.INFO, "Deducted {0} units from book {1}. New stock: {2}",
                         new Object[] { quantity, bookId, newStock });
 
-                // Create OrderDetail
+                // Tạo OrderDetail
                 BigDecimal unitPrice = lockedBook.getPrice();
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.setOrder(order);
@@ -221,21 +226,25 @@ public class OrderService {
             // Lưu đơn hàng (cascade saves OrderDetails)
             em.persist(order);
 
-            // Commit giao dịch - giải phóng tất cả locks
-            tx.commit();
+            // Flush để đảm bảo orderId được sinh ra (auto-increment)
+            // Cần thiết để tạo VoucherUsage với orderId hợp lệ
+            em.flush();
 
-            // Ghi lại việc sử dụng voucher sau khi commit (đơn hàng phải tồn tại trong DB
-            // để tạo khóa ngoại)
+            // Ghi lại việc sử dụng voucher BÊN TRONG transaction
+            // Đảm bảo tính nhất quán: nếu recordUsage thất bại, đơn hàng cũng bị rollback
             if (order.getVoucherId() != null) {
-                VoucherDAO voucherDAO2 = new VoucherDAO();
-                Voucher voucher = voucherDAO2.findById(order.getVoucherId());
-                if (voucher != null) {
-                    VoucherUsage usage = new VoucherUsage(voucher, customer, order, order.getVoucherDiscount());
-                    voucherDAO2.recordUsage(usage);
+                Voucher managedVoucher = em.find(Voucher.class, order.getVoucherId());
+                if (managedVoucher != null) {
+                    VoucherUsage usage = new VoucherUsage(managedVoucher, managedCustomer, order,
+                            order.getVoucherDiscount());
+                    em.persist(usage);
                     LOGGER.log(Level.INFO, "Recorded voucher usage for order {0}, discount: {1}",
                             new Object[] { order.getOrderId(), order.getVoucherDiscount() });
                 }
             }
+
+            // Commit giao dịch - giải phóng tất cả locks
+            tx.commit();
 
             LOGGER.log(Level.INFO, "Order created successfully with locking. OrderId: {0}, Total: {1}",
                     new Object[] { order.getOrderId(), grandTotal });
@@ -378,11 +387,17 @@ public class OrderService {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng với ID: " + orderId);
         }
 
-        // Only allow cancellation for COD payment method
-        if (!"COD".equalsIgnoreCase(order.getPaymentMethod())) {
+        // Check if order can be cancelled based on payment method and status
+        String paymentMethod = order.getPaymentMethod();
+        if (!"COD".equalsIgnoreCase(paymentMethod) && !"BANK_TRANSFER".equalsIgnoreCase(paymentMethod)) {
             throw new IllegalStateException(
-                    "Chỉ có thể huỷ đơn hàng thanh toán khi nhận hàng (COD). " +
-                            "Đơn hàng đã thanh toán online vui lòng liên hệ hotline để được hỗ trợ hoàn tiền.");
+                    "Không thể huỷ đơn hàng với phương thức thanh toán này. Vui lòng liên hệ hotline để được hỗ trợ.");
+        }
+
+        // For BANK_TRANSFER, check if already paid
+        if ("BANK_TRANSFER".equalsIgnoreCase(paymentMethod) && order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new IllegalStateException(
+                    "Không thể huỷ đơn hàng đã thanh toán. Vui lòng liên hệ hotline để được hỗ trợ hoàn tiền.");
         }
 
         // Only allow cancellation if order is PENDING or PROCESSING
@@ -432,24 +447,35 @@ public class OrderService {
     }
 
     /**
-     * Check if an order can be cancelled by customer
+     * Kiểm tra xem khách hàng có thể hủy đơn hàng hay không
      * 
-     * @param order Order to check
-     * @return true if can be cancelled, false otherwise
+     * @param order Đơn hàng cần kiểm tra
+     * @return true nếu có thể hủy, false nếu không
      */
     public boolean canCancelOrder(Order order) {
         if (order == null) {
             return false;
         }
 
-        // Only COD orders can be cancelled by customer
-        if (!"COD".equalsIgnoreCase(order.getPaymentMethod())) {
+        // Chỉ đơn hàng ở trạng thái PENDING mới có thể hủy
+        if (order.getOrderStatus() != OrderStatus.PENDING) {
             return false;
         }
 
-        // Only PENDING or PROCESSING orders can be cancelled
-        return order.getOrderStatus() == OrderStatus.PENDING ||
-                order.getOrderStatus() == OrderStatus.PROCESSING;
+        // Đơn hàng COD có thể hủy khi ở trạng thái PENDING
+        if ("COD".equalsIgnoreCase(order.getPaymentMethod())) {
+            return true;
+        }
+
+        // Đơn hàng BANK_TRANSFER có thể hủy nếu chưa thanh toán (trạng thái PENDING
+        // hoặc UNPAID)
+        if ("BANK_TRANSFER".equalsIgnoreCase(order.getPaymentMethod())) {
+            PaymentStatus paymentStatus = order.getPaymentStatus();
+            // Cho phép hủy nếu trạng thái thanh toán là UNPAID hoặc null
+            return paymentStatus == null || paymentStatus == PaymentStatus.UNPAID;
+        }
+
+        return false;
     }
 
     public long getCustomerOrderCount(Integer customerId) {

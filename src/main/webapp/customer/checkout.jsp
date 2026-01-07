@@ -8,8 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán - Bookify</title>
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
-    
-    <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -748,8 +746,6 @@
     </style>
 </head>
 <body>
-    
-    <!-- Reuse Header Logic -->
     <c:choose>
         <c:when test="${isGuest}">
             <jsp:include page="/customer/header_sign_in.jsp"/>
@@ -1073,8 +1069,8 @@
 
     <!-- Voucher JavaScript -->
     <script>
-        // Store original values
-        var originalSubtotal = ${subtotal != null ? subtotal : 0};
+        // Lưu giá trị gốc
+        var originalSubtotal = ${cart.totalAmount != null ? cart.totalAmount : 0};
         var originalShippingFee = ${shippingFee != null ? shippingFee : 0};
         var currentDiscount = 0;
         var currentVoucherCode = '';
@@ -1093,7 +1089,7 @@
                 return;
             }
             
-            // Disable button during request
+            // Disable button khi đang gửi request
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
             
@@ -1112,7 +1108,7 @@
                             var response = JSON.parse(xhr.responseText);
                             
                             if (response.valid) {
-                                // Success - apply discount
+                                // Thành công - apply discount
                                 currentDiscount = response.discount;
                                 currentVoucherCode = response.voucherCode;
                                 

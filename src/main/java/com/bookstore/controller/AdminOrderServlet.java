@@ -17,7 +17,6 @@ public class AdminOrderServlet extends HttpServlet {
     private final AdminServices service = new AdminServices();
     private static final int DEFAULT_PAGE_SIZE = 10;
 
-    // ================= GET =================
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -53,7 +52,7 @@ public class AdminOrderServlet extends HttpServlet {
 
     private void listOrders(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        // Pagination parameters
+        // Tham số phân trang
         int page = 0;
         int size = DEFAULT_PAGE_SIZE;
 
@@ -95,7 +94,6 @@ public class AdminOrderServlet extends HttpServlet {
         req.getRequestDispatcher("/admin/orders.jsp").forward(req, resp);
     }
 
-    // ================= POST =================
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -103,13 +101,12 @@ public class AdminOrderServlet extends HttpServlet {
         String action = req.getParameter("action");
         int orderId = Integer.parseInt(req.getParameter("orderId"));
 
-        // Email Service
+        // Dịch vụ Email
         com.bookstore.service.EmailService emailService = new com.bookstore.service.EmailService();
 
         switch (action) {
-
             case "save": {
-                // 1. Fetch current order status BEFORE update
+                // 1. Lấy trạng thái đơn hàng CŨ trước khi cập nhật
                 Order existingOrder = service.getOrderForEdit(orderId);
                 Order.OrderStatus oldStatus = existingOrder.getOrderStatus();
                 String paymentMethod = existingOrder.getPaymentMethod();
@@ -124,7 +121,7 @@ public class AdminOrderServlet extends HttpServlet {
 
                 Order.OrderStatus newStatus = Order.OrderStatus.valueOf(req.getParameter("orderStatus"));
 
-                // 2. Perform Update
+                // 2. Thực hiện cập nhật
                 service.updateOrder(
                         orderId,
                         req.getParameter("recipientName"),
@@ -132,24 +129,29 @@ public class AdminOrderServlet extends HttpServlet {
                         newStatus,
                         address);
 
-                // 3. Check for Status Changes & Send Emails
+                // 3. Kiểm tra thay đổi trạng thái & gửi Email
                 if (newStatus != oldStatus) {
-                    // Fetch updated order to get latest details
+                    // Lấy đơn hàng cập nhật để lấy thông tin mới nhất
                     Order updatedOrder = service.getOrderForEdit(orderId);
 
-                    // Case A: Status changed to SHIPPED
+                    // Case A: Trạng thái thay đổi thành SHIPPED
                     if (newStatus == Order.OrderStatus.SHIPPED) {
-                        // In a real app, you'd get tracking number from input.
-                        // For now we simulate or leave placeholder.
+                        // Hiện tại mô phỏng.
                         emailService.sendShippingNotification(updatedOrder, "BOOKIFY-" + orderId);
                     }
 
-                    // Case B: Status changed to CANCELLED
+                    // Case B: Trạng thái thay đổi thành DELIVERED
+                    else if (newStatus == Order.OrderStatus.DELIVERED) {
+                        emailService.sendDeliveryConfirmation(updatedOrder);
+                    }
+
+                    // Case C: Trạng thái thay đổi thành CANCELLED
                     else if (newStatus == Order.OrderStatus.CANCELLED) {
                         emailService.sendOrderCancellation(updatedOrder, "Đơn hàng bị hủy bởi Admin");
 
-                        // Special Case: Refund required?
-                        // If order was PAID and method was NOT COD (Bank Transfer, Sepay, etc.)
+                        // Special Case: Yêu cầu hoàn tiền?
+                        // Nếu đơn hàng đã thanh toán và phương thức thanh toán không phải là COD (Bank
+                        // Transfer, Sepay, v.v.)
                         boolean isPrePaid = paymentMethod != null &&
                                 !paymentMethod.equalsIgnoreCase("COD");
 

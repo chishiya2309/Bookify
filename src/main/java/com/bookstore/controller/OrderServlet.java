@@ -3,6 +3,7 @@ package com.bookstore.controller;
 import com.bookstore.model.Customer;
 import com.bookstore.model.Order;
 import com.bookstore.service.CustomerServices;
+import com.bookstore.service.EmailService;
 import com.bookstore.service.JwtAuthHelper;
 import com.bookstore.service.OrderServices;
 import com.bookstore.data.DBUtil;
@@ -147,6 +148,10 @@ public class OrderServlet extends HttpServlet {
 
                 // Cập nhật status
                 orderServices.updateOrderStatus(orderId, Order.OrderStatus.DELIVERED);
+
+                // Gửi email xác nhận giao hàng thành công
+                EmailService emailService = new EmailService();
+                emailService.sendDeliveryConfirmation(order);
 
                 // Redirect về trang chi tiết đơn hàng hoặc danh sách đơn hàng
                 String successMessage = URLEncoder.encode("Đã xác nhận nhận hàng thành công", StandardCharsets.UTF_8);

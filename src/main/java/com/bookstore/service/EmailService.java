@@ -23,9 +23,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * EmailService - Service for sending emails via Brevo HTTP API
- * Using HTTP API instead of SMTP for better cloud hosting compatibility
- * Emails are sent asynchronously to avoid blocking the main thread
+ * EmailService - Dịch vụ gửi email thông qua Brevo HTTP API
+ * Email được gửi bất đồng bộ để tránh chặn luồng chính (main thread)
  */
 public class EmailService {
 
@@ -34,24 +33,24 @@ public class EmailService {
     @SuppressWarnings("deprecation")
     private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getInstance(new Locale("vi", "VN"));
 
-    // Thread pool for async email sending - prevents blocking webhook/request
-    // threads
+    // Thread pool để gửi email bất đồng bộ - tránh block các thread xử lý
+    // webhook/request
     private static final ExecutorService EMAIL_EXECUTOR = Executors.newFixedThreadPool(2);
 
     /**
      * Send email with HTML content (async - non-blocking)
      * Uses Brevo HTTP API instead of SMTP for cloud compatibility
      * 
-     * @param to          Recipient email address
-     * @param subject     Email subject
-     * @param htmlContent HTML content
+     * @param to          Email người nhận
+     * @param subject     Tiêu đề email
+     * @param htmlContent Nội dung email
      */
     public void sendEmail(String to, String subject, String htmlContent) {
         EMAIL_EXECUTOR.submit(() -> sendEmailViaApi(to, subject, htmlContent));
     }
 
     /**
-     * Send email synchronously via Brevo HTTP API
+     * Gửi email đồng bộ (sync) qua Brevo HTTP API
      */
     private void sendEmailViaApi(String to, String subject, String htmlContent) {
         HttpURLConnection connection = null;
@@ -66,7 +65,7 @@ public class EmailService {
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(30000);
 
-            // Build JSON payload - escape special characters in content
+            // Build payload JSON - escape các ký tự đặc biệt trong nội dung
             String escapedHtmlContent = escapeJsonString(htmlContent);
             String escapedSubject = escapeJsonString(subject);
             String escapedFromName = escapeJsonString(EmailConfig.getFromName());
@@ -84,19 +83,19 @@ public class EmailService {
                     escapedSubject,
                     escapedHtmlContent);
 
-            // Send request
+            // Gửi request
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
 
-            // Check response
+            // Kiểm tra response
             int responseCode = connection.getResponseCode();
             if (responseCode >= 200 && responseCode < 300) {
                 LOGGER.log(Level.INFO, "Email sent successfully via Brevo API to: {0}, subject: {1}",
                         new Object[] { to, subject });
             } else {
-                // Read error response
+                // Đọc response lỗi
                 String errorResponse = "";
                 try (BufferedReader br = new BufferedReader(
                         new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8))) {
@@ -116,7 +115,7 @@ public class EmailService {
     }
 
     /**
-     * Escape special characters for JSON string
+     * Escape các ký tự đặc biệt cho chuỗi JSON
      */
     private String escapeJsonString(String input) {
         if (input == null)
@@ -130,16 +129,15 @@ public class EmailService {
     }
 
     /**
-     * Send order confirmation email
+     * Gửi email xác nhận đơn hàng
      * 
-     * @param order Order to confirm
+     * @param order Đơn hàng cần xác nhận
      */
     public void sendOrderConfirmation(Order order) {
         try {
             String customerEmail = order.getCustomer().getEmail();
             String customerName = order.getCustomer().getFullName();
 
-            // Build items HTML
             StringBuilder itemsHtml = new StringBuilder();
             for (OrderDetail detail : order.getOrderDetails()) {
                 String imageUrl = detail.getBook().getPrimaryImageUrl();
@@ -175,10 +173,8 @@ public class EmailService {
                         CURRENCY_FORMATTER.format(detail.getSubTotal())));
             }
 
-            // Load and populate template
             String template = loadTemplate("order-confirmation.html");
 
-            // Format shipping fee
             String shippingFeeDisplay;
             if (order.getShippingFee() == null || order.getShippingFee().compareTo(BigDecimal.ZERO) == 0) {
                 shippingFeeDisplay = "Miễn phí";
@@ -186,7 +182,6 @@ public class EmailService {
                 shippingFeeDisplay = CURRENCY_FORMATTER.format(order.getShippingFee()) + "₫";
             }
 
-            // Get subtotal
             BigDecimal subtotal = order.getSubtotal();
             if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) == 0) {
                 subtotal = order.getOrderDetails().stream()
@@ -194,7 +189,6 @@ public class EmailService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
             }
 
-            // Build voucher discount row if applicable
             String voucherRow = "";
             if (order.getVoucherDiscount() != null && order.getVoucherDiscount().compareTo(BigDecimal.ZERO) > 0) {
                 String voucherLabel = order.getVoucherCode() != null
@@ -229,7 +223,7 @@ public class EmailService {
     }
 
     /**
-     * Send payment confirmation email
+     * Gửi email xác nhận thanh toán
      */
     public void sendPaymentConfirmation(Order order, Payment payment) {
         try {
@@ -255,7 +249,7 @@ public class EmailService {
     }
 
     /**
-     * Send shipping notification email
+     * Gửi email thông báo giao hàng
      */
     public void sendShippingNotification(Order order, String trackingNumber) {
         try {
@@ -278,7 +272,7 @@ public class EmailService {
     }
 
     /**
-     * Send order cancellation email
+     * Gửi email thông báo hủy đơn hàng
      */
     public void sendOrderCancellation(Order order, String reason) {
         try {
@@ -301,7 +295,79 @@ public class EmailService {
     }
 
     /**
-     * Send admin notification email
+     * Gửi email xác nhận giao hàng (khi đơn hàng được đánh dấu là DELIVERED)
+     * Cảm ơn khách hàng đã mua hàng
+     */
+    public void sendDeliveryConfirmation(Order order) {
+        try {
+            String customerEmail = order.getCustomer().getEmail();
+            String customerName = order.getCustomer().getFullName();
+
+            StringBuilder itemsSummary = new StringBuilder();
+            for (OrderDetail detail : order.getOrderDetails()) {
+                itemsSummary.append(String.format(
+                        "<tr>" +
+                                "<td style='padding: 12px; border-bottom: 1px solid #e0e0e0;'>%s</td>" +
+                                "<td style='padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: center;'>%d</td>"
+                                +
+                                "<td style='padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;'>%s₫</td>"
+                                +
+                                "</tr>",
+                        detail.getBook().getTitle(),
+                        detail.getQuantity(),
+                        CURRENCY_FORMATTER.format(detail.getSubTotal())));
+            }
+
+            BigDecimal subtotal = order.getSubtotal();
+            if (subtotal == null || subtotal.compareTo(BigDecimal.ZERO) == 0) {
+                subtotal = order.getOrderDetails().stream()
+                        .map(OrderDetail::getSubTotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
+
+            String shippingFeeDisplay;
+            if (order.getShippingFee() == null || order.getShippingFee().compareTo(BigDecimal.ZERO) == 0) {
+                shippingFeeDisplay = "Miễn phí";
+            } else {
+                shippingFeeDisplay = CURRENCY_FORMATTER.format(order.getShippingFee()) + "₫";
+            }
+
+            String voucherRow = "";
+            if (order.getVoucherDiscount() != null && order.getVoucherDiscount().compareTo(BigDecimal.ZERO) > 0) {
+                String voucherLabel = order.getVoucherCode() != null
+                        ? "Giảm giá (" + order.getVoucherCode() + ")"
+                        : "Giảm giá";
+                voucherRow = "<tr style='background-color: #f8f9fa;'>" +
+                        "<td colspan='2' style='padding: 12px; color: #dc3545; border-bottom: 1px solid #e0e0e0;'>"
+                        + voucherLabel + "</td>" +
+                        "<td style='padding: 12px; text-align: right; color: #dc3545; font-weight: bold; border-bottom: 1px solid #e0e0e0;'>-"
+                        +
+                        CURRENCY_FORMATTER.format(order.getVoucherDiscount()) + "₫</td>" +
+                        "</tr>";
+            }
+
+            String template = loadTemplate("delivery-confirmation.html");
+            String html = template
+                    .replace("{{customerName}}", customerName)
+                    .replace("{{orderId}}", order.getOrderId().toString())
+                    .replace("{{items}}", itemsSummary.toString())
+                    .replace("{{subtotal}}", CURRENCY_FORMATTER.format(subtotal) + "₫")
+                    .replace("{{shippingFee}}", shippingFeeDisplay)
+                    .replace("{{voucherRow}}", voucherRow)
+                    .replace("{{totalAmount}}", CURRENCY_FORMATTER.format(order.getTotalAmount()) + "₫");
+
+            sendEmail(customerEmail,
+                    "✅ Đơn hàng #" + order.getOrderId() + " đã được giao thành công - Cảm ơn quý khách!", html);
+
+            LOGGER.log(Level.INFO, "Delivery confirmation email sent for order: {0}", order.getOrderId());
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to send delivery confirmation for order: " + order.getOrderId(), e);
+        }
+    }
+
+    /**
+     * Gửi email thông báo cho admin
      */
     public void sendAdminNotification(String subject, String message) {
         try {
@@ -353,9 +419,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * Get fallback template when main template not found
-     */
     private String getFallbackTemplate() {
         return "<!DOCTYPE html><html><body>" +
                 "<h1>Bookify</h1>" +
@@ -364,7 +427,7 @@ public class EmailService {
     }
 
     /**
-     * Format shipping address
+     * Format địa chỉ giao hàng
      */
     private String formatAddress(Order order) {
         return String.format("%s, %s, %s, %s",
@@ -383,10 +446,6 @@ public class EmailService {
         switch (method.toUpperCase()) {
             case "COD":
                 return "Thanh toán khi nhận hàng (COD)";
-            case "SEPAY":
-                return "Chuyển khoản ngân hàng (Sepay)";
-            case "CREDIT_CARD":
-                return "Thẻ tín dụng";
             case "BANK_TRANSFER":
                 return "Chuyển khoản ngân hàng";
             default:
@@ -397,7 +456,7 @@ public class EmailService {
     // ==================== FORGOT PASSWORD OTP ====================
 
     /**
-     * Send OTP email for password reset (synchronous for immediate feedback)
+     * Gửi email OTP để reset mật khẩu (synchronous for immediate feedback)
      * 
      * @param toEmail recipient email
      * @param otpCode 6-digit OTP code
@@ -406,12 +465,12 @@ public class EmailService {
     public boolean sendOtpEmail(String toEmail, String otpCode) {
         String subject = "Mã xác nhận đặt lại mật khẩu - Bookify";
         String htmlContent = buildOtpEmailTemplate(otpCode);
-        
+
         return sendEmailSync(toEmail, subject, htmlContent);
     }
 
     /**
-     * Send email synchronously (blocking) - used for OTP where we need immediate feedback
+     * Gửi email đồng bộ (blocking) - dùng cho OTP khi cần phản hồi ngay lập tức
      */
     private boolean sendEmailSync(String to, String subject, String htmlContent) {
         HttpURLConnection connection = null;
@@ -469,26 +528,33 @@ public class EmailService {
     }
 
     /**
-     * Build OTP email HTML template
+     * Xây dựng template email OTP
      */
     private String buildOtpEmailTemplate(String otpCode) {
         return "<!DOCTYPE html>" +
-            "<html><head><meta charset='UTF-8'></head>" +
-            "<body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>" +
-            "<div style='max-width: 500px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>" +
-            "<div style='text-align: center; margin-bottom: 30px;'>" +
-            "<h1 style='color: #0D6EFD; margin: 0;'>📚 Bookify</h1>" +
-            "<p style='color: #666; margin-top: 5px;'>Nhà sách trực tuyến</p>" +
-            "</div>" +
-            "<h2 style='color: #333; text-align: center;'>Mã xác nhận đặt lại mật khẩu</h2>" +
-            "<p style='color: #666; text-align: center;'>Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng sử dụng mã sau:</p>" +
-            "<div style='background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;'>" +
-            "<span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0D6EFD;'>" + otpCode + "</span>" +
-            "</div>" +
-            "<p style='color: #666; text-align: center; font-size: 14px;'>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>" +
-            "<p style='color: #999; text-align: center; font-size: 12px;'>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
-            "<hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'>" +
-            "<p style='color: #999; text-align: center; font-size: 12px;'>&copy; 2025 Bookify. All rights reserved.</p>" +
-            "</div></body></html>";
+                "<html><head><meta charset='UTF-8'></head>" +
+                "<body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>" +
+                "<div style='max-width: 500px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>"
+                +
+                "<div style='text-align: center; margin-bottom: 30px;'>" +
+                "<h1 style='color: #0D6EFD; margin: 0;'>📚 Bookify</h1>" +
+                "<p style='color: #666; margin-top: 5px;'>Nhà sách trực tuyến</p>" +
+                "</div>" +
+                "<h2 style='color: #333; text-align: center;'>Mã xác nhận đặt lại mật khẩu</h2>" +
+                "<p style='color: #666; text-align: center;'>Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng sử dụng mã sau:</p>"
+                +
+                "<div style='background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;'>"
+                +
+                "<span style='font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0D6EFD;'>" + otpCode
+                + "</span>" +
+                "</div>" +
+                "<p style='color: #666; text-align: center; font-size: 14px;'>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>"
+                +
+                "<p style='color: #999; text-align: center; font-size: 12px;'>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>"
+                +
+                "<hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'>" +
+                "<p style='color: #999; text-align: center; font-size: 12px;'>&copy; 2025 Bookify. All rights reserved.</p>"
+                +
+                "</div></body></html>";
     }
 }
