@@ -16,7 +16,7 @@ import java.util.List;
 @WebServlet("/search_book")
 public class SearchBookServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    
+
     private BookServices bookServices;
     private CustomerServices customerServices;
 
@@ -28,13 +28,13 @@ public class SearchBookServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // Thiết lập encoding UTF-8 cho request và response trước khi xử lý tham số
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-        
+
         // --- 1. KIỂM TRA ĐĂNG NHẬP (Dùng JwtAuthHelper) ---
         // Hàm này sẽ tự động set các attribute: "isLoggedIn", "userEmail", "userRole"
         JwtAuthHelper.checkLoginStatus(request);
@@ -43,10 +43,16 @@ public class SearchBookServlet extends HttpServlet {
         Object userEmailObj = request.getAttribute("userEmail");
         if (userEmailObj != null) {
             String userEmail = userEmailObj.toString();
-            // Ở mức tối thiểu, dùng email làm userName hiển thị
-            request.setAttribute("userName", userEmail);
+            // Lấy full name từ database để hiển thị
+            com.bookstore.model.Customer customer = customerServices.getCustomerByEmail(userEmail);
+            if (customer != null && customer.getFullName() != null) {
+                request.setAttribute("userName", customer.getFullName());
+            } else {
+                // Fallback dùng email nếu không tìm thấy customer
+                request.setAttribute("userName", userEmail);
+            }
         }
-        
+
         // --- 2. LẤY DANH MỤC SÁCH CHO HEADER ---
         request.setAttribute("listCategories", customerServices.listAllCategories());
 
@@ -62,14 +68,14 @@ public class SearchBookServlet extends HttpServlet {
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("listResult", result);
-        
+
         // --- 4. CHUYỂN HƯỚNG SANG JSP ---
         RequestDispatcher dispatcher = request.getRequestDispatcher("customer/search_result.jsp");
         dispatcher.forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
     }
