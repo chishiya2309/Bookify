@@ -12,47 +12,45 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class JwtUtil {
-    
-    // IMPORTANT: Change this in production! Use environment variable
-    private static final String SECRET_KEY = "your-very-secure-256-bit-secret-key-change-this-in-production-please-make-it-long-enough";
-    
+    private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY");
+
     // Cached signing key to avoid repeated computation
     private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-    
+
     // Token validity: 24 hours
     private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
-    
+
     // Refresh token validity: 7 days
     private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000;
-    
+
     private static Key getSigningKey() {
         return SIGNING_KEY;
     }
-    
+
     // Generate token for user (email-based)
     public static String generateToken(String email) {
         return createToken(new HashMap<>(), email, JWT_TOKEN_VALIDITY);
     }
-    
+
     // Generate token with role
     public static String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         return createToken(claims, email, JWT_TOKEN_VALIDITY);
     }
-    
+
     // Generate token with custom claims
     public static String generateToken(String email, Map<String, Object> claims) {
         return createToken(claims, email, JWT_TOKEN_VALIDITY);
     }
-    
+
     // Generate refresh token
     public static String generateRefreshToken(String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
         return createToken(claims, email, REFRESH_TOKEN_VALIDITY);
     }
-    
+
     // Create token
     private static String createToken(Map<String, Object> claims, String subject, long validity) {
         return Jwts.builder()
@@ -63,17 +61,17 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    
+
     // Extract email from token
     public static String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
-    
+
     // Alias for backward compatibility
     public static String extractUsername(String token) {
         return extractEmail(token);
     }
-    
+
     // Extract role from token
     public static String extractRole(String token) {
         try {
@@ -83,7 +81,7 @@ public class JwtUtil {
             return null;
         }
     }
-    
+
     // Extract roles from token (returns list for multi-role support)
     public static List<String> extractRoles(String token) {
         List<String> roles = new ArrayList<>();
@@ -97,18 +95,18 @@ public class JwtUtil {
         }
         return roles;
     }
-    
+
     // Extract expiration date
     public static Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-    
+
     // Extract claim
     public static <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-    
+
     // Extract all claims
     private static Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -117,7 +115,7 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
-    
+
     // Check if token is expired
     public static Boolean isTokenExpired(String token) {
         try {
@@ -126,7 +124,7 @@ public class JwtUtil {
             return true;
         }
     }
-    
+
     // Validate token with email
     public static Boolean validateToken(String token, String email) {
         try {
@@ -136,7 +134,7 @@ public class JwtUtil {
             return false;
         }
     }
-    
+
     // Validate token (general)
     public static Boolean validateToken(String token) {
         try {
@@ -146,7 +144,7 @@ public class JwtUtil {
             return false;
         }
     }
-    
+
     // Refresh token
     public static String refreshToken(String refreshToken) {
         if (validateToken(refreshToken)) {
