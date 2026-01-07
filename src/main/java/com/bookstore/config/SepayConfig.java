@@ -13,18 +13,21 @@ public class SepayConfig {
 
     /**
      * API Token - Lấy từ Sepay Dashboard → API
+     * Required: Set environment variable SEPAY_API_TOKEN
      */
-    private static final String API_TOKEN = "FDN2CAWWJGRZDHZIY75C8XROHB7EXAOEGQRXTSBJJIFFHBHIE4O3UG8QVK9KUQMI";
+    private static final String API_TOKEN = System.getenv("SEPAY_API_TOKEN");
 
     /**
      * Account Number - Số tài khoản ngân hàng nhận tiền
+     * Required: Set environment variable SEPAY_ACCOUNT_NUMBER
      */
-    private static final String ACCOUNT_NUMBER = "0347983243";
+    private static final String ACCOUNT_NUMBER = System.getenv("SEPAY_ACCOUNT_NUMBER");
 
     /**
-     * Bank Code - Mã ngân hàng
+     * Bank Code - Mã ngân hàng (VD: MB, VCB, TCB, ACB...)
+     * Required: Set environment variable SEPAY_BANK_CODE
      */
-    private static final String BANK_CODE = "MB"; // MBBank
+    private static final String BANK_CODE = System.getenv("SEPAY_BANK_CODE");
 
     // ========== PAYMENT SETTINGS ==========
     /**
@@ -45,26 +48,34 @@ public class SepayConfig {
     // ========== SEPAY MERCHANT CONFIGURATION ==========
     /**
      * Merchant ID (Mã đơn vị) - Get from Sepay Dashboard -> Cổng thanh toán QR
+     * Required: Set environment variable SEPAY_MERCHANT_ID
      */
-    private static final String MERCHANT_ID = "SP-LIVE-LQ4B4233";
+    private static final String MERCHANT_ID = System.getenv("SEPAY_MERCHANT_ID");
 
     /**
      * Secret Key - Get from Sepay Dashboard -> Cổng thanh toán QR
+     * Required: Set environment variable SEPAY_SECRET_KEY
      */
-    private static final String SECRET_KEY = "spsk_live_cysAJev94vsKPese3nF3gpigozDYirtJ";
+    private static final String SECRET_KEY = System.getenv("SEPAY_SECRET_KEY");
 
-    private static final String WEBHOOK_API_KEY = "P0Zx9hPEnDhqdN7PrCqkOm372A6v32xb";
+    /**
+     * Webhook API Key - Get from Sepay Dashboard
+     * Required: Set environment variable SEPAY_WEBHOOK_API_KEY
+     */
+    private static final String WEBHOOK_API_KEY = System.getenv("SEPAY_WEBHOOK_API_KEY");
 
     // ========== CALLBACK URLs ==========
     /**
      * Return URL - Where customer is redirected after payment
+     * Required: Set environment variable SEPAY_RETURN_URL (use HTTPS in production)
      */
-    private static String returnUrl = "http://localhost:8080/Bookify/payment/return";
+    private static String returnUrl = System.getenv("SEPAY_RETURN_URL");
 
     /**
      * Notify URL - Webhook endpoint for Sepay notifications
+     * Required: Set environment variable SEPAY_NOTIFY_URL (use HTTPS in production)
      */
-    private static String notifyUrl = "http://localhost:8080/Bookify/payment/notify";
+    private static String notifyUrl = System.getenv("SEPAY_NOTIFY_URL");
 
     // ========== GETTERS ==========
     public static String getApiToken() {
